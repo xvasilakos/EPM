@@ -1,0 +1,10 @@
+simulation.seed=rpt
+space.mu.dmd.trace=dmdTrc
+
+space.sc.buffer.size=bf
+space.mu.dmd.trace.override_size=itmSz
+space.sc.connection_policy=conn
+space.sc.num=sc
+
+space.mu.dmd.trace.override_size=ovrdsz
+space.mu.dmd.trace.requests_per_user=rpu

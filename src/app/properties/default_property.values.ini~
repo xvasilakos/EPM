@@ -1,0 +1,232 @@
+##################################### General Simulation ###########################################
+# seed for each repeat and concurrent threads used (1 per simulation setup)
+	simulation.seed=1#5;6;#7;8;9;10;11;12;13;14;15;16;17;18;19;20
+	simulation.progress_update=0.025
+
+# caching decisions during simulation	
+	simulation.naive_caching=true
+	simulation.epc_caching=true
+
+# clock
+	simulation.clock.classpath=epc.femto.sim.time.FiniteTimeClock
+	simulation.clock.max_time=7000	#prerequisite: clock_ending=by_max_time
+
+# Garbage Collection Period (in simulation time units). 
+#	Setting to 0 implies invocation after completing every simulation. Negative values disable
+#	the use of System.gc(), which leaves the JVM decide upon the right gc invocation time on its
+#	own.
+simulation.clock.gc_period=500;
+
+############################################# LOGGING ##############################################	
+logging.path=../epc-femto/trunk/files/sim/core/logging/
+logging.general.level=WARNING
+
+# logging.general.enable_universal:
+#	- true: uses this logger in place of any other, ignoring their setup. 
+#	Note that console logging is stil used.
+logging.general.enable_universal=true
+
+logging.properties.level=OFF
+logging.console.level=INFO
+logging.mus.level=OFF
+logging.cells.level=OFF
+logging.buff.level=OFF	
+
+############################################## STATS ###############################################
+stats.min_time=500	# use zero to record all stats from the beggining
+stats.rounding_decimal=5	#negative value means no rounding
+
+# stats.conf_interval_z
+#	"NONE" for not printing confidence intervals, or "50%", "60%", "70%", "80%", "90%",
+#	"default" or "95%", "98%", "99%", "99.9%". Note that default uses 95th percentile
+stats.conf_interval_z=NONE  
+
+# stats.mean, stats.stddev
+#	true to print mean, stddev, aggregated/time transient results, compress by averaging per time simulation units
+stats.print.mean=true
+stats.print.stddev=false
+stats.print.aggregates=false
+stats.print.transient=true
+stats.aggregates.avg_period=100
+
+
+stats.outputdir=/Dropbox/2013-2014-SNC_in_Femto/epc-femto/trunk/files/results
+
+####### handlers to use stats.handlers.* ########
+#	"undefined" or NONE declairs not using any
+stats.handlers.iterative.mu.handover=EPC_Gain,	EPC_Naive_GainDiff	
+#	Naive_Gain,	
+#	EPC_Naive_GainRatio
+
+stats.handlers.iterative.mu=MU_Handover,	MU_ResetStatus, MU_Disconnected
+	#MU_Started,		U_ResetStatus,
+	#MU_Connected	MU_Disconnected,
+	#MU_Moved,	MU_Handover
+	
+# stats.handlers.sc	
+# 	Computes for all Smaller Cells
+stats.handlers.iterative.sc=EPC_BuffUtil,	EPC_CCache
+	#EPC_BuffUtil,	Naive_BuffUtil
+	#EPC_BuffUsed,	Naive_BuffUsed,	EPC_CCache,
+	#EPC_BuffUtil,	Naive_BuffUtil
+
+# stats.handlers.sc	
+# 	Computes for only one SC	
+stats.handlers.sc=EPC_BuffUtil,	EPC_CCACHE, Naive_BuffUtil, 	
+	#Naive_BuffUsed,		EPC_BuffUtil,	Naive_BuffUtil
+
+############################################## SPACE ###############################################
+# Dimensions of the space are
+#	for x=202 and y=201 you get an area of a surface that is approximately equal to the 
+#	surface of a circle with radius equal to 113.683851091
+space.area.x=202
+space.area.y=201
+
+# space.sc.init
+#	if "random", then space.sc.num smaller cells with space.sc.radious are placed
+#	if "trace", then the rest of the parameters are ignored and SCs are created as defined in the 
+#	trace file found in space.sc.trace_path
+space.sc.init=trace	#random
+
+# space.sc.trace_path
+#
+#	Each line in the trace must be in the following, comma separated textual format,  modeling the
+#	next smaller cell to be created:
+#		integer coordinate x; integer coordinate y; double radius;
+#		double maximum data transmission rate; boolean compute area coverage based on radius length;
+#		double backhaul data rate\n
+space.sc.trace_path=/Dropbox/2013-2014-SNC_in_Femto/epc-femto/trunk/files/traces/scs.ini
+
+# sc.radious sc.num combincation
+#	Assuming that the dimensions of the space are x=202 and y=201, the surface of the area is 
+#	approximately equal to the surface of a circle with radius equal to 113.683851091.
+# 
+#	Assuming that r_sc/r_mc = 50%,30%,10%, 1% implies that surface ratio is: 
+#		p*r_sc^2 / p*r_mc^2 = (r_sc/r_mc)^2, which implies the following  
+#		<r_sc, r_sc/r_mc, % surface> combinations:
+#
+#			<56.841925545,	50%,	  25%>,
+#			<50.840937967,	44.72%,	  20%>,
+#			<34.105155327,	33%,	   9%>,
+#			<11.368385109,	10%,	   1%>,
+#			<1.1368385109,	 1%,	0.01%>
+space.sc.radious=56.841925545;	#34.105155327;	11.368385109;	1.1368385109;
+space.sc.num=4;#12;	16;12;8; 4;	11;	100;	1000;
+
+space.sc.coverage=by_range
+
+space.sc.max_rate=4194304		# 4Mbps=4194304, 1Mbps = 1048576
+space.mc.max_rate=1048576		# 1Mbps
+
+# Backhaul rate
+space.r_BH=1048576
+# Requested QoS
+space.r_QoS=1048576
+
+space.sc.cost_per_bit=0.25		# per rate transmission cost
+space.mc.cost_per_bit=0.5		# per rate transmission cost
+
+# space.sc.handoff_probabilities
+#	Defines which handoff probabilities are used for taking EPC descisions.
+#
+#	Allowed options:
+#	- location:	
+#		Probabilities that depend only on the location of MUs. Uses the
+#		handoff probabilties of MUs given their locations before and after 
+#		they perform a handoff from one location (connection smaller cell)
+#		to another connection smaller cell.
+#
+#	- location+group: 
+#		Probabilities depend on the location of MUs and their group. 
+#		Uses the handoff probabilties per group of MUs, given their locations
+#		before and after members of a group perform a handoff from one 
+#		location (connection smaller cell) to another connection smaller cell.
+space.sc.neighborhood_probabilities=location+group
+	#	location
+
+# space.mu.transition_probabilities
+#	Fixed transition probabilities for MUs. Use 9 probabilities that summarize to 1.0.
+#	Use "|" to separate different probability lists for different MU groups.
+#
+#	This is a probabilities lists property, with one list of probabilities per group. 
+#	Note that if there are multiple groups defined and only one list in this property,
+#	then this is a a cross-group list of transition probabilties for MUs.
+space.mu.transition_probabilities=0.0,0.25,0.5,  0.0,0.0,0.25,  0.0,0.0,0.0 | 0.5,0.25,0.0,  0.25,0.0,0.0,  0.0,0.0,0.0
+	#	0.0,0.25,0.50,  0.0,0.0,0.25,  0.0,0.0,0.0 | 0.50,0.25,0.0,  0.25,0.0,0.0,  0.0,0.0,0.0
+	
+# mu.group.num
+# 	This is a list property. For each group of mus introduced, add the number of mobiles 
+#	followed by a comma for the next group. Note that the number of arguments implicitely 
+#	defines the number of groups.
+#	
+#	Assuming 201x202 area, 1 user per square => 40602 MUs
+#	- 4060	=> 1 user per 010 squares,
+#	- 1624	=> 1 user per 025 squares,
+#	- 812	=> 1 user per 050 squares,
+#	- 406	=> 1 user per 100 squares,
+space.mu.group.size=406, 406;#	812, 812; 2230, 2230
+	#	203, 203;	406, 406;	812, 812; 1624; 1624;	2230, 2230
+	#	406;	812;	1624;	4060
+
+space.mu.shuffle=upon_creation
+	#always;	never;	upon_creation		
+	
+# mu.group.init.pos:
+#	Choose from west, center, east, south_east, south_west, north_east, north_west, 
+#	random, trace (i.e. defined in trace).
+#
+#
+#	This is a list property, with one value per group. Note that if there are multiple groups
+#	defined and only one value assigned in this property, then this is a a cross-group value.
+space.mu.group.init.pos=south_west, random#south_east#, center, random
+
+# space.mu.group.init.roam_start
+#	The number of MUs that start roaming with each simulation clock tick.  For instance, setting 
+#	this parameter to 10 denotes that MUs with IDs 0,1..9 start roaming at simulation time 0, MUs 
+#	with IDs 10..19 join the already roaming MUs in simulation time 1, and so forth.
+#	Note that value less than 1 denote that all MUs start roaming at time 0.
+#
+#	This is a list property, with one value per group. Note that if there are multiple groups
+#	defined and only one value assigned in this property, then this is a a cross-group value.	
+space.mu.group.init.roam_start=1#4;8;16;32;64
+
+
+# space.mu.group.connection_window.sc
+#	Time window (maximum simulation time period) following the establishment of a connection 
+#	to a SC, during which MUs do not move from their position. Each MU makes a random period 
+#	duration choice en [min, max]. This is a list property, with one value per group. Note that if 
+#	multiple groups and only one value assigned, then this is a a cross-group value.
+space.mu.group.connection_window.sc=0#10;100#10;80;160#;320#5;50;500#100,50, 100
+
+space.mu.group.velocity.min=1
+space.mu.group.velocity.max=1
+
+
+space.mu.init.epc=true			# take cache decisions if connected to a smaller cell after being
+								# initialized
+space.mu.init.connect.sc=true	# try to connect upon initialization to a smaller cell using the 
+								# property-defined connection policy
+space.mu.trace_path=null
+
+# sc.connection_policy:
+#	max_cached means that there is preference for smaller cells which 
+#	have the mus items already cached. Alternative is by_range, which is to say by closest
+#	to center of SC, or random, or any combination. In the latter case, the rank of the 
+#	combined rules (using the "," character as a separator) denotes rank of rules taken 
+#	into account until an eligible cell is found.
+space.sc.connection_policy=max_cached,	by_range,	random 
+space.mc.connection_policy=default	# Currently, no other option other than default is supported
+
+############################################ COSTS #################################################
+
+cost.buffer_capacity=100
+cost.item_size=1	# ignored if mus_trace_path is used (i.e., mus_initialization=trace)
+
+cost.epc_target.utilization=0.95;	0.90;	0.80	# ignored iff cost.cache.type=fixed 
+cost.cache.factor=32.0						# cache cost factor; ignored iff cost.cache.type=fixed
+
+cost.cache.type=dynamic			# the alternative is "fixed"
+cost.cache.fixed.sc=10     		# prerequisite: cache_cost_type=fixed, otherwise ignored
+cost.transmission.type=fixed	# the alternative is "dynamic"
+cost.transmission.fixed.sc=10
+cost.transmission.fixed.mc=100
