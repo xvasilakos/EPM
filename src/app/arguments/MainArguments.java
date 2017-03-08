@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Properties;
 import java.util.logging.Level;
-import static logging.LoggersRegistry.CONSOLE_LOGGER;
+import java.util.logging.Logger;
 
 /**
  *
@@ -18,19 +18,18 @@ public class MainArguments {
 
     public static class Defaults {
 
-        public static final String HOME = System.getProperty("user.home")
-                + "/Dropbox/2014-2015-EPC+POP/trunk";
+        public static final String INSTALLATION_PATH_TAG = "<INSTALLATION_PATH>";
+        public static final String INSTALLATION_PATH = System.getProperty("user.home")
+                + "/Dropbox/EPC/trunk";
 
-        public static final String DEFAULT_FILES_TAG = "<files>";
-        public static final String FILES_PATH = HOME + "/files";
+        public static final String FILES_TAG = "<files>";
+        public static final String FILES_PATH = INSTALLATION_PATH + "/files";
 
-        public static final String DEFAULT_SIMCORE_TAG = "<simcore>";
+        public static final String SIMCORE_TAG = "<simcore>";
         public static final String CORE_FILES_PATH = FILES_PATH + "/sim/core";
 
-        public static final String DEFAULT_PROPS_TAG = "<defaultprops>";
-        public static final String PROPERTIES_DIR_PATH = CORE_FILES_PATH + "/properties";
-
-        public static final String HOME_TAG = "<home>";
+        public static final String PROPS_PATH_TAG = "<defaultprops>";
+        public static final String PROPERTIES_DIR_PATH = INSTALLATION_PATH + "/files/sim/core/default_properties";
 
         private Defaults() {// do not instanciate
         }
@@ -39,7 +38,7 @@ public class MainArguments {
                 = "/" + MainArguments.class.getPackage().toString().substring(8).trim().replace('.', '/')
                 + "/default_arg_values.ini";
 
-        public static final String DEFAULT_PROPERTIES__INI_CLASSPATH = "app/properties/default_property.values.ini";
+        public static final String DEFAULT_PROPERTIES_MASTER__INI = PROPERTIES_DIR_PATH + "/master.ini";
 
         private static Properties loadFromProperties() {
             Properties loadedProps = new Properties();
@@ -52,7 +51,7 @@ public class MainArguments {
                 loadedProps.load(in);
             } catch (IOException ioex) {
                 String uponIOEX_msg = "Failed to load default properties file: " + ARGUMENTS__INI_CLASSPATH + "\n";
-                CONSOLE_LOGGER.severe(uponIOEX_msg);
+                LOG.severe(uponIOEX_msg);
             }
             return loadedProps;
         }
@@ -62,95 +61,53 @@ public class MainArguments {
     }
 
     public interface ArgFlag {
+
     }
 
     public enum Flag implements ArgFlag {
 
-        DEFAULT("-default") {
-            public boolean equals(Flag_shortcut _flag) {
-                return _flag.equals(Flag_shortcut.dash_d);
-            }
-        },
-        /////////////////////
-        VERBOSE("-verbose") {
-            public boolean equals(Flag_shortcut _flag) {
-                return _flag.equals(Flag_shortcut.dash_v);
-            }
-        },
-        /////////////////////
-        PROPERTIES_FULL_PATH("-properties_full_path") {
-            public boolean equals(Flag_shortcut _flag) {
-                return _flag.equals(Flag_shortcut.dash_pp);
-            }
-        },
-        /////////////////////
-        PARALLEL("-parallel") {
-            public boolean equals(Flag_shortcut _flag) {
-                return _flag.equals(Flag_shortcut.dash_p);
-            }
-        };
+        DEFAULT("--default", "-d"),
+        VERBOSE("--verbose", "-v"),
+        PROPERTIES_FULL_PATH("--properties_full_path", "-pp"),
+        PARALLEL("--parallel", "-p"),
+        D("-d", "--default"),
+        V("-v", "--verbose"),
+        PP("-pp", "--properties_full_path"),
+        P("-p", "--parallel");
         private final String flag;
+        private final String alternative;
 
-        Flag(String _flag) {
-            this.flag = _flag;
+        Flag(String flag, String alternative) {
+            this.flag = flag;
+            this.alternative = alternative;
         }
 
+        public static boolean isValidFlag(String enumString) {
+
+            try {
+                Flag.valueOf(enumString);
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * @return the flag value, e.g: "--default"
+         */
         @Override
         public String toString() {
             return this.flag;
         }
 
         public boolean equals(String _flag) {
-            return this.flag.equals(_flag);
+            return this.flag.equals(_flag)
+                    || this.alternative.equals(_flag);
         }
 
         public boolean equals(Flag _flag) {
-            return this.flag.equals(_flag.flag);
-        }
-    }
-
-    public enum Flag_shortcut implements ArgFlag {
-
-        dash_d("-d") {
-            public boolean equals(Flag _flag) {
-                return this.toString().equals(Flag.DEFAULT.toString());
-            }
-        }, d("d"),
-        /////////////////////
-        dash_v("-v") {
-            public boolean equals(Flag _flag) {
-                return this.toString().equals(Flag.VERBOSE.toString());
-            }
-        }, v("v"),
-        /////////////////////
-        dash_pp("-pp") {
-            public boolean equals(Flag _flag) {
-                return this.toString().equals(Flag.PROPERTIES_FULL_PATH.toString());
-            }
-        }, pp("pp"),
-        /////////////////////
-        dash_p("-p") {
-            public boolean equals(Flag _flag) {
-                return this.toString().equals(Flag.PARALLEL.toString());
-            }
-        }, p("p");
-        private final String flag;
-
-        Flag_shortcut(String _flag) {
-            this.flag = _flag;
-        }
-
-        @Override
-        public String toString() {
-            return this.flag;
-        }
-
-        public boolean equals(String _flag) {
-            return this.flag.equals(_flag);
-        }
-
-        public boolean equals(Flag_shortcut _flag) {
-            return this.flag.equals(_flag.flag);
+            return this.flag.equals(_flag.flag)
+                    || this.flag.equals(_flag.alternative);
         }
     }
 
@@ -185,7 +142,7 @@ public class MainArguments {
     private int parallelSimsNum;
 
     private void defaults() {
-        propertiesPath = Defaults.DEFAULT_PROPERTIES__INI_CLASSPATH;
+        propertiesPath = Defaults.DEFAULT_PROPERTIES_MASTER__INI;
         parallelSimsNum = Defaults.PARALLEL;
     }
 
@@ -199,7 +156,7 @@ public class MainArguments {
     public static MainArguments load(String[] args) throws WrongOrImproperArgumentException {
         MainArguments loaded = new MainArguments(); // initially all defaults
         if (args.length == 0) {
-            CONSOLE_LOGGER.log(Level.WARNING, "Using default arguments:\n{0}\n", loaded.toString());
+            LOG.log(Level.WARNING, "Using default arguments:\n{0}\n", loaded.toString());
             return loaded;
         }
 
@@ -209,38 +166,31 @@ public class MainArguments {
         while (i < args.length && args[i].startsWith("-")) {
             String nxtArg = args[i++];
 
-            if (Flag.DEFAULT.equals(nxtArg) || Flag_shortcut.dash_d.equals(nxtArg)) {
+            if (Flag.DEFAULT.equals(nxtArg) || Flag.D.equals(nxtArg)) {
                 //<editor-fold defaultstate="collapsed" desc="default overides everything else">
-                CONSOLE_LOGGER.log(Level.WARNING, "Default arguments mode. "
+                LOG.log(Level.WARNING, "Default arguments mode. "
                         + "Other arguments passed (if any) overriden by default values.\n");
 
                 return new MainArguments();
                 //</editor-fold>
-            } 
-            else if (Flag.PROPERTIES_FULL_PATH.equals(nxtArg)){
+            } else if (Flag.PROPERTIES_FULL_PATH.equals(nxtArg) || Flag.PP.equals(nxtArg)) {
                 //<editor-fold defaultstate="collapsed" desc="handle properties input path">
                 if (i < args.length) {
-                    loaded.propertiesPath = args[i++];
+                    if (args[i].startsWith(Defaults.PROPS_PATH_TAG)) {
+                        loaded.propertiesPath = Defaults.PROPERTIES_DIR_PATH
+                                + args[i].substring(
+                                        Defaults.PROPS_PATH_TAG.length()
+                                );
+                        i++;
+                    } else {
+                        loaded.propertiesPath = args[i++];
+                    }
                 } else {
                     String msg = "Argument \"" + nxtArg + "\" requires a path to a file";
                     throw new WrongOrImproperArgumentException(msg);
                 }
                 //</editor-fold>
-            } 
-            else if (Flag_shortcut.dash_pp.equals(nxtArg)) {
-                //<editor-fold defaultstate="collapsed" desc="handle properties input path">
-                if (i < args.length) {
-                    loaded.propertiesPath = 
-                            Defaults.PROPERTIES_DIR_PATH
-//                            System.getProperty("user.home")+ "/Dropbox"
-                                    + "/" + args[i++];
-                } else {
-                    String msg = "Argument \"" + nxtArg + "\" requires a path to a file";
-                    throw new WrongOrImproperArgumentException(msg);
-                }
-                //</editor-fold>
-            } 
-            else if (Flag.PARALLEL.equals(nxtArg) || Flag_shortcut.dash_p.equals(nxtArg)) {
+            } else if (Flag.PARALLEL.equals(nxtArg) || Flag.P.equals(nxtArg)) {
                 //<editor-fold defaultstate="collapsed" desc="handle properties input path">
                 if (i < args.length) {
                     loaded.parallelSimsNum = Integer.valueOf(args[i++]);
@@ -257,12 +207,12 @@ public class MainArguments {
                     flag = nxtArg.charAt(j);
 
                     if (MultiFlag.d.equals(String.valueOf(flag))) {
-                        CONSOLE_LOGGER.log(Level.FINE, "Default arguments mode on.. any other arguments will be ignored\n");
+                        LOG.log(Level.FINE, "Default arguments mode on.. any other arguments will be ignored\n");
                         return new MainArguments();
                     } else if (MultiFlag.v.equals(String.valueOf(flag))) {
-                        CONSOLE_LOGGER.setLevel(Level.ALL);
-                        CONSOLE_LOGGER.setLevel(Level.ALL);
-                        CONSOLE_LOGGER.log(Level.INFO, "verbose mode on\n");
+                        LOG.setLevel(Level.ALL);
+                        LOG.setLevel(Level.ALL);
+                        LOG.log(Level.INFO, "verbose mode on\n");
                     } else {
                         String msg = "Argument \"" + nxtArg + "\":  illegal option or argument passed\n";
                         throw new WrongOrImproperArgumentException(msg);
@@ -273,6 +223,7 @@ public class MainArguments {
         }//while
         return loaded;
     }
+    private static final Logger LOG = Logger.getLogger(MainArguments.class.getName());
 
     @Override
     public String toString() {

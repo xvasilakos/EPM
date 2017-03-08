@@ -546,14 +546,14 @@ public class Scenario implements Comparable<Scenario> {
 
     private String removePathTags(boolean isPath, String toreturn) {
         if (isPath) {
-            if (toreturn.startsWith(MainArguments.Defaults.DEFAULT_PROPS_TAG)) {
-                toreturn = toreturn.replace(MainArguments.Defaults.DEFAULT_PROPS_TAG, MainArguments.Defaults.PROPERTIES_DIR_PATH);
-            } else if (toreturn.startsWith(MainArguments.Defaults.DEFAULT_FILES_TAG)) {
-                toreturn = toreturn.replace(MainArguments.Defaults.DEFAULT_FILES_TAG, MainArguments.Defaults.FILES_PATH);
-            } else if (toreturn.startsWith(MainArguments.Defaults.HOME_TAG)) {
-                toreturn = toreturn.replace(MainArguments.Defaults.HOME_TAG, MainArguments.Defaults.HOME);
+            if (toreturn.startsWith(MainArguments.Defaults.PROPS_PATH_TAG)) {
+                toreturn = toreturn.replace(MainArguments.Defaults.PROPS_PATH_TAG, MainArguments.Defaults.PROPERTIES_DIR_PATH);
+            } else if (toreturn.startsWith(MainArguments.Defaults.FILES_TAG)) {
+                toreturn = toreturn.replace(MainArguments.Defaults.FILES_TAG, MainArguments.Defaults.FILES_PATH);
+            } else if (toreturn.startsWith(MainArguments.Defaults.INSTALLATION_PATH_TAG)) {
+                toreturn = toreturn.replace(MainArguments.Defaults.INSTALLATION_PATH_TAG, MainArguments.Defaults.INSTALLATION_PATH);
             }
-        } else if (toreturn.startsWith(MainArguments.Defaults.DEFAULT_PROPS_TAG) || toreturn.startsWith(MainArguments.Defaults.DEFAULT_FILES_TAG) || toreturn.startsWith(MainArguments.Defaults.HOME_TAG)) {
+        } else if (toreturn.startsWith(MainArguments.Defaults.PROPS_PATH_TAG) || toreturn.startsWith(MainArguments.Defaults.FILES_TAG) || toreturn.startsWith(MainArguments.Defaults.INSTALLATION_PATH_TAG)) {
             throw new RuntimeException("xxx");
         }
         return toreturn;

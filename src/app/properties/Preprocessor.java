@@ -23,7 +23,6 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static logging.LoggersRegistry.PROPERTIES_LOGGER;
 import utilities.Couple;
 
 /**
@@ -68,7 +67,7 @@ public final class Preprocessor {
      * Performs the initial processing of a properties file. Calling this method
      * discards the result of a previous invocation.
      *
-     *  thePath the path to the properties file
+     * thePath the path to the properties file
      *
      * @return the default Preprocessor instance after performing the processing
      * of the properties file.
@@ -80,7 +79,7 @@ public final class Preprocessor {
         try {
             _singleton.loadNameValuesPairs(thePath);
         } catch (IOException ioex) {
-            PROPERTIES_LOGGER.log(Level.SEVERE, "\n", ioex);
+            LOG.log(Level.SEVERE, "\n", ioex);
             throw new CriticalFailureException(ioex);
         }
 
@@ -92,7 +91,7 @@ public final class Preprocessor {
             } catch (InconsistencyException ex) {
                 // impossible because this method initilizes the singleton..
             } finally {
-                PROPERTIES_LOGGER.log(Level.FINER, "The list of {0}  loaded\n\n{1}\n\n",
+                LOG.log(Level.FINER, "The list of {0}  loaded\n\n{1}\n\n",
                         new Object[]{
                             (customPathUsed ? "custom" : "default"),
                             new String(baos.toByteArray())
@@ -113,15 +112,41 @@ public final class Preprocessor {
      * ..} pairs are neglected. This applies also to pairs included from other
      * property files.
      *
-     *  inStream
+     * inStream
      *
-     *  IOException
+     * IOException
      */
     private void loadNameValuesPairs(String pth) throws IOException {
 
-        if (pth.startsWith(MainArguments.Defaults.DEFAULT_PROPS_TAG)) {
-            pth = pth.replace(MainArguments.Defaults.DEFAULT_PROPS_TAG,
+        if (pth.startsWith(MainArguments.Defaults.PROPS_PATH_TAG)) {
+            pth = pth.replace(MainArguments.Defaults.PROPS_PATH_TAG,
                     MainArguments.Defaults.PROPERTIES_DIR_PATH);
+        } else {
+            int sep = pth.lastIndexOf("/");
+            if (sep == -1) {
+                sep = pth.lastIndexOf("\\");
+            }
+
+            if (sep != -1) {
+                String flagstr = pth.substring(sep + 1);
+
+                if (flagstr.startsWith("--")) {
+                    flagstr = flagstr.substring(2).toUpperCase();
+                } else if (flagstr.startsWith("-")) {
+                    flagstr = flagstr.substring(1).toUpperCase();
+                }
+
+                if (MainArguments.Flag.isValidFlag(flagstr)) {
+                    MainArguments.Flag theFlag = MainArguments.Flag.valueOf(flagstr);
+                    if (theFlag == MainArguments.Flag.DEFAULT
+                            || theFlag == MainArguments.Flag.D) {
+                        pth = pth.replace(theFlag.toString(),
+                                MainArguments.Defaults.DEFAULT_PROPERTIES_MASTER__INI);
+                    }
+
+                }
+            }
+
         }
 
         File pFile = new File(pth);
@@ -129,7 +154,7 @@ public final class Preprocessor {
         FileInputStream inStream = new FileInputStream(pFile);
 
         String line;
-        int lineCounter=0;
+        int lineCounter = 0;
         BufferedReader readBf = new BufferedReader(new InputStreamReader(inStream));
         while ((line = readBf.readLine()) != null) {
             line = line.trim();
@@ -154,7 +179,7 @@ public final class Preprocessor {
                         File includedFile = null;
 
                         includedFile = new File(pfileParent, nxtPth.substring(2));
-                       
+
                         loadFromIncludedFile(includedFile);
                         continue;
                     }
@@ -167,8 +192,8 @@ public final class Preprocessor {
                         continue;
                     }
 
-                    if (nxtPth.startsWith(MainArguments.Defaults.DEFAULT_PROPS_TAG)) {
-                        nxtPth = nxtPth.replace(MainArguments.Defaults.DEFAULT_PROPS_TAG,
+                    if (nxtPth.startsWith(MainArguments.Defaults.PROPS_PATH_TAG)) {
+                        nxtPth = nxtPth.replace(MainArguments.Defaults.PROPS_PATH_TAG,
                                 MainArguments.Defaults.PROPERTIES_DIR_PATH);
                     }
 
@@ -185,8 +210,8 @@ public final class Preprocessor {
             }
             StringTokenizer tok = new StringTokenizer(line, "=");
             if (tok.countTokens() != 2) {
-                throw new InconsistencyException("Non valid entry: " + line 
-                        + "in line #" + lineCounter 
+                throw new InconsistencyException("Non valid entry: " + line
+                        + "in line #" + lineCounter
                         + "\n at path: " + pth);
             }
             String key = tok.nextToken().trim();
@@ -258,10 +283,11 @@ public final class Preprocessor {
     }
 
     /**
-     *  property
+     * property
+     *
      * @return the (possibly multiple) values for this property, coupled by
      * comments (optionally) following property values
-     *  InvalidOrUnsupportedException
+     * InvalidOrUnsupportedException
      */
     public Couple<List<String>, String> getValues(IProperty property)
             throws InvalidOrUnsupportedException, InconsistencyException {
@@ -269,10 +295,11 @@ public final class Preprocessor {
     }
 
     /**
-     *  propName
+     * propName
+     *
      * @return the (possibly multiple) values for this property name, coupled by
      * the optional comments following property values
-     *  InvalidOrUnsupportedException
+     * InvalidOrUnsupportedException
      */
     public Couple<List<String>, String> getValues(String propName)
             throws InvalidOrUnsupportedException {
@@ -301,22 +328,24 @@ public final class Preprocessor {
     }
 
     /**
-     *  statsProperty
+     * statsProperty
+     *
      * @return the first value if according to the current scenarios setups this
      * is a multiple values property, or if this is a list property. Note that
      * the value returned is in string format.
-     *  epc.femto.exceptions.InvalidOrUnsupportedException
+     * epc.femto.exceptions.InvalidOrUnsupportedException
      */
     public String getFirstValue(StatsProperty statsProperty) throws InvalidOrUnsupportedException {
         return getValues(statsProperty).getFirst().get(0);
     }
 
     /**
-     *  statsProperty
+     * statsProperty
+     *
      * @return the first value if according to the current scenarios setups this
      * is a multiple values property, or if this is a list property. Note that
      * the value returned is in string format.
-     *  epc.femto.exceptions.InvalidOrUnsupportedException
+     * epc.femto.exceptions.InvalidOrUnsupportedException
      */
     public String getFirstValue(String statsProperty) throws InvalidOrUnsupportedException {
         return getValues(statsProperty).getFirst().get(0);

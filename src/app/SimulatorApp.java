@@ -97,11 +97,12 @@ public final class SimulatorApp {
 
         //<editor-fold defaultstate="collapsed" desc="defaultPreprocessor properties">
         try {
-            String path = new File(_mainArgs.getPropertiesPath()).getCanonicalPath();
+            String propertiesPath = _mainArgs.getPropertiesPath();
+            String path = new File(propertiesPath).getAbsolutePath();
             LOG.log(Level.INFO, "Parsing properties file from path \"{0}\"\n", path);
             _preprocessedProps = Preprocessor.process(path);
             LOG.log(Level.INFO, "Simulation properties file parsed successfully from path \"{0}\"\n", path);
-        } catch (CriticalFailureException | IOException ex) {
+        } catch (CriticalFailureException ex) {
             exitByFail("Loading properties failed: " + ex.getMessage(), ex, -20);
         }
         //</editor-fold>

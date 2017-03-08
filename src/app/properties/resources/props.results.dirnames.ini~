@@ -1,6 +1,0 @@
-space.sc.buffer.size
-space.mu.dmd.trace.override_size
-space.sc.connection_policy
-space.sc.num
-space.mu.dmd.trace.override_size=ovrdsz
-space.mu.dmd.trace.requests_per_user=rpu
