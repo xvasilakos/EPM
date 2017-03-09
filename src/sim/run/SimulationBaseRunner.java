@@ -32,7 +32,6 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import static java.util.logging.Level.INFO;
 import java.util.logging.Logger;
-import javafx.beans.property.DoubleProperty;
 import sim.content.Chunk;
 import sim.space.Area;
 import sim.content.request.DocumentRequest;
@@ -51,7 +50,6 @@ import traces.dmdtrace.TraceLoader;
 import traces.dmdtrace.TraceWorkloadRecord;
 import utilities.Couple;
 import utils.CommonFunctions;
-import utils.DebugTool;
 import utils.random.RandomGeneratorWrapper;
 
 /**
@@ -66,7 +64,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     protected static int _idGen = 0;
     protected final int _id = ++_idGen;
-    protected final Logger _logger = CommonFunctions.getLoggerFor(this);
+    protected final Logger LOG = CommonFunctions.getLoggerFor(this);
 
     protected static final Object CONCURRENT_LOCK = new Object();
 
@@ -451,7 +449,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     }
 
     protected void preLoad(Collection<SmallCell> scs, AbstractCachingPolicy nxtPolicy) throws CriticalFailureException {
-        _logger.log(INFO, "Preloading top most popular items for policy {0}", nxtPolicy.toString());
+        LOG.log(INFO, "Preloading top most popular items for policy {0}", nxtPolicy.toString());
         int count = 0;
         int num = scs.size();
 
@@ -467,7 +465,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             }
 
             if (++count % 100 == 0) {
-                _logger.log(INFO, "Preloading.. {0}% completed.", Math.round(10000.0 * count / num) / 100.0);
+                LOG.log(INFO, "Preloading.. {0}% completed.", Math.round(10000.0 * count / num) / 100.0);
             }
         }
     }
@@ -499,7 +497,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         synchronized (CONCURRENT_LOCK) {
             runningSimulations--;
 
-            _logger
+            LOG
                     .log(Level.INFO, "Simulation Thread {0} Ended! Currently running: {1}/{2}",
                             new Object[]{getID(), runningSimulations,
                                 SimulatorApp.getMainArgs().getMaxConcurrentWorkers()
@@ -752,10 +750,10 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
         try {
             CellRegistry reg = new CellRegistry(this, groupsRegistry, mc, area);
-            _logger.log(Level.INFO, "Cell registry initialized.\n");
+            LOG.log(Level.INFO, "Cell registry initialized.\n");
             return reg;
         } catch (InvalidOrUnsupportedException ex) {
-            _logger.log(Level.SEVERE, ex.getMessage(), ex);
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
             throw new CriticalFailureException(ex);
         }
     }
@@ -992,7 +990,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         System.gc();
 
         try {
-            _logger.log(
+            LOG.log(
                     Level.INFO,
                     "Printing results for simulation {0}.",
                     new Object[]{Thread.currentThread().getName()}
@@ -1000,7 +998,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             getStatsHandle().prntAggregates();
             getStatsHandle().appendTransient(true);
         } catch (StatisticException ex) {
-            _logger.log(Level.SEVERE, "Unsuccessful effort to print results.", ex);
+            LOG.log(Level.SEVERE, "Unsuccessful effort to print results.", ex);
         }
         decreaseRunningSimulations();
     }

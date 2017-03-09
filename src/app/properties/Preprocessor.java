@@ -77,6 +77,9 @@ public final class Preprocessor {
         USER_PASSED_PROPS_PATH = thePath;
         boolean customPathUsed = true;
         try {
+            if (MainArguments.containsSomeTag(thePath)) {
+                thePath = MainArguments.replaceaLLTags(thePath);
+            }
             _singleton.loadNameValuesPairs(thePath);
         } catch (IOException ioex) {
             LOG.log(Level.SEVERE, "\n", ioex);
@@ -118,40 +121,36 @@ public final class Preprocessor {
      */
     private void loadNameValuesPairs(String pth) throws IOException {
 
-        if (pth.startsWith(MainArguments.Defaults.PROPS_PATH_TAG)) {
-            pth = pth.replace(MainArguments.Defaults.PROPS_PATH_TAG,
-                    MainArguments.Defaults.PROPERTIES_DIR_PATH);
-        } else {
-            int sep = pth.lastIndexOf("/");
-            if (sep == -1) {
-                sep = pth.lastIndexOf("\\");
-            }
-
-            if (sep != -1) {
-                String flagstr = pth.substring(sep + 1);
-
-                if (flagstr.startsWith("--")) {
-                    flagstr = flagstr.substring(2).toUpperCase();
-                } else if (flagstr.startsWith("-")) {
-                    flagstr = flagstr.substring(1).toUpperCase();
-                }
-
-                if (MainArguments.Flag.isValidFlag(flagstr)) {
-                    MainArguments.Flag theFlag = MainArguments.Flag.valueOf(flagstr);
-                    if (theFlag == MainArguments.Flag.DEFAULT
-                            || theFlag == MainArguments.Flag.D) {
-                        pth = pth.replace(theFlag.toString(),
-                                MainArguments.Defaults.DEFAULT_PROPERTIES_MASTER__INI);
-                    }
-
-                }
-            }
-
+        int sep = pth.lastIndexOf("/");
+        if (sep == -1) {
+            sep = pth.lastIndexOf("\\");
         }
+
+        // case of flags: -d or --default
+        if (sep != -1) {
+            String flagstr = pth.substring(sep + 1);
+
+            if (flagstr.startsWith("--")) {
+                flagstr = flagstr.substring(2).toUpperCase();
+            } else if (flagstr.startsWith("-")) {
+                flagstr = flagstr.substring(1).toUpperCase();
+            }
+
+            if (MainArguments.Flag.isValidFlag(flagstr)) {
+                MainArguments.Flag theFlag = MainArguments.Flag.valueOf(flagstr);
+                if (theFlag == MainArguments.Flag.DEFAULT
+                        || theFlag == MainArguments.Flag.D) {
+                    pth = pth.replace(theFlag.toString(),
+                            MainArguments.Defaults.DEFAULT_PROPERTIES_MASTER__INI);
+                }
+
+            }
+        }
+
 
         File pFile = new File(pth);
 
-        FileInputStream inStream = new FileInputStream(pFile);
+        FileInputStream inStream = new FileInputStream(pth);
 
         String line;
         int lineCounter = 0;
@@ -173,7 +172,12 @@ public final class Preprocessor {
                 while (tok.hasMoreTokens()) {
                     String nxtPth = tok.nextToken().trim();
 
+                    if (MainArguments.containsSomeTag(nxtPth)) {
+                        nxtPth = MainArguments.replaceaLLTags(nxtPth);
+                    }
+
                     if (nxtPth.startsWith("./")) {
+
                         File pfileParent = pFile.getParentFile();
 //                        nxtPth = pfileParent.getAbsolutePath() + "/" + nxtPth.substring(2);
                         File includedFile = null;
@@ -190,11 +194,6 @@ public final class Preprocessor {
                         File includedFile = new File(pfileGParent, nxtPth.substring(2));
                         loadFromIncludedFile(includedFile);
                         continue;
-                    }
-
-                    if (nxtPth.startsWith(MainArguments.Defaults.PROPS_PATH_TAG)) {
-                        nxtPth = nxtPth.replace(MainArguments.Defaults.PROPS_PATH_TAG,
-                                MainArguments.Defaults.PROPERTIES_DIR_PATH);
                     }
 
                     File includedFile = new File(nxtPth);

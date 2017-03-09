@@ -76,7 +76,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
 
             //</editor-fold>
             //<editor-fold defaultstate="collapsed" desc="report/log progress">
-            _logger.log(Level.INFO, "Initializing MUs on the area:\n\t{0}/{1}", new Object[]{0, musNum});
+            LOG.log(Level.INFO, "Initializing MUs on the area:\n\t{0}/{1}", new Object[]{0, musNum});
             int count = 0;
             int printPer = (int) (musNum * percentage);
             printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
@@ -115,7 +115,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
 
                 //<editor-fold defaultstate="collapsed" desc="report/log progress">
                 if (++count % printPer == 0) {
-                    _logger.log(Level.INFO, "\tMobiles prepared:{0}%", Math.round(100.0 * count / musNum) / 100);
+                    LOG.log(Level.INFO, "\tMobiles prepared:{0}%", Math.round(100.0 * count / musNum) / 100);
                 }
                 //</editor-fold> 
             }//for every MU__CLASS in group
@@ -241,14 +241,14 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
             }// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
-            _logger.log(
+            LOG.log(
                     Level.INFO, "Simulation {0} ended: {1}",
                     new Object[]{
                         Thread.currentThread().getName(),
                         simEndEx.getMessage()
                     });
         } catch (Throwable ex) {
-            _logger.log(Level.SEVERE, "Simulation " + getID()
+            LOG.log(Level.SEVERE, "Simulation " + getID()
                     + " terminates unsuccessfully at time " + simTime(),
                     new CriticalFailureException(ex));
         } finally {

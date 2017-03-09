@@ -36,7 +36,6 @@ import sim.space.users.mobile.TraceMU;
 import sim.space.users.mobile.TraceMUBuilder;
 import statistics.StatisticException;
 import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
-import utils.DebugTool;
 
 /**
  *
@@ -45,7 +44,8 @@ import utils.DebugTool;
 public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
 
     private Scanner _muTraceIn;
-    private String _mubinLine;
+    private String mobTrcLine;
+    private String mobTrcCSVSep = " ";// default set to " "
 
     private Map<Integer, TraceMU> _muByID;
     /**
@@ -66,7 +66,14 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
         String mutracePath = scenario.stringProperty(Space.MU__TRACE, true);
         try {
             _muTraceIn = new Scanner(new FileReader(mutracePath));
-            _mubinLine = _muTraceIn.nextLine();
+            mobTrcLine = _muTraceIn.nextLine();// init line
+            while (mobTrcLine.startsWith("#")) {
+                if (mobTrcLine.startsWith("#sep=")) {
+                    mobTrcCSVSep = mobTrcLine.substring(5);
+                    LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
+                }
+                mobTrcLine = _muTraceIn.nextLine();// init line
+            }
         } catch (IOException ioe) {
             throw new CriticalFailureException(ioe);
         }
@@ -79,14 +86,14 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
 
         String trcEndStr = "The mobility trace has ended.";
 
-        while (_mubinLine != null) {
-            String[] csv = _mubinLine.split(",");
+        while (mobTrcLine != null) {
+            String[] csv = mobTrcLine.split(",");
             if (csv[0].startsWith("#")) {
                 if (!_muTraceIn.hasNextLine()) {
                     _muTraceIn.close();
                     throw new TraceEndedException(trcEndStr);
                 }
-                _mubinLine = _muTraceIn.nextLine();
+                mobTrcLine = _muTraceIn.nextLine();
                 continue;
             }
             if (Integer.parseInt(csv[0]) > simTime) {
@@ -103,7 +110,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
                 _muTraceIn.close();
                 throw new TraceEndedException(trcEndStr);
             }
-            _mubinLine = _muTraceIn.nextLine();
+            mobTrcLine = _muTraceIn.nextLine();
         }
 
         if (getStatsHandle() != null) {
@@ -282,7 +289,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
             }
         }
 
-        _logger.info(cloneMobsFactor + " clones per original mobile added.");
+        LOG.info(cloneMobsFactor + " clones per original mobile added.");
     }
 
     private List<Integer> cloneIDs(int cloneMobsFactor, int totalMUsNum, int originalID) {
@@ -322,7 +329,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
                 break;
             }
 
-            _logger.log(Level.INFO,
+            LOG.log(Level.INFO,
                     "Initializing MUs on the area:\n\t{0}/{1}", new Object[]{0, musNum});
             int count = 0;
             int printPer = (int) (musNum * percentage);
@@ -340,7 +347,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
 
 //<editor-fold defaultstate="collapsed" desc="report/log progress">
                 if (++count % 100 == 0 || count % printPer == 0) {
-                    _logger.log(Level.INFO, "\tMobiles prepared: {0} "
+                    LOG.log(Level.INFO, "\tMobiles prepared: {0} "
                             + "out of {1}, i.e: {2}%",
                             new Object[]{
                                 count, musNum,
@@ -406,11 +413,11 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
                 }
             }
         } catch (IOException ex) {
-//            _logger.log(Level.SEVERE, null, ex);
+//            LOG.log(Level.SEVERE, null, ex);
             throw new CriticalFailureException(ex);
         }
 
-        _logger.log(Level.INFO,
+        LOG.log(Level.INFO,
                 "Initializing MUs on the area:\n\t{0}/{1}", new Object[]{0, musNum});
 
         int count = 0;
@@ -423,7 +430,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
 
 //<editor-fold defaultstate="collapsed" desc="report/log progress">
             if (++count % 100 == 0 || count % printPer == 0) {
-                _logger.log(Level.INFO, "\tMobiles prepared: {0} "
+                LOG.log(Level.INFO, "\tMobiles prepared: {0} "
                         + "out of {1}, i.e: {2}%",
                         new Object[]{
                             count, musNum,
@@ -602,17 +609,17 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
             }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
-            _logger.log(Level.INFO, "Simulation {0} ended: {1}",
+            LOG.log(Level.INFO, "Simulation {0} ended: {1}",
                     new Object[]{
                         Thread.currentThread().getName(),
                         simEndEx.getMessage()
                     });
         } catch (StatisticException ex) {
-            _logger.log(Level.SEVERE, "Simulation " + getID()
+            LOG.log(Level.SEVERE, "Simulation " + getID()
                     + " terminates unsuccessfully at time " + simTime(),
                     new CriticalFailureException(ex));
         } catch (Throwable ex) {
-            _logger.log(Level.SEVERE, "Simulation " + getID()
+            LOG.log(Level.SEVERE, "Simulation " + getID()
                     + " terminates unsuccessfully at time " + simTime(),
                     new CriticalFailureException(ex));
         } finally {

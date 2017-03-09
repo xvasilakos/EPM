@@ -16,11 +16,58 @@ import java.util.logging.Logger;
  */
 public class MainArguments {
 
+    public static String replaceaLLTags(String str) {
+
+        String ret = str.
+                replaceAll(
+                        MainArguments.Defaults.INSTALLATION_PATH_TAG,
+                        MainArguments.Defaults.INSTALLATION_PATH
+                ).replaceAll(
+                        MainArguments.Defaults.FILES_TAG,
+                        MainArguments.Defaults.FILES_PATH
+                ).replaceAll(
+                        MainArguments.Defaults.SIMCORE_TAG,
+                        MainArguments.Defaults.CORE_FILES_PATH
+                ).replaceAll(MainArguments.Defaults.PROPS_PATH_TAG,
+                        MainArguments.Defaults.PROPS_PATH
+                ).replaceAll(MainArguments.Defaults.PROPS_MASTER__INI_TAG,
+                        MainArguments.Defaults.DEFAULT_PROPS_MASTER__INI_PATH
+                );
+
+      
+        return ret;
+    }
+
+    public static boolean containsSomeTag(String str) {
+        return str.contains((CharSequence) Defaults.INSTALLATION_PATH_TAG)
+                || str.contains((CharSequence) Defaults.FILES_TAG)
+                || str.contains((CharSequence) Defaults.SIMCORE_TAG)
+                || str.contains((CharSequence) Defaults.PROPS_PATH_TAG)
+                || str.contains((CharSequence) Defaults.PROPS_MASTER__INI_TAG);
+    }
+
     public static class Defaults {
 
+        public static final String SYSTEM_SEP = System.getProperty("file.separator");
+
         public static final String INSTALLATION_PATH_TAG = "<INSTALLATION_PATH>";
-        public static final String INSTALLATION_PATH = System.getProperty("user.home")
-                + "/Dropbox/EPC/trunk";
+        public static String INSTALLATION_PATH;
+
+        static {
+            
+            
+//        WRONG--> path = path.replaceAll("\\", "/");
+//        This will fail during execution giving you a PatternSyntaxException, 
+//        because the fisr String is a regular expression 
+//        So, writing it as a RegEx, as @jlordo gave in his answer:
+//        path = path.replaceAll("\\\\", "/");
+            
+            if (SYSTEM_SEP.equals("\\")) {
+                INSTALLATION_PATH = System.getProperty("user.home")
+                        .replaceAll("\\\\", "/")
+                        + "/Dropbox/EPC/trunk";
+            }
+        }
 
         public static final String FILES_TAG = "<files>";
         public static final String FILES_PATH = INSTALLATION_PATH + "/files";
@@ -28,8 +75,11 @@ public class MainArguments {
         public static final String SIMCORE_TAG = "<simcore>";
         public static final String CORE_FILES_PATH = FILES_PATH + "/sim/core";
 
-        public static final String PROPS_PATH_TAG = "<defaultprops>";
-        public static final String PROPERTIES_DIR_PATH = INSTALLATION_PATH + "/files/sim/core/default_properties";
+        public static final String PROPS_PATH_TAG = "<DEFAULT_PROPS>";
+        public static final String PROPS_PATH = INSTALLATION_PATH + "/files/sim/core/default_properties";
+
+        public static final String PROPS_MASTER__INI_TAG = "<DEFAULT_PROPS_MASTER__INI>";
+        public static final String DEFAULT_PROPS_MASTER__INI_PATH = INSTALLATION_PATH + "/files/sim/core/default_properties/master.ini";
 
         private Defaults() {// do not instanciate
         }
@@ -38,7 +88,7 @@ public class MainArguments {
                 = "/" + MainArguments.class.getPackage().toString().substring(8).trim().replace('.', '/')
                 + "/default_arg_values.ini";
 
-        public static final String DEFAULT_PROPERTIES_MASTER__INI = PROPERTIES_DIR_PATH + "/master.ini";
+        public static final String DEFAULT_PROPERTIES_MASTER__INI = DEFAULT_PROPS_MASTER__INI_PATH + "/master.ini";
 
         private static Properties loadFromProperties() {
             Properties loadedProps = new Properties();
@@ -177,7 +227,7 @@ public class MainArguments {
                 //<editor-fold defaultstate="collapsed" desc="handle properties input path">
                 if (i < args.length) {
                     if (args[i].startsWith(Defaults.PROPS_PATH_TAG)) {
-                        loaded.propertiesPath = Defaults.PROPERTIES_DIR_PATH
+                        loaded.propertiesPath = Defaults.DEFAULT_PROPS_MASTER__INI_PATH
                                 + args[i].substring(
                                         Defaults.PROPS_PATH_TAG.length()
                                 );

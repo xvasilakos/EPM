@@ -81,7 +81,6 @@ public class CachedTraceDocuments {
             documents = new HashMap<>(440);
             documents.put(theID, theDoc);
 //            StatsHandling statsHandle = sm.getSim().getStatsHandle();
-//xxx            statsHandle.updtSCCmpt6(-1, "MEMSAVED");
             _documentsPerTrcFile.put(f, documents);
         }
     }
@@ -97,23 +96,11 @@ public class CachedTraceDocuments {
     public synchronized Map<Long, ContentDocument> getDocumentsOfTrace(File f, ISimulationMember sm) {
         Map<Long, ContentDocument> docs = _documentsPerTrcFile.get(f);
         if (docs != null) {
-//xxx            sm.getSim().getStatsHandle().updtSCCmpt6(1/*one because the stat presents a percentage*/, "MEMSAVED");
             _logger.log(Level.INFO,
                     "Loaded {0} cross-sim cached content documents from file {1}",
                     new Object[]{docs.size(), f.getAbsolutePath()});
 
-            //xxx
-//            DebugTool.appendLn("\n***Simulation " + sm.simID() + " reloaded "
-//                    + docs.size() 
-//                    + " with signature: " + docs.hashCode()
-//                    + " cross-sim cached content documents from file " + f.getAbsolutePath()
-//            
-//                    + "\n\t _overrideSizes=" + _documentsMeta.get(f).get(0)
-//                    + "\n\t _totalReqNum=" + _documentsMeta.get(f).get(1)
-//                    + "\n\t _maxItemSize=" + _documentsMeta.get(f).get(2)
-//                    + "\n\t _sumSize=" + _documentsMeta.get(f).get(3)
-//                    + "\n\t _minItemSize=" + _documentsMeta.get(f).get(4)
-//            );
+
             
         }
         return docs;

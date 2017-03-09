@@ -94,8 +94,7 @@ public final class SimulatorApp {
 
         //<editor-fold defaultstate="collapsed" desc="defaultPreprocessor properties">
         try {
-            String propertiesPath = _mainArgs.getPropertiesPath();
-            String path = new File(propertiesPath).getAbsolutePath();
+            String path = _mainArgs.getPropertiesPath();
             LOG.log(Level.INFO, "Parsing properties file from path \"{0}\"\n", path);
             _preprocessedProps = Preprocessor.process(path);
             LOG.log(Level.INFO, "Simulation properties file parsed successfully from path \"{0}\"\n", path);
