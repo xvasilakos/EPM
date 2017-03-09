@@ -62,7 +62,7 @@ public final class Registry {
    public static void loadPropTypesMap(String path) {
 
       Properties props = new Properties();
-      LOG.log(Level.INFO, "Loading from {0}.", path);
+      Logger.getLogger(Registry.class.getName()).log(Level.INFO, "Loading from {0}.", path);
       InputStream in = Preprocessor.class.getResourceAsStream(path);
 
       try {
@@ -72,7 +72,7 @@ public final class Registry {
          props.load(in);
       } catch (IOException ioex) {
          String uponIOEX_msg = "Failed to load default properties file: " + path + "\n";
-         LOG.log(Level.SEVERE, uponIOEX_msg, ioex);
+         Logger.getLogger(Registry.class.getName()).log(Level.SEVERE, uponIOEX_msg, ioex);
          System.exit(-1000);
       }
 
@@ -83,11 +83,11 @@ public final class Registry {
          PROPERTIES_TO_TYPES_MAP.put(nxtKey, type);
       }
    }
-    private static final Logger LOG = Logger.getLogger(Registry.class.getName());
+   
     public static void loadPropsAbbrevationsMap(String path) {
 
         Properties props = new Properties();
-        LOG.log(Level.INFO, "Loading from {0}.", path);
+        Logger.getLogger(Registry.class.getName()).log(Level.INFO, "Loading from {0}.", path);
         InputStream in = Preprocessor.class.getResourceAsStream(path);
 
         try {
@@ -97,7 +97,7 @@ public final class Registry {
             props.load(in);
         } catch (IOException ioex) {
             String uponIOEX_msg = "Failed to load default properties file: " + path + "\n";
-            LOG.log(Level.SEVERE, uponIOEX_msg, ioex);
+            Logger.getLogger(Registry.class.getName()).log(Level.SEVERE, uponIOEX_msg, ioex);
             System.exit(-1000);
         }
 
@@ -112,7 +112,7 @@ public final class Registry {
    public static void loadProps4ResultFiles(String path) {
 
       Properties props = new Properties();
-      LOG.log(Level.INFO, "Loading from {0}.", path);
+      Logger.getLogger(Registry.class.getName()).log(Level.INFO, "Loading from {0}.", path);
       InputStream in = Preprocessor.class.getResourceAsStream(path);
 
       try {
@@ -122,7 +122,7 @@ public final class Registry {
          props.load(in);
       } catch (IOException ioex) {
          String uponIOEX_msg = "Failed to load default properties file: " + path + "\n";
-         LOG.log(Level.SEVERE, uponIOEX_msg, ioex);
+         Logger.getLogger(Registry.class.getName()).log(Level.SEVERE, uponIOEX_msg, ioex);
          System.exit(-1000);
       }
 
@@ -136,7 +136,7 @@ public final class Registry {
    public static void loadProps4ResultDirectories(String path) {
 
       Properties props = new Properties();
-      LOG.log(Level.INFO, "Loading from {0}.", path);
+      Logger.getLogger(Registry.class.getName()).log(Level.INFO, "Loading from {0}.", path);
       InputStream in = Preprocessor.class.getResourceAsStream(path);
 
       try {
@@ -146,7 +146,7 @@ public final class Registry {
          props.load(in);
       } catch (IOException ioex) {
          String uponIOEX_msg = "Failed to load default properties file: " + path + "\n";
-         LOG.log(Level.SEVERE, uponIOEX_msg, ioex);
+         Logger.getLogger(Registry.class.getName()).log(Level.SEVERE, uponIOEX_msg, ioex);
          System.exit(-1000);
       }
 
