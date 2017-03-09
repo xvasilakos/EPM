@@ -77,9 +77,8 @@ public final class Preprocessor {
         USER_PASSED_PROPS_PATH = thePath;
         boolean customPathUsed = true;
         try {
-            if (MainArguments.containsSomeTag(thePath)) {
-                thePath = MainArguments.replaceaLLTags(thePath);
-            }
+            thePath = MainArguments.replaceAllTags(thePath);
+            
             _singleton.loadNameValuesPairs(thePath);
         } catch (IOException ioex) {
             LOG.log(Level.SEVERE, "\n", ioex);
@@ -172,10 +171,8 @@ public final class Preprocessor {
                 while (tok.hasMoreTokens()) {
                     String nxtPth = tok.nextToken().trim();
 
-                    if (MainArguments.containsSomeTag(nxtPth)) {
-                        nxtPth = MainArguments.replaceaLLTags(nxtPth);
-                    }
-
+                    nxtPth = MainArguments.replaceAllTags(nxtPth);
+                    
                     if (nxtPth.startsWith("./")) {
 
                         File pfileParent = pFile.getParentFile();

@@ -83,18 +83,17 @@ public final class SimulatorApp {
 
         Logger.getGlobal().setLevel(Level.INFO);
 
-        //<editor-fold defaultstate="collapsed" desc="parse getMainArgs">
         try {
             _mainArgs = MainArguments.load(args);
         } catch (WrongOrImproperArgumentException ex) {
             exitByFail("Failed to load arguments propertly..\n", ex, -10);
         }
-        LOG.log(Level.INFO, " Arguments parsed successfully\n");
-        //</editor-fold>
+        
 
         //<editor-fold defaultstate="collapsed" desc="defaultPreprocessor properties">
         try {
             String path = _mainArgs.getPropertiesPath();
+            
             LOG.log(Level.INFO, "Parsing properties file from path \"{0}\"\n", path);
             _preprocessedProps = Preprocessor.process(path);
             LOG.log(Level.INFO, "Simulation properties file parsed successfully from path \"{0}\"\n", path);

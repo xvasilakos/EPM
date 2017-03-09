@@ -68,7 +68,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
             _muTraceIn = new Scanner(new FileReader(mutracePath));
             mobTrcLine = _muTraceIn.nextLine();// init line
             while (mobTrcLine.startsWith("#")) {
-                if (mobTrcLine.startsWith("#sep=")) {
+                if (mobTrcLine.toUpperCase().startsWith("#SEP=")) {
                     mobTrcCSVSep = mobTrcLine.substring(5);
                     LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
                 }
@@ -87,7 +87,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
         String trcEndStr = "The mobility trace has ended.";
 
         while (mobTrcLine != null) {
-            String[] csv = mobTrcLine.split(",");
+            String[] csv = mobTrcLine.split(mobTrcCSVSep);
             if (csv[0].startsWith("#")) {
                 if (!_muTraceIn.hasNextLine()) {
                     _muTraceIn.close();
@@ -96,10 +96,8 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
                 mobTrcLine = _muTraceIn.nextLine();
                 continue;
             }
-            if (Integer.parseInt(csv[0]) > simTime) {
-                break;
-            }
-
+            
+            int parseInt = Integer.parseInt(csv[0]);
             int parsedMUID = Integer.parseInt(csv[1]);
             double dxdt = Math.ceil(Double.parseDouble(csv[2]));
             double dydt = Math.ceil(Double.parseDouble(csv[3]));
@@ -310,16 +308,22 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
             String mobTransDecisions, List<TraceMU> musLst)
             throws CriticalFailureException, InconsistencyException, NumberFormatException {
 
-        String lineCSV;
+        String lineCSV, sep = " ";
         try (BufferedReader metaIn = new BufferedReader(new FileReader(metaDataPath))) {
             int musNum = -1;
 
             while ((lineCSV = metaIn.readLine()) != null) {
 
-                if (lineCSV.toUpperCase().startsWith("#NUM")) {
-                    String[] csv = lineCSV.split(",");
+                if (lineCSV.toUpperCase().startsWith("#NUM=")) {
+                    String[] csv = lineCSV.split("=");
                     musNum = Integer.parseInt(csv[1]);
                     continue;
+                }
+
+                if (lineCSV.toUpperCase().startsWith("#SEP=")) {
+                    sep = mobTrcLine.substring(5);
+                    LOG.log(Level.INFO, "Metadata file for the mobility trace \"{0}\" uses separator=\"{1}\"",
+                            new Object[]{metaDataPath, mobTrcCSVSep});
                 }
 
                 if (lineCSV.startsWith("#")) {
@@ -337,7 +341,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
 
             do {
 
-                String[] csv = lineCSV.split(",");
+                String[] csv = lineCSV.split(sep);
 
                 int nxtMuID = Integer.parseInt(csv[0]);
 //ignore these, zero init velocities for all mobiles                double avgdxdt = Double.parseDouble(csv[4]);
@@ -394,6 +398,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
 
         String mutracePath = scenario.stringProperty(Space.MU__TRACE, true);
         String lineCSV;
+        String sep = " ";
 
         int musNum = 0;
         SortedSet<Integer> ids = new TreeSet<>();
@@ -401,11 +406,17 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
 
             while ((lineCSV = bin.readLine()) != null) {
 
+                if (lineCSV.toUpperCase().startsWith("#SEP=")) {
+                    sep = mobTrcLine.substring(5);
+                    LOG.log(Level.INFO, "Mobility trace \"{0}\" uses separator=\"{1}\"",
+                            new Object[]{mutracePath, mobTrcCSVSep});
+                }
+
                 if (lineCSV.startsWith("#")) {
                     continue;
                 }
 
-                String[] csv = lineCSV.split(",");
+                String[] csv = lineCSV.split(sep);
                 int nxtMuID = Integer.parseInt(csv[1]);
 
                 if (ids.add(nxtMuID)) {

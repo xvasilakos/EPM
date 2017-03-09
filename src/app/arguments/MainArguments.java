@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  */
 public class MainArguments {
 
-    public static String replaceaLLTags(String str) {
+    public static String replaceAllTags(String str) {
 
         String ret = str.
                 replaceAll(
@@ -233,7 +233,7 @@ public class MainArguments {
                                 );
                         i++;
                     } else {
-                        loaded.propertiesPath = args[i++];
+                        loaded.propertiesPath = MainArguments.replaceAllTags(args[i++]);
                     }
                 } else {
                     String msg = "Argument \"" + nxtArg + "\" requires a path to a file";
