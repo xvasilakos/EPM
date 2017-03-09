@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.logging.Level;
-import logging.LoggersRegistry;
 import utils.ISynopsisString;
 import sim.space.cell.AbstractCell;
 import sim.space.cell.MacroCell;

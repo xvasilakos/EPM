@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
-import static logging.LoggersRegistry.CONSOLE_LOGGER;
+import java.util.logging.Logger;
 import utilities.Couple;
 
 /**
@@ -66,7 +66,7 @@ public final class ScenariosFactory {
             throws CriticalFailureException {
         synchronized (concurentAccessLock) {
             if (initialized) {
-                CONSOLE_LOGGER.log(Level.WARNING,
+                LOG.log(Level.WARNING,
                         "{0}.init() invoked but ignored because {0} is already intilized.\n",
                         ScenariosFactory.class.getCanonicalName()
                 );
@@ -115,6 +115,7 @@ public final class ScenariosFactory {
             return (initialized = true);
         }
     }
+    private static final Logger LOG = Logger.getLogger(ScenariosFactory.class.getName());
 
     /**
      * Thread-safe

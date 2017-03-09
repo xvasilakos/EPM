@@ -3,7 +3,6 @@ package app;
 import app.arguments.MainArguments;
 import app.properties.Preprocessor;
 import exceptions.CriticalFailureException;
-import exceptions.InvalidOrUnsupportedException;
 import exceptions.NotIntiliazedException;
 import exceptions.WrongOrImproperArgumentException;
 import java.io.BufferedReader;
@@ -19,8 +18,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jdk.nashorn.internal.objects.NativeDebug;
-import static logging.LoggersRegistry.CONSOLE_LOGGER;
 import sim.Scenario;
 import sim.ScenariosFactory;
 import sim.run.SimulationBaseRunner;
@@ -107,13 +104,7 @@ public final class SimulatorApp {
         }
         //</editor-fold>
 
-        //<editor-fold defaultstate="collapsed" desc="reset global loggers after properties">
-        try {
-            logging.LoggersRegistry.resetGlobalLoggers(_preprocessedProps);
-        } catch (InvalidOrUnsupportedException ex) {
-            exitByFail("Failed to reset global loggers ..\n", ex, -25);
-        }
-        //</editor-fold>
+        
 
         //<editor-fold defaultstate="collapsed" desc="init ScenariosFactory">
         try {
@@ -163,7 +154,7 @@ public final class SimulatorApp {
         }
         //</editor-fold>
 
-        CONSOLE_LOGGER.exiting(SimulatorApp.class.getCanonicalName(), "main");
+        LOG.exiting(SimulatorApp.class.getCanonicalName(), "main");
     }
 
     public static String getStatsDirPath() {

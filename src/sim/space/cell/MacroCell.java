@@ -1,7 +1,7 @@
 package sim.space.cell;
 
 import java.util.logging.Level;
-import static logging.LoggersRegistry.CONSOLE_LOGGER;
+import java.util.logging.Logger;
 import sim.run.SimulationBaseRunner;
 import sim.space.Area;
 import sim.space.Point;
@@ -49,7 +49,7 @@ public class MacroCell extends AbstractCell {
         macrocell = new MacroCell(sim, center.getY(), center.getX(), radius, area);
         macrocell.addInCoveredArea(area);
 
-        CONSOLE_LOGGER.log(Level.FINER, "{0}: Created macrocell covering all area {1}\n",
+        LOG.log(Level.FINER, "{0}: Created macrocell covering all area {1}\n",
                 new Object[]{
                     sim.simTime(),
                     area.toSynopsisString()
@@ -57,6 +57,7 @@ public class MacroCell extends AbstractCell {
 
         return macrocell;
     }
+    private static final Logger LOG = Logger.getLogger(MacroCell.class.getName());
 
     private void addInCoveredArea(Area area) {
         _coveredAreaPoints.addAll(area.getPoints());
