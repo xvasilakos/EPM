@@ -41,7 +41,7 @@ import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
+public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
     private Scanner _muTraceIn;
     private String mobTrcLine;
@@ -57,7 +57,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
     private int _cloneMobsFactor;
     private double _muAvgVelocity;
 
-    public TraceMUSimulation(Scenario s) {
+    public TraceKolnSimulation(Scenario s) {
         super(s);
     }
 
@@ -97,7 +97,7 @@ public final class TraceMUSimulation extends SimulationBaseRunner<TraceMU> {
                 continue;
             }
             
-            int parseInt = Integer.parseInt(csv[0]);
+            int time = Integer.parseInt(csv[0]);
             int parsedMUID = Integer.parseInt(csv[1]);
             double dxdt = Math.ceil(Double.parseDouble(csv[2]));
             double dydt = Math.ceil(Double.parseDouble(csv[3]));

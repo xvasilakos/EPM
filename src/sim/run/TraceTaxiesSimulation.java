@@ -97,7 +97,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 continue;
             }
             
-            int parseInt = Integer.parseInt(csv[0]);
+            int time = Integer.parseInt(csv[0]);
             int parsedMUID = Integer.parseInt(csv[1]);
             double dxdt = Math.ceil(Double.parseDouble(csv[2]));
             double dydt = Math.ceil(Double.parseDouble(csv[3]));
