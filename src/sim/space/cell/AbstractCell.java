@@ -372,17 +372,17 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
 
     @Override
     public final int simID() {
-        return getSim().getID();
+        return getSimulation().getID();
     }
 
     @Override
-    public final SimulationBaseRunner getSim() {
+    public final SimulationBaseRunner getSimulation() {
         return _sim;
     }
 
     @Override
     public final int simTime() {
-        return getSim().simTime();
+        return getSimulation().simTime();
     }
 
     @Override
@@ -392,7 +392,7 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
 
     @Override
     public final CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
     /**

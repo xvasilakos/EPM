@@ -444,7 +444,7 @@ public class TraceLoader implements sim.ISimulationMember {
         }
 
         if (_randInitInTrace) {
-            int randInitPos = getSim().getScenario().getRandomGenerator()
+            int randInitPos = getSimulation().getScenario().getRandomGenerator()
                     .randIntInRange(1, recordsInTrace -20); // /-20; empirical; because some lines are alrady read..
             while (--randInitPos > 0 && scnr.hasNextLine()) {
                 scnr.nextLine();//skip
@@ -469,7 +469,7 @@ public class TraceLoader implements sim.ISimulationMember {
 
     @Override
     public int simTime() {
-        return getSim().simTime();
+        return getSimulation().simTime();
     }
 
     @Override
@@ -479,17 +479,17 @@ public class TraceLoader implements sim.ISimulationMember {
 
     @Override
     public int simID() {
-        return getSim().getID();
+        return getSimulation().getID();
     }
 
     @Override
-    public SimulationBaseRunner getSim() {
+    public SimulationBaseRunner getSimulation() {
         return _sim;
     }
 
     @Override
     public CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
     private static long createID(String idInTraceStr, File traceFile) {
@@ -573,7 +573,7 @@ public class TraceLoader implements sim.ISimulationMember {
 
                 double theTime;
                 if (_shuffleReqTimes) {
-                    theTime = getSim().getRandomGenerator().
+                    theTime = getSimulation().getRandomGenerator().
                             randDoubleInRange(0.0, 100000/*this is big enough*/);
                     toks.nextToken();
                 } else {
@@ -581,7 +581,7 @@ public class TraceLoader implements sim.ISimulationMember {
                     // if there is another loaded at same time, 
                     // jitter it a bit; otherwise it will replace 
                     // the other request in the loaded requests!
-                    double jitter = getSim().getRandomGenerator().randDoubleInRange(0.1, 0.8);
+                    double jitter = getSimulation().getRandomGenerator().randDoubleInRange(0.1, 0.8);
                     while (wrkTMP.containsKey(theTime)) {
                         theTime = theTime + jitter;
 //                        jitter = getSim().getRandomGenerator().randDoubleInRange(0.1, 1);
@@ -598,7 +598,7 @@ public class TraceLoader implements sim.ISimulationMember {
 
                 long theSizeInBytes = _overrideSizes < 0 ? Long.parseLong(toks.nextToken()) : _overrideSizes;
 
-                TraceWorkloadRecord rec = new TraceWorkloadRecord(getSim(), theSizeInBytes, theID, theTime);
+                TraceWorkloadRecord rec = new TraceWorkloadRecord(getSimulation(), theSizeInBytes, theID, theTime);
 
                 wrkTMP.put(rec.getTime(), rec);
                 _recsLoaded++;

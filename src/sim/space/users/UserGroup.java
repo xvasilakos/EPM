@@ -57,7 +57,7 @@ public class UserGroup implements Comparable<UserGroup>, ISimulationMember {
 
     @Override
     public final int simTime() {
-        return getSim().simTime();
+        return getSimulation().simTime();
     }
 
     @Override
@@ -67,17 +67,17 @@ public class UserGroup implements Comparable<UserGroup>, ISimulationMember {
 
     @Override
     public final int simID() {
-        return getSim().getID();
+        return getSimulation().getID();
     }
 
     @Override
-    public final SimulationBaseRunner getSim() {
+    public final SimulationBaseRunner getSimulation() {
         return _simulation;
     }
 
     @Override
     public final CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
 }

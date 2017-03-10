@@ -26,7 +26,7 @@ public class SimpleClock extends AbstractClock {
         }
 
         try {
-            gcPeriod = getSim().getScenario().intProperty(app.properties.Simulation.Clock.GC_PERIOD);
+            gcPeriod = getSimulation().getScenario().intProperty(app.properties.Simulation.Clock.GC_PERIOD);
             //</editor-fold>
         } catch (RuntimeException ex) {
             // ignore

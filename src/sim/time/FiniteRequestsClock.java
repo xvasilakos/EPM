@@ -25,14 +25,14 @@ public class FiniteRequestsClock extends AbstractFiniteClock {
 
     @Override
     protected void defineThresholds() {
-        _reqsThreshold = _setup.intProperty(Simulation.Clock.MAX_REQ_NUM);
+        _reqsThreshold = setup.intProperty(Simulation.Clock.MAX_REQ_NUM);
     }
 
     @Override
     protected void checkSimEnded() throws NormalSimulationEndException {
         reportProgressLcl();
         super.checkSimEnded();
-        if (_sim.getWrkloadConsumed() > _reqsThreshold) {
+        if (simulation.getWrkloadConsumed() > _reqsThreshold) {
             try {
                 Toolkit.getDefaultToolkit().beep();
             } catch (Exception e) {
@@ -50,7 +50,7 @@ public class FiniteRequestsClock extends AbstractFiniteClock {
      * @return
      */
     public double progressPercent() {
-        return (int) (10000.0 * _sim.getWrkloadConsumed() / _reqsThreshold) / 100.0;
+        return (int) (10000.0 * simulation.getWrkloadConsumed() / _reqsThreshold) / 100.0;
     }
 
 }

@@ -27,7 +27,7 @@ public class StreamingRequest extends DocumentRequest {
             double minSCorBHRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromBH,
             Map<AbstractCachingPolicy, List<Chunk>> fillInWithMissedPerPolicy) {
 
-        long chunkSizeInBytes = getSim().chunkSizeInBytes();
+        long chunkSizeInBytes = getSimulation().chunkSizeInBytes();
 
         boolean userConnected = getRequesterUser().isConnected();
 
@@ -35,11 +35,11 @@ public class StreamingRequest extends DocumentRequest {
 
         if (!userConnected) {
             maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-            for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
                 mergeToFirstMap(fillInWithDownloadedFromMC, super.consumeFromMCwSCDiscon(policy, maxBudget));
             }
         } else {// in this case, downloads from all reasources, with this *priority*: 
-            for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
 // CAUTION! do not change  the priority of the following invokations!    
 
                 if (policy != caching.incremental.Oracle.instance()) {

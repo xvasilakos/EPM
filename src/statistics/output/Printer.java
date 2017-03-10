@@ -98,7 +98,7 @@ public class Printer implements ISimulationMember {
         nextPriorityBean.setInOutputDirName(false);
         nextPriorityBean.setTitle("SCs_Per_Point_Ratio");
         nextPriorityBean.setTitleAbbreviation("#SCsPntRt");
-        double scPerPoint = simulation.getArea().coveragePerPoint_SC();
+        double scPerPoint = simulation.getTheArea().coveragePerPoint_SC();
         nextPriorityBean.setValue(scPerPoint);
         repeatDetails.add(nextPriorityBean);
         //</editor-fold>
@@ -108,7 +108,7 @@ public class Printer implements ISimulationMember {
         nextPriorityBean.setInOutputDirName(false);
         nextPriorityBean.setTitle("NoCover_Per_Point_Ratio");
         nextPriorityBean.setTitleAbbreviation("NoCoverPntRt");
-        double no_sc_perPoint = simulation.getArea().noCoveragePerPoint_SC();
+        double no_sc_perPoint = simulation.getTheArea().noCoveragePerPoint_SC();
         nextPriorityBean.setValue(no_sc_perPoint);
         repeatDetails.add(nextPriorityBean);
         //</editor-fold>
@@ -192,7 +192,7 @@ public class Printer implements ISimulationMember {
         StringBuilder dirName = new StringBuilder();
         Iterator<SetupBean> simSetupIter = simSetup.iterator();
 
-        String decimalFormat = getSim().getDecimalFormat();
+        String decimalFormat = getSimulation().getDecimalFormat();
         DecimalFormat formatter;
         if (decimalFormat == null) {
             formatter = new DecimalFormat("#,##0.00;(#,##0.00)");
@@ -244,7 +244,7 @@ public class Printer implements ISimulationMember {
         StringBuilder fileName = new StringBuilder();
         Iterator<SetupBean> iter = simSetupDetails.iterator();
 
-        String decimalFormat = getSim().getDecimalFormat();
+        String decimalFormat = getSimulation().getDecimalFormat();
         DecimalFormat formatter;
         if (decimalFormat == null) {
             formatter = new DecimalFormat("#,##0.00;(#,##0.00)");
@@ -337,7 +337,7 @@ public class Printer implements ISimulationMember {
 
     @Override
     public final int simTime() {
-        return getSim().simTime();
+        return getSimulation().simTime();
     }
 
     @Override
@@ -347,17 +347,17 @@ public class Printer implements ISimulationMember {
 
     @Override
     public final int simID() {
-        return getSim().getID();
+        return getSimulation().getID();
     }
 
     @Override
-    public final sim.run.SimulationBaseRunner getSim() {
+    public final sim.run.SimulationBaseRunner getSimulation() {
         return _sim;
     }
 
     @Override
     public final CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
     public synchronized void print(String msg) {

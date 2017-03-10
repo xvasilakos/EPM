@@ -36,23 +36,23 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
         _id = id;
         _sim = sim;
 
-        _remoteCostType = getSim().getScenario().stringProperty(Cost.Transfer.TRANSFER_COST_ON_MISS__TYPE, false);
+        _remoteCostType = getSimulation().getScenario().stringProperty(Cost.Transfer.TRANSFER_COST_ON_MISS__TYPE, false);
 
-        double hopMean = getSim().getScenario().doubleProperty(Cost.Transfer.TRANSFER__PROPAGATION__HOP_COUNT__MEAN);
-        double hopStdev = getSim().getScenario().doubleProperty(Cost.Transfer.TRANSFER__PROPAGATION__HOP_COUNT__STD);
+        double hopMean = getSimulation().getScenario().doubleProperty(Cost.Transfer.TRANSFER__PROPAGATION__HOP_COUNT__MEAN);
+        double hopStdev = getSimulation().getScenario().doubleProperty(Cost.Transfer.TRANSFER__PROPAGATION__HOP_COUNT__STD);
         redefineRemoteTransferAndMCCost(hopMean, hopStdev); // call again if CDN exists after creating all documents
 
         if (_remoteCostType.equalsIgnoreCase(Values.MONETARY)) {
 
             _costOfSCWireless = 0.0;
 
-            _costOfMCWireless = getSim().getScenario().doubleProperty(Cost.Transfer.MC__MDU);
+            _costOfMCWireless = getSimulation().getScenario().doubleProperty(Cost.Transfer.MC__MDU);
         } else if (_remoteCostType.equalsIgnoreCase(Values.PROPAGATION_DELAY__PLUS__MC_WIRELESS)) {
 
-            _costOfSCWireless = getSim().getScenario().doubleProperty(
+            _costOfSCWireless = getSimulation().getScenario().doubleProperty(
                     Cost.Transfer.COST__TRANSFER__WIRELESS_HOP_COST__SC);
 
-            _costOfMCWireless = getSim().getScenario().doubleProperty(
+            _costOfMCWireless = getSimulation().getScenario().doubleProperty(
                     Cost.Transfer.COST__TRANSFER__WIRELESS_HOP_COST__MC);
         } else {
             throw new UnsupportedOperationException(
@@ -119,7 +119,7 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
     }
     @Override
     public final double sizeInChunks() {
-        return (double)_sizeBytes / getSim().chunkSizeInBytes();
+        return (double)_sizeBytes / getSimulation().chunkSizeInBytes();
     }
 
     @Override
@@ -163,7 +163,7 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
     }
 
     @Override
-    public final SimulationBaseRunner<?> getSim() {
+    public final SimulationBaseRunner<?> getSimulation() {
         return _sim;
     }
 
@@ -210,10 +210,10 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
             return;
         }
         if (_remoteCostType.equalsIgnoreCase(Values.PROPAGATION_DELAY__PLUS__MC_WIRELESS)) {
-            double ratio = getSim().getRandomGenerator().getGaussian(
+            double ratio = getSimulation().getRandomGenerator().getGaussian(
                     hopMean, hopStdev
             );
-            _costOfRmtTransfer = ratio * getSim().getScenario()
+            _costOfRmtTransfer = ratio * getSimulation().getScenario()
                     .doubleProperty(Cost.Transfer.TRANSFER__HOP_COST);
 
             return;

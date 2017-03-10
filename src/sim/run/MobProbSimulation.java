@@ -76,7 +76,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
 
             //</editor-fold>
             //<editor-fold defaultstate="collapsed" desc="report/log progress">
-            LOG.log(Level.INFO, "Initializing MUs on the area:\n\t{0}/{1}", new Object[]{0, musNum});
+            _logger.log(Level.INFO, "Initializing MUs on the area:\n\t{0}/{1}", new Object[]{0, musNum});
             int count = 0;
             int printPer = (int) (musNum * percentage);
             printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
@@ -115,7 +115,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
 
                 //<editor-fold defaultstate="collapsed" desc="report/log progress">
                 if (++count % printPer == 0) {
-                    LOG.log(Level.INFO, "\tMobiles prepared:{0}%", Math.round(100.0 * count / musNum) / 100);
+                    _logger.log(Level.INFO, "\tMobiles prepared:{0}%", Math.round(100.0 * count / musNum) / 100);
                 }
                 //</editor-fold> 
             }//for every MU__CLASS in group
@@ -146,7 +146,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
 
             while (!Thread.currentThread().isInterrupted()
                     && isDuringWarmupPeriod(getTrcLoader())) {
-                _clock.tick();
+                clock.tick();
             };
 
             /*
@@ -154,7 +154,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
              */
             WHILE_THREAD_NOT_INTERUPTED:
             while (!Thread.currentThread().isInterrupted()) {
-                _clock.tick();
+                clock.tick();
 
 //////////////////////////////////////////////////                
 //yyy                runGoldenRatioSearchEMPCLC();
@@ -187,7 +187,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                 getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-                for (AbstractCachingPolicy nxtPolicy : _cachingPolicies) {/*
+                for (AbstractCachingPolicy nxtPolicy : cachingStrategies) {/*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */
@@ -223,11 +223,11 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                     nxtMU.cacheDescisionsPerformRegisterPC(nxtMU.getLastKnownConnectedSC());
                 }
 
-                getSim().getStatsHandle().updtSCCmpt6(clearedReqs,
+                getSimulation().getStatsHandle().updtSCCmpt6(clearedReqs,
                         new UnonymousCompute6(
                                 new UnonymousCompute6.WellKnownTitle("ClearedReqs"))
                 );
-                getSim().getStatsHandle().updtSCCmpt6(newAddedReqs,
+                getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
                         new UnonymousCompute6(
                                 new UnonymousCompute6.WellKnownTitle("newAddedReqs"))
                 );
@@ -241,14 +241,14 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
             }// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
-            LOG.log(
+            _logger.log(
                     Level.INFO, "Simulation {0} ended: {1}",
                     new Object[]{
                         Thread.currentThread().getName(),
                         simEndEx.getMessage()
                     });
         } catch (Throwable ex) {
-            LOG.log(Level.SEVERE, "Simulation " + getID()
+            _logger.log(Level.SEVERE, "Simulation " + getID()
                     + " terminates unsuccessfully at time " + simTime(),
                     new CriticalFailureException(ex));
         } finally {

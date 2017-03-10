@@ -95,8 +95,8 @@ public class Scenario implements Comparable<Scenario> {
     private List<double[][]> transProbabilities;
     /**
      * A list of property name and value couples that keeps track of all the
-     * different property values in a single _setup used to create different
-     * scenarios running in parallel.
+ different property values in a single setup used to create different
+ scenarios running in parallel.
      */
     private final SortedSet<Couple<String, String>> _replicationProperties;
     private final Logger _logger;
@@ -388,8 +388,8 @@ public class Scenario implements Comparable<Scenario> {
 
     /**
      * @return the properties that yield multiple scenarios due to having
-     * multiple values in the same properties _setup file, coupled by their
-     * values in the current scenario.
+ multiple values in the same properties setup file, coupled by their
+ values in the current scenario.
      */
     public SortedSet<Couple<String, String>> getReplicationProperties() {
         return Collections.unmodifiableSortedSet(_replicationProperties);
@@ -901,14 +901,14 @@ public class Scenario implements Comparable<Scenario> {
     }
 
     /**
-     * @return the id of this _setup.
+     * @return the id of this setup.
      */
     public int getId() {
         return _id;
     }
 
     /**
-     * @return the id of this _setup in string format.
+     * @return the id of this setup in string format.
      */
     public String getIDStr() {
         return String.valueOf(_id);

@@ -432,7 +432,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
                 return;
             }
             ((caching.incremental.EMC) policy).
-                    cacheDecision(getSim(), cacheRequestor,
+                    cacheDecision(getSimulation(), cacheRequestor,
                             predictedChunks,
                             this, targetSC);
             return;
@@ -440,7 +440,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
         if (policy instanceof caching.incremental.Naive) {
             ((caching.incremental.Naive) policy).
-                    cacheDecision(getSim(), cacheRequestor,
+                    cacheDecision(getSimulation(), cacheRequestor,
                             predictedChunks,
                             this, targetSC);
             return;
@@ -462,7 +462,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
             Set<Chunk> rplcd = new HashSet();
             ((IGainRplc) policy).
-                    cacheDecision(getSim(), cacheRequestor, predictedChunks,
+                    cacheDecision(getSimulation(), cacheRequestor, predictedChunks,
                             this, targetSC, rplcd, cachedOrderByGain);
 
             if (!rplcd.isEmpty()) {
@@ -847,7 +847,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
         if (!force) {
             try {
                 _stationaryUser.forceCompleteRequests();
-                getSim().getStatsHandle().updtPerformanceStats(_stationaryUser);
+                getSimulation().getStatsHandle().updtPerformanceStats(_stationaryUser);
             } catch (InvalidOrUnsupportedException | StatisticException ex) {
                 throw new CriticalFailureException(ex);
             }
@@ -860,8 +860,8 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
 ///////////////////////
 //load new requests
-        getSim().loadFromWrkloadIfNeeded(_loadStationaryReqsNum);
-        Map<Double, TraceWorkloadRecord> wrkLoad = getSim().getWrkLoad();
+        getSimulation().loadFromWrkloadIfNeeded(_loadStationaryReqsNum);
+        Map<Double, TraceWorkloadRecord> wrkLoad = getSimulation().getWrkLoad();
 
         Iterator<Map.Entry<Double, TraceWorkloadRecord>> iterator
                 = wrkLoad.entrySet().iterator();
@@ -883,13 +883,13 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
     public void initLclDmdStationary() throws InconsistencyException, InvalidOrUnsupportedException {
         _dmdTrcStationaryReqsRateLoadedPerSC
-                = getSim().getScenario().intProperty(Space.SC__DMD__TRACE__STATIONARY_REQUESTS__RATE);
+                = getSimulation().getScenario().intProperty(Space.SC__DMD__TRACE__STATIONARY_REQUESTS__RATE);
         _dmdTrcStationaryReqsRateLoadedPerSCStdv
-                = getSim().getScenario().intProperty(Space.SC__DMD__TRACE__STATIONARY_REQUESTS__STDEV);
+                = getSimulation().getScenario().intProperty(Space.SC__DMD__TRACE__STATIONARY_REQUESTS__STDEV);
 
         _loadStationaryReqsNum
                 = // so that not all cells get syncrhonised on loading new requests.
-                (int) getSim().getRandomGenerator().getGaussian(_dmdTrcStationaryReqsRateLoadedPerSC, _dmdTrcStationaryReqsRateLoadedPerSCStdv);
+                (int) getSimulation().getRandomGenerator().getGaussian(_dmdTrcStationaryReqsRateLoadedPerSC, _dmdTrcStationaryReqsRateLoadedPerSCStdv);
 
         if (_loadStationaryReqsNum <= 0) {
             _loadStationaryReqsNum = _dmdTrcStationaryReqsRateLoadedPerSC;
@@ -906,7 +906,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
         _stationaryUser = new StationaryUser(-1 * getID(), _sim, _sim.simTime(),
                 this, _sim.macrocell(),
-                _sim.getCachingPolicies());
+                _sim.getCachingStrategies());
     }
 
     /**
@@ -994,7 +994,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
          * that the golden ratio search algorithm concluded.
          */
         public double getStopE() {
-            Scenario scenario = SmallCell.this.getSim().getScenario();
+            Scenario scenario = SmallCell.this.getSimulation().getScenario();
             return scenario.intProperty(app.properties.Caching.CACHING__RPLC__MINGAIN__SUM__HEURISTIC__TIME__DYNAMIC__STOPE);
         }
 
@@ -1108,7 +1108,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
          * @return the _readjustmenyPeriod
          */
         public int getReadjustmenyPeriod() {
-            Scenario scenario = SmallCell.this.getSim().getScenario();
+            Scenario scenario = SmallCell.this.getSimulation().getScenario();
             return scenario.intProperty(CACHING__RPLC__MINGAIN__SUM__HEURISTIC__TIME__DYNAMIC__READJUSTMENT_PERIOD);
         }
 

@@ -45,7 +45,10 @@ public enum Space implements IProperty {
     MU__TRACE("space.mu.trace", "tooltip TBD"),
     MU__TRACE__META("space.mu.trace.meta", "tooltip TBD"),
     MU__TRANSITION_PROBABILITIES__MATRIX("space.mu.transition_probabilities.matrix", "tooltip TBD"),
-    MU__TRANSITION_DECISIONS("space.mu.transition_decisions", "tooltip TBD"),
+    MU__TRANSITION_DECISIONS("space.mu.transition_decisions", "Defines how transition probabilities are applied. "
+            + "E.g, with \"per_mu\" each mobile user moves to any of the "
+            + "directions according to a random choice based on "
+            + "the corresponding transition probabilties per direction."),
     MU__CLONEFACTOR("space.mu.clonefactor", "How many clones for each mobile. Used for mobility traces only."),
     ///////////////////////////////////////////////////////////////////
     MU__GROUP__SIZE("space.mu.group.size", "tooltip TBD"),

@@ -1,5 +1,7 @@
 package sim.time;
 
+import static app.properties.Simulation.Clock.INIT_TIME;
+import exceptions.InconsistencyException;
 import java.util.logging.Logger;
 import sim.ISimulationMember;
 import sim.Scenario;
@@ -13,40 +15,40 @@ public abstract class AbstractClock implements ISimulationMember, Comparable<Abs
 
     /**
      * this is the simTime since the class was loaded, i.e., from the beginning
-     * of the whole _sim batch
+     * of the whole simulation batch
      */
     public final static long REAL_GLOBAL_TIME_BEGIN = System.currentTimeMillis();
 
-    protected int _simTime;
+    protected int simTime;
     /**
      * start simTime of this instance
      */
-    protected final long _realTimeStart;
-    protected SimulationBaseRunner _sim;
-    protected Scenario _setup;
-    private long _lastPeriodicLoging;
+    protected final long realTimeStart;
+    protected SimulationBaseRunner simulation;
+    protected Scenario setup;
+    private long lastPeriodicLoging;
     protected Logger _logger;
 
     public AbstractClock(SimulationBaseRunner sim) {
-        this._lastPeriodicLoging = System.currentTimeMillis();
-        this._realTimeStart = System.currentTimeMillis();
-        this._simTime = 0;
-        this._sim = sim;
-        this._setup = sim.getScenario();
+        this.lastPeriodicLoging = System.currentTimeMillis();
+        this.realTimeStart = System.currentTimeMillis();
+        this.simulation = sim;
+        this.setup = sim.getScenario();
 
+        this.simTime = setup.intProperty(INIT_TIME);
     }
 
     abstract protected void reportProgressLcl();
 
     protected boolean isPeriodicLoging() {
         int time = simTime();
-        long elapsed = System.currentTimeMillis() - _lastPeriodicLoging;
+        long elapsed = System.currentTimeMillis() - lastPeriodicLoging;
         boolean shouldLog
                 = elapsed > 30000
-                || time % getSim().loggingSimTimePeriod() == 0;
+                || time % getSimulation().loggingSimTimePeriod() == 0;
 
         if (shouldLog) {
-            _lastPeriodicLoging = System.currentTimeMillis();
+            lastPeriodicLoging = System.currentTimeMillis();
         }
 
         return shouldLog;
@@ -56,41 +58,66 @@ public abstract class AbstractClock implements ISimulationMember, Comparable<Abs
 
     /**
      * @return the simTime after ticking
-     * @throws NormalSimulationEndException when the _sim has ended according to
-     * the SimulationEndChecker used.
+     * @throws NormalSimulationEndException when the simulation has ended
+     * according to the SimulationEndChecker used.
      */
     public int tick() throws NormalSimulationEndException {
         checkSimEnded();
-        return ++_simTime;
+        return ++simTime;
+    }
+
+    /**
+     * Proceeds the time to a given time value. This is a useful option for some
+     * mobility traces.
+     *
+     * @param t
+     * @return
+     * @throws NormalSimulationEndException
+     */
+    public int tick(int t) throws NormalSimulationEndException {
+        if (t <= simTime) {
+            throw new InconsistencyException(
+                    "Effort to set simulation time to value "
+                    + "\""
+                    + t
+                    + "\""
+                    + ", which is less than current time "
+                    + "\""
+                    + simTime
+                    + "\""
+            );
+        }
+        checkSimEnded();
+        return simTime = t;
     }
 
     @Override
     public final int simTime() {
-        return _simTime;
+        return simTime;
     }
 
     @Override
     public final int simID() {
-        return getSim().getID();
+        return getSimulation().getID();
     }
 
     @Override
-    public final SimulationBaseRunner getSim() {
-        return _sim;
+    public final SimulationBaseRunner getSimulation() {
+        return simulation;
     }
 
     @Override
     public String simTimeStr() {
-        return String.valueOf(_simTime);
+        return String.valueOf(simTime);
     }
 
     @Override
     public final CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
     public long realTimeElapsedL() {
-        return System.currentTimeMillis() - _realTimeStart;
+        return System.currentTimeMillis() - realTimeStart;
     }
 
     public String realTimeElapsedStr() {
@@ -135,7 +162,7 @@ public abstract class AbstractClock implements ISimulationMember, Comparable<Abs
     @Override
     public int compareTo(AbstractClock t) {
         if (this.getClass().equals(t.getClass())) {
-            return this._simTime - t._simTime;
+            return this.simTime - t.simTime;
         }
         return this.getClass().getCanonicalName().compareTo(t.getClass().getCanonicalName());
     }

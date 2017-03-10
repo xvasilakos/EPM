@@ -89,13 +89,13 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
     }
 
     @Override
-    public final SimulationBaseRunner<?> getSim() {
+    public final SimulationBaseRunner<?> getSimulation() {
         return _simulation;
     }
 
     @Override
     public final int simTime() {
-        return getSim().simTime();
+        return getSimulation().simTime();
     }
 
     @Override
@@ -105,7 +105,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
 
     @Override
     public final int simID() {
-        return getSim().getID();
+        return getSimulation().getID();
     }
 
     @Override
@@ -160,7 +160,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
 
     @Override
     public final CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
     public void updtLastTimeReqsUpdt() {

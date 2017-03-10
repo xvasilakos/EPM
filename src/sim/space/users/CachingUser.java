@@ -46,7 +46,7 @@ public abstract class CachingUser extends User {
         _mostRecentlyCacheMissesPerPolicy = new HashMap<>(5);
 
         if (sim != null) {// dummy user
-            for (AbstractCachingPolicy policy : sim.getCachingPolicies()) {
+            for (AbstractCachingPolicy policy : sim.getCachingStrategies()) {
                 _mostRecentlyConsumedMC.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedFromCacheHits.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedBH.put(policy, new ArrayList<Chunk>());
@@ -71,7 +71,7 @@ public abstract class CachingUser extends User {
         _mostRecentlyCacheMissesPerPolicy = new HashMap<>(5);
 
         if (sim != null) {// dummy user
-            for (AbstractCachingPolicy policy : sim.getCachingPolicies()) {
+            for (AbstractCachingPolicy policy : sim.getCachingStrategies()) {
                 _mostRecentlyConsumedMC.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedFromCacheHits.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedBH.put(policy, new ArrayList<Chunk>());
@@ -105,10 +105,10 @@ public abstract class CachingUser extends User {
         double slices = this instanceof StationaryUser ? 1
                 : getRequests().size();
 
-        double mcRateSlice = Math.round((double) getSim().getRateMCWlessInBytes() / slices);
+        double mcRateSlice = Math.round((double) getSimulation().getRateMCWlessInBytes() / slices);
 
         for (DocumentRequest nxtRequest : getRequests()) {
-            for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
                 nxtRequest.consumeChunksRemainderFromMC(policy, mcRateSlice, _mostRecentlyConsumedMC);
             }
         }
@@ -123,9 +123,9 @@ public abstract class CachingUser extends User {
 
         // equal (fair) slicing of rates to each request
         // caution, use double numbers to keep precision after divisions
-        double mcRateSlice = Math.round((double) timeWindow * getSim().getRateMCWlessInBytes() / slices);
-        double scRateSlice = Math.round((double) timeWindow * getSim().getRateSCWlessInBytes() / slices);
-        double bhRateSlice = Math.round((double) timeWindow * getSim().getRateBHInBytes() / slices);
+        double mcRateSlice = Math.round((double) timeWindow * getSimulation().getRateMCWlessInBytes() / slices);
+        double scRateSlice = Math.round((double) timeWindow * getSimulation().getRateSCWlessInBytes() / slices);
+        double bhRateSlice = Math.round((double) timeWindow * getSimulation().getRateBHInBytes() / slices);
         bhRateSlice = Math.min(bhRateSlice, scRateSlice); // you download with minimum flow from the BH+SC network.
 
         // clear from previous move

@@ -102,7 +102,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
 
         _sim = sim;
         _s = _sim.getScenario();
-        _logger = CommonFunctions.getLoggerFor(CellRegistry.class, "simID=" + getSim().getID());
+        _logger = CommonFunctions.getLoggerFor(CellRegistry.class, "simID=" + getSimulation().getID());
 
         _mobilityModel = _s.stringProperty(Space.MOBILITY_MODEL, false);
         _probJitter = _s.doubleProperty(Space.SC__HANDOFF_PROBABILITY__STDEV);
@@ -110,7 +110,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
         this._muGroupRegistry = groupRegistry;
 
         this._smallCells = new TreeMap<>();
-        Collection<SmallCell> scs = createSCs(area, sim.getCachingPolicies());
+        Collection<SmallCell> scs = createSCs(area, sim.getCachingStrategies());
         Iterator<SmallCell> cellsIter = scs.iterator();
         while (cellsIter.hasNext()) {
             SmallCell sc = cellsIter.next();
@@ -215,7 +215,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     @Override
-    public final SimulationBaseRunner getSim() {
+    public final SimulationBaseRunner getSimulation() {
         return _sim;
     }
 
@@ -269,7 +269,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
 
         double newWeight = residenceSC.getConnectedMUs().isEmpty() ? 0.3 : 1.0 / (residenceSC.getConnectedMUs().size());
         if (historyDuration == null) {
-            historyDuration = getSim().getScenario().doubleProperty(Space.SC__INIT_DURATION__RESIDENCE);
+            historyDuration = getSimulation().getScenario().doubleProperty(Space.SC__INIT_DURATION__RESIDENCE);
 
             double samples[] = new double[SAMPLES_SIZE];
             interCellResidenceDurationLastSamples.put(theCells, new Couple(samples, 0));
@@ -316,7 +316,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
         Couple theCells = new Couple(disconFromID, conToID);
         Double historyDuration = interCellHandoverDuration.get(theCells);
         if (historyDuration == null) {
-            historyDuration = getSim().getScenario().doubleProperty(Space.SC__INIT_DURATION__HANDOVER);
+            historyDuration = getSimulation().getScenario().doubleProperty(Space.SC__INIT_DURATION__HANDOVER);
 
             double samples[] = new double[SAMPLES_SIZE];
             interCellHandoverDurationLastSamples.put(theCells, new Couple(samples, 0));
@@ -565,7 +565,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
             return 0.0;
         }
 
-        double prob = getSim().getRandomGenerator().getGaussian(1.0, _probJitter)
+        double prob = getSimulation().getRandomGenerator().getGaussian(1.0, _probJitter)
                 /*robustness testing: intentional random error*/
                 * handoffsBetweenCells / outgoingHandoffs;
 
@@ -611,7 +611,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
         }
 
         CellRegistry rg = (CellRegistry) b;
-        return rg.getSim().equals(getSim());
+        return rg.getSimulation().equals(getSimulation());
     }
 
     @Override
@@ -640,7 +640,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
     private Set<SmallCell> initSCsRndUniform(
             Area area, Collection<AbstractCachingPolicy> cachingMethods)
             throws CriticalFailureException {
-        Scenario s = getSim().getScenario();
+        Scenario s = getSimulation().getScenario();
 
         try {
             Set<SmallCell> _init_SmallCells_random = new HashSet<>();
@@ -668,7 +668,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
                 toX = (int) ((i + 1.0) * area.getLengthX() / scsNum);
 
                 Point randCenter = area.getRandPoint(fromY, toY, fromX, toX);
-                SmallCell nxt_sc = new SmallCell(getSim(), randCenter, area, cachingMethods);
+                SmallCell nxt_sc = new SmallCell(getSimulation(), randCenter, area, cachingMethods);
                 //<editor-fold defaultstate="collapsed" desc="logging">
                 if (++count % printPer == 0) {
                     sum += (int) (10000.0 * printPer / scsNum) / 100;// roiunding, then percent
@@ -779,7 +779,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
         int countLines = 0;
         String nxtSCLine = "";
 
-        Scenario s = getSim().getScenario();
+        Scenario s = getSimulation().getScenario();
 
         String tracePath = s.stringProperty(Space.SC__TRACE_PATH, true);
         _logger.
@@ -902,7 +902,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
      */
     public Set<SmallCell> createSCs(Area area,
             Collection<AbstractCachingPolicy> cachingPolicies) throws CriticalFailureException {
-        Scenario s = getSim().getScenario();
+        Scenario s = getSimulation().getScenario();
 
         Set<SmallCell> scSet = null;
         try {
@@ -940,7 +940,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
             }
 
             //<editor-fold defaultstate="collapsed" desc="discover neighbors sanity check">
-            if (_sim.getCachingPolicies().contains(Values.CACHING__NAIVE__TYPE03)
+            if (_sim.getCachingStrategies().contains(Values.CACHING__NAIVE__TYPE03)
                     && s.intProperty(Space.SC__WARMUP_PERIOD) < 100) {
                 throw new CriticalFailureException(Values.CACHING__NAIVE__TYPE03 + " is enabled. Finding neighbors for each SC is mandatory."
                         + " But the time interval for discovering neighbors is too small: "

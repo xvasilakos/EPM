@@ -201,7 +201,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
 //                        UnonymousCompute6.WellKnownTitle.P_G_DIFF.concat(getClass().getName())
 //                )
 //        );
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 Q,
                 new UnonymousCompute6(
                         UnonymousCompute6.WellKnownTitle.Q.
@@ -213,7 +213,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
 
         if (sumProb != 0) {// otherwise it counts the probabilities
             // from objects that are not requested any more by any mobile user.
-            sc.getSim().getStatsHandle().updtSCCmpt6(
+            sc.getSimulation().getStatsHandle().updtSCCmpt6(
                     Q,
                     new UnonymousCompute6(
                             UnonymousCompute6.WellKnownTitle.Q_NONZERO//.concat(getClass().getName())
@@ -221,7 +221,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
             );
         }
 
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 f,
                 new UnonymousCompute6(
                         UnonymousCompute6.WellKnownTitle.F_POP.
@@ -232,7 +232,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
         );
 
         if (w != -1) {
-            sc.getSim().getStatsHandle().updtSCCmpt6(
+            sc.getSimulation().getStatsHandle().updtSCCmpt6(
                     w,
                     new UnonymousCompute6(
                             UnonymousCompute6.WellKnownTitle.F_POP.
@@ -243,7 +243,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
             );
         }
 //
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 sc.getDmdLclForW().getCurrDemandNumForW(),
                 new UnonymousCompute6(
                         UnonymousCompute6.WellKnownTitle.LCL_DMD.
@@ -253,7 +253,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
                 )
         );
 
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 sc.getDmdPC(this).getCurrDemandNum(),
                 new UnonymousCompute6(
                         UnonymousCompute6.WellKnownTitle.PC_DMD.
@@ -263,7 +263,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
                 )
         );
 
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 theChunk.gainOfTransferSCCacheHit(),
                 new UnonymousCompute6(
                         new UnonymousCompute6.WellKnownTitle("G_HIT").
@@ -272,7 +272,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
                         )
                 )
         );
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 theChunk.gainOfTransferSCThroughBH(),
                 new UnonymousCompute6(
                         new UnonymousCompute6.WellKnownTitle("G_BH").
@@ -281,7 +281,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
                         )
                 )
         );
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 theChunk.costOfTransferMC_BH(),
                 new UnonymousCompute6(
                         new UnonymousCompute6.WellKnownTitle("_MC_BH").
@@ -290,7 +290,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
                         )
                 )
         );
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 theChunk.costOfTransferSCCacheHit(),
                 new UnonymousCompute6(
                         new UnonymousCompute6.WellKnownTitle("_SC_HIT").
@@ -299,7 +299,7 @@ public abstract class AbstractGainRplc extends AbstractCachingPolicy implements 
                         )
                 )
         );
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 theChunk.costOfTransferSC_BH(),
                 new UnonymousCompute6(
                         new UnonymousCompute6.WellKnownTitle("_SC_BH").

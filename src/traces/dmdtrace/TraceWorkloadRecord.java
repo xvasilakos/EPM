@@ -30,7 +30,7 @@ public class TraceWorkloadRecord extends AbstractContent {
      */
     @Override
     public ContentDocument referredContentDocument() {
-        return getSim().getTrcDocs().get(getID());
+        return getSimulation().getTrcDocs().get(getID());
     }
 
     @Override

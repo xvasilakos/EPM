@@ -24,6 +24,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import sim.space.Area;
 import sim.space.cell.CellRegistry;
 import sim.space.cell.smallcell.SmallCell;
@@ -81,7 +82,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
     private void updateTraceMU() throws IOException, NumberFormatException,
             InconsistencyException, StatisticException, TraceEndedException {
-        int simTime = _clock.simTime();
+        int simTime = clock.simTime();
         int switched2moving = 0;
 
         String trcEndStr = "The mobility trace has ended.";
@@ -126,14 +127,14 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         for (Integer nxtID : cloneIDs) {
             TraceMU nxtMU = _muByID.get(nxtID);
 
-            double prevDx = nxtMU.getDx();
-            double prevDy = nxtMU.getDy();
+            double prevDx = nxtMU.getdX();
+            double prevDy = nxtMU.getdY();
 
             double velocity = Math.sqrt(prevDx * prevDx + prevDy * prevDy);
 
             _muAvgVelocity -= velocity / _muByID.size();
-            nxtMU.setDx(dxdt);
-            nxtMU.setDy(dydt);
+            nxtMU.setdX(dxdt);
+            nxtMU.setdY(dydt);
 
             double newVelocity = Math.sqrt(dxdt * dxdt + dydt * dydt);
 
@@ -254,7 +255,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 //reduce users
                 int rmvCounter = (int) Math.abs(musLst.size() * _cloneMobsFactor);
                 while (rmvCounter > 0 && !musLst.isEmpty()) {
-                    int rand = getSim().getRandomGenerator().
+                    int rand = getSimulation().getRandomGenerator().
                             randIntInRange(0, musLst.size() - 1);
                     musLst.remove(rand);
                 }
@@ -372,6 +373,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
             throw new CriticalFailureException("Trace ended too early during intiallization of mobiles", ex);
         }
     }
+    private static final Logger LOG = Logger.getLogger(TraceTaxiesSimulation.class.getName());
 
     /**
      * Makes a first full parse of the mobility trace file to discover meta
@@ -481,8 +483,8 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         int id = mu.getID();
 
         _muByID.put(id, mu);
-        mu.setDx(5.25);
-        mu.setDy(5.25);// 5.25 is the sqrt of 27.6, which is the average walking speed 5km/h, only in 20 sec
+        mu.setdX(5.25);
+        mu.setdY(5.25);// 5.25 is the sqrt of 27.6, which is the average walking speed 5km/h, only in 20 sec
         _muMovingByID.put(id, mu);
         _muAvgVelocity = 27.6;
 
@@ -496,7 +498,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
             while (!Thread.currentThread().isInterrupted()
                     && isDuringWarmupPeriod(getTrcLoader())) {
-                _clock.tick();
+                clock.tick();
 
                 try {
                     updateTraceMU();
@@ -510,7 +512,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
              */
             WHILE_THREAD_NOT_INTERUPTED:
             while (!Thread.currentThread().isInterrupted()) {
-                _clock.tick();
+                clock.tick();
 
                 try {
                     updateTraceMU();
@@ -561,7 +563,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-                for (AbstractCachingPolicy nxtPolicy : _cachingPolicies) {/*
+                for (AbstractCachingPolicy nxtPolicy : cachingStrategies) {/*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */

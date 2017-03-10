@@ -41,7 +41,7 @@ public abstract class AbstractFiniteClock extends SimpleClock {
                         + "Simulation {0} time {1}:\n" + "\t- Local run time progress {2}%\n"
                         + "\t- Local real time elapsed " + realTimeElapsedStr() + "\n"
                         + "\t- Simulation expected to finish in {3}\n"
-                        + (_sim.usesTraceOfRequests() ? LOG_SEPARATOR
+                        + (simulation.usesTraceOfRequests() ? LOG_SEPARATOR
                                 + "\t- Loaded records from trace: {4} ({5}%)\n" : "")
                         + LOG_SEPARATOR + "Parallel Running simulations {6}\n"
                         + "\t- Global progress {7}%\n"
@@ -53,8 +53,8 @@ public abstract class AbstractFiniteClock extends SimpleClock {
                             /*1*/ simTime(),
                             /*2*/ progressPercent(),
                             /*3*/ realTimeStr(100.0 * realTimeElapsedL() / progressPercent() - realTimeElapsedL()),
-                            /*4*/ _sim.getWrkloadConsumed(),
-                            /*5*/ _sim.getWrkloadConsumedPercent(),
+                            /*4*/ simulation.getWrkloadConsumed(),
+                            /*5*/ simulation.getWrkloadConsumedPercent(),
                             /*6*/ SimulationBaseRunner.getRunningSimulations(),
                             /*7*/ globalProgressPercent(),
                             /*8*/ realGlobalTimeElapsedStr(),

@@ -68,7 +68,7 @@ public class ContentDocument extends AbstractContent implements Comparable<Conte
 
     @Override
     public ContentDocument referredContentDocument() {
-        return getSim().getTrcDocs().get(getID());
+        return getSimulation().getTrcDocs().get(getID());
     }
 
     @Override

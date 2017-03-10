@@ -77,7 +77,7 @@ public class DebugTool {
         if ((sc.getID() == monitorCellID) && policy.getClass() == _policy.getClass()) {
             printer.append("\n\n");
             printer.append("{simID=");
-            printer.append("" + sc.getSim().getID());
+            printer.append("" + sc.getSimulation().getID());
             printer.append("}");
 
             printer.append("[simTime=" + sc.simTime() + "]");
@@ -96,7 +96,7 @@ public class DebugTool {
 
             printer.append("\n\n");
             printer.append("{simID=");
-            printer.append("" + usr.getSim().getID());
+            printer.append("" + usr.getSimulation().getID());
             printer.append("}");
 
             if (newRec) {
@@ -114,7 +114,7 @@ public class DebugTool {
 
             printer.append("\n\n");
             printer.append("{simID=");
-            printer.append("" + sc.getSim().getID());
+            printer.append("" + sc.getSimulation().getID());
             printer.append("}");
 
             if (newRec) {

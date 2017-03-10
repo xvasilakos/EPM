@@ -204,14 +204,16 @@ public final class Preprocessor {
             if (commTok.hasMoreTokens()) {
                 line = commTok.nextToken(); // use the part before comments
             }
-            StringTokenizer tok = new StringTokenizer(line, "=");
-            if (tok.countTokens() != 2) {
+            
+            int eqIdx = line.indexOf("=");
+            
+            if (eqIdx == -1) {
                 throw new InconsistencyException("Non valid entry: " + line
-                        + "in line #" + lineCounter
+                        + " found on line #" + lineCounter
                         + "\n at path: " + pth);
             }
-            String key = tok.nextToken().trim();
-            String val = tok.nextToken().trim();
+            String key = line.substring(0, eqIdx).trim();
+            String val = line.substring(eqIdx+1).trim();
             String prvIgnored = _rawProps.put(key, val);
 
             if (prvIgnored != null) {

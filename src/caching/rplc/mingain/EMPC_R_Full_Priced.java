@@ -200,7 +200,7 @@ public class EMPC_R_Full_Priced extends AbstractCachingPolicy implements IGainRp
 //                        UnonymousCompute6.WellKnownTitle.P_G_DIFF.concat(getClass().getName())
 //                )
 //        );
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 q,
                 new UnonymousCompute6(
                         UnonymousCompute6.WellKnownTitle.Q.concat(getClass().getName())
@@ -217,7 +217,7 @@ public class EMPC_R_Full_Priced extends AbstractCachingPolicy implements IGainRp
 //            );
 //        }
 //
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 w,
                 new UnonymousCompute6(
                         UnonymousCompute6.WellKnownTitle.W_POP.concat(getClass().getName())
@@ -233,7 +233,7 @@ public class EMPC_R_Full_Priced extends AbstractCachingPolicy implements IGainRp
 //            );
 //        }
 //
-        sc.getSim().getStatsHandle().updtSCCmpt6(
+        sc.getSimulation().getStatsHandle().updtSCCmpt6(
                 f,
                 new UnonymousCompute6(
                         UnonymousCompute6.WellKnownTitle.F_POP.concat(getClass().getName())

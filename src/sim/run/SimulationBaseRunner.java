@@ -64,7 +64,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     protected static int _idGen = 0;
     protected final int _id = ++_idGen;
-    protected final Logger LOG = CommonFunctions.getLoggerFor(this);
+    protected final Logger _logger = CommonFunctions.getLoggerFor(this);
 
     protected static final Object CONCURRENT_LOCK = new Object();
 
@@ -81,9 +81,9 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     protected final long _rateBHInBytes;
 
     /**
-     * Then simulated _area where the cells and the mobiles are placed.
+     * Then simulated theArea where the cells and the mobiles are placed.
      */
-    protected final Area _area;
+    protected final Area theArea;
     /**
      * A registry for the cells involved in this _sim.
      */
@@ -104,16 +104,16 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     /**
      * The _sim "clock" which keeps the _sim simTime "ticking".
      */
-    protected final AbstractClock _clock;
+    protected final AbstractClock clock;
     ///////////
     protected final StatsHandling _statsHandle;
     protected final String _decimalFormat;
     /**
      * Main caching method simulated.
      */
-    protected final List<AbstractCachingPolicy> _cachingPolicies;
+    protected final List<AbstractCachingPolicy> cachingStrategies;
     private final double _maxPopCachingCutter;
-    protected int _warmupPeriod;
+    protected int warmupPeriod;
     /**
      * Contains one or more entries referring to the documents of a workload.
      */
@@ -185,7 +185,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     @Override
     public final int simTime() {
-        return _clock.simTime();
+        return clock.simTime();
     }
 
     @Override
@@ -205,20 +205,20 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * @return a reference to the current _sim itself.
      */
     @Override
-    public final SimulationBaseRunner getSim() {
+    public final SimulationBaseRunner getSimulation() {
         return this;
     }
 
     @Override
     public final CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
     /**
      * @return the list of caching methods used.
      */
-    public List<AbstractCachingPolicy> getCachingPolicies() {
-        return Collections.unmodifiableList(_cachingPolicies);
+    public List<AbstractCachingPolicy> getCachingStrategies() {
+        return Collections.unmodifiableList(cachingStrategies);
     }
 
     /**
@@ -288,7 +288,6 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         return _trcDocs;
     }
 
-    
     /**
      * @return the _wrkLoad
      */
@@ -332,19 +331,19 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             //<editor-fold defaultstate="collapsed" desc="init various final scenario setup parameters">
 
             //  initilize the clock.. //
-            _clock = s.initClock(this);
+            clock = s.initClock(this);
             int maxTime = getScenario().intProperty(app.properties.Simulation.Clock.MAX_TIME);
             int tmp = (int) (getScenario().doubleProperty(app.properties.Simulation.PROGRESS_UPDATE) * maxTime);
             _loggingSimTimePeriod = tmp == 0 ? 10 : tmp;
 
             // global variables for data rates
             // 125000 bytes <=> 1Mbps
-            _chunkSizeInBytes = Math.round(125000 * getSim().getScenario().doubleProperty(Networking.Rates.CHUNK_SIZE));
+            _chunkSizeInBytes = Math.round(125000 * getSimulation().getScenario().doubleProperty(Networking.Rates.CHUNK_SIZE));
             _rateMCWlessInBytes = (long) (125000 * _scenarioSetup.doubleProperty(Networking.Rates.MC_WIRELESS));
             _rateSCWlessInBytes = (long) (125000 * _scenarioSetup.doubleProperty(Networking.Rates.SC_WIRELESS));
             _rateBHInBytes = (long) (125000 * _scenarioSetup.doubleProperty(Networking.Rates.SC_BACKHAUL));
 
-            _warmupPeriod = getScenario().intProperty(Space.SC__WARMUP_PERIOD);
+            warmupPeriod = getScenario().intProperty(Space.SC__WARMUP_PERIOD);
             _itemPopCmptType = _scenarioSetup.stringProperty(Space.ITEM__POP_CMPT, false);
             _decimalFormat = s.stringProperty(app.properties.Simulation.DecimalFormat, false);
 
@@ -373,8 +372,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                 );
                 _trcDocs = _trcLoader.getDocuments();
 
-                _dmdTrcReqsLoadedPerUser = (int) 
-                        s.intProperty(Space.MU__DMD__TRACE__REQUESTS_PER_USER);
+                _dmdTrcReqsLoadedPerUser = (int) s.intProperty(Space.MU__DMD__TRACE__REQUESTS_PER_USER);
                 if (_dmdTrcReqsLoadedPerUser < 0) {
                     _dmdTrcReqsLoadedPerUser = 0;
                 }
@@ -385,26 +383,26 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         }
 
         //  initilize caching methods //
-        _cachingPolicies = s.loadCachingPolicies();
+        cachingStrategies = s.loadCachingPolicies();
         _maxPopCachingCutter = s.doubleProperty(CACHING__POLICIES__MAXPOP_CUTTER);
-        // initialize the _area //
-        _area = s.initArea(this);
+        // initialize the theArea //
+        theArea = s.initArea(this);
 
         // itialize cells //
-        MacroCell macroCell = s.initMC(this, _area);
+        MacroCell macroCell = s.initMC(this, theArea);
 
         // initilize mobile users and arrange initial connectivity and proactive caching  status //
         _musGrpsRegistry = new MobileGroupsRegistry(this);
 
         // initialize cells and CellRegistry //
-        _cellRegistry = initSCRegistry(s, _musGrpsRegistry, macroCell, _area);
+        _cellRegistry = initSCRegistry(s, _musGrpsRegistry, macroCell, theArea);
         initCellNeighborhood(_cellRegistry, s);
 
         // initilize statistics handling //
         _statsHandle = new StatsHandling(this);
 
         // initilize mobile users and arrange initial connectivity and proactive caching  status //
-        _mblUsrs = initAndConnectMUs(s, _musGrpsRegistry, _area, _cellRegistry, getCachingPolicies());
+        _mblUsrs = initAndConnectMUs(s, _musGrpsRegistry, theArea, _cellRegistry, getCachingStrategies());
 
         _loadedDocumentsNum = 0;
         _maxWorklaodRequestsNum = 0;
@@ -428,13 +426,13 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                     + MaxPop.class.getCanonicalName() + " when loaded requests trace is " + null);
         }
         if (preloadAll) {
-            if (!_cachingPolicies.contains(MaxPop.instance())) {
+            if (!cachingStrategies.contains(MaxPop.instance())) {
                 throw new WrongOrImproperArgumentException("Can not preload most popular"
                         + " documents in the cache for all policies without using "
                         + MaxPop.instance().toString()
                 );
             }
-            for (AbstractCachingPolicy nxtPolicy : _cachingPolicies) {
+            for (AbstractCachingPolicy nxtPolicy : cachingStrategies) {
                 if (!(nxtPolicy instanceof IGainRplc)) {
                     continue;
                 }
@@ -443,13 +441,13 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         }
 
         // do it anyway for MaxPop
-        if (_cachingPolicies.contains(MaxPop.instance())) {
+        if (cachingStrategies.contains(MaxPop.instance())) {
             preLoad(scs, MaxPop.instance()); // else do it only for maxPop
         }
     }
 
     protected void preLoad(Collection<SmallCell> scs, AbstractCachingPolicy nxtPolicy) throws CriticalFailureException {
-        LOG.log(INFO, "Preloading top most popular items for policy {0}", nxtPolicy.toString());
+        _logger.log(INFO, "Preloading top most popular items for policy {0}", nxtPolicy.toString());
         int count = 0;
         int num = scs.size();
 
@@ -465,7 +463,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             }
 
             if (++count % 100 == 0) {
-                LOG.log(INFO, "Preloading.. {0}% completed.", Math.round(10000.0 * count / num) / 100.0);
+                _logger.log(INFO, "Preloading.. {0}% completed.", Math.round(10000.0 * count / num) / 100.0);
             }
         }
     }
@@ -497,7 +495,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         synchronized (CONCURRENT_LOCK) {
             runningSimulations--;
 
-            LOG
+            _logger
                     .log(Level.INFO, "Simulation Thread {0} Ended! Currently running: {1}/{2}",
                             new Object[]{getID(), runningSimulations,
                                 SimulatorApp.getMainArgs().getMaxConcurrentWorkers()
@@ -514,10 +512,10 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     }
 
     /**
-     * @return the _area
+     * @return the theArea
      */
-    public Area getArea() {
-        return _area;
+    public Area getTheArea() {
+        return theArea;
     }
 
     /**
@@ -750,19 +748,19 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
         try {
             CellRegistry reg = new CellRegistry(this, groupsRegistry, mc, area);
-            LOG.log(Level.INFO, "Cell registry initialized.\n");
+            _logger.log(Level.INFO, "Cell registry initialized.\n");
             return reg;
         } catch (InvalidOrUnsupportedException ex) {
-            LOG.log(Level.SEVERE, ex.getMessage(), ex);
+            _logger.log(Level.SEVERE, ex.getMessage(), ex);
             throw new CriticalFailureException(ex);
         }
     }
 
     /**
-     * @return the _warmupPeriod
+     * @return the warmupPeriod
      */
     protected int getWarmupPeriod() {
-        return _warmupPeriod;
+        return warmupPeriod;
     }
 
     protected boolean runUpdtStats4SimRound() throws StatisticException {
@@ -779,12 +777,12 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     protected boolean isDuringWarmupPeriod(TraceLoader trcLoader) throws NormalSimulationEndException, Throwable {
 
         try {
-            if (simTime() < _warmupPeriod) {
+            if (simTime() < warmupPeriod) {
                 runWarmUpVars();
                 return true;
-            } else if (simTime() == _warmupPeriod) {
+            } else if (simTime() == warmupPeriod) {
                 runWarmUpVars();
-                /* When simTime() == _warmupPeriod, reset and prepear all mobiles.
+                /* When simTime() == warmupPeriod, reset and prepear all mobiles.
                  */
                 if (stationaryRequestsUsed()) {
                     for (SmallCell nxtSC : getCellRegistry().getSmallCells()) {
@@ -843,8 +841,8 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     protected void runGoldenRatioSearchEMPCLC() throws Exception {
 
         // checkSimEnded if needed
-        if (!_cachingPolicies.contains(caching.rplc.mingain.tuned.EMPC_LC_Tunned_a.instance())
-                || simTime() <= getSim().getScenario().intProperty(StatsProperty.STATS__MIN_TIME)) {
+        if (!cachingStrategies.contains(caching.rplc.mingain.tuned.EMPC_LC_Tunned_a.instance())
+                || simTime() <= getSimulation().getScenario().intProperty(StatsProperty.STATS__MIN_TIME)) {
             return;
         }
 
@@ -939,13 +937,13 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      *
      * @param mu
      * @param loadPerUser
-     * @return 
+     * @return
      * @throws sim.time.NormalSimulationEndException
      */
     protected int updtLoadWorkloadRequests(MobileUser mu, int loadPerUser)
             throws NormalSimulationEndException, Throwable {
         int howManyToAdd = loadPerUser - mu.getRequests().size(); // just add what has finished
-        
+
         int count = 0;
         do {
             loadFromWrkloadIfNeeded(loadPerUser * _mblUsrs.size());
@@ -954,9 +952,8 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                 TraceWorkloadRecord nxtWorkloadRecord = iterator.next().getValue();
 
                 DocumentRequest loadedRequest = new DocumentRequest(nxtWorkloadRecord, mu);
-                
+
                 //DebugTool.append("Loaded record from trace: " + loadedRequest.toSynopsisString());
-                
                 incrWrkloadConsumed();
 
                 iterator.remove();
@@ -980,7 +977,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     public void runFinish() {
 
-        for (AbstractCachingPolicy policy : getCachingPolicies()) {
+        for (AbstractCachingPolicy policy : getCachingStrategies()) {
             for (SmallCell sc : _cellRegistry.getSmallCells()) {
                 sc.clearDmdPC(policy);
                 sc.clearBuffer(policy);
@@ -990,7 +987,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         System.gc();
 
         try {
-            LOG.log(
+            _logger.log(
                     Level.INFO,
                     "Printing results for simulation {0}.",
                     new Object[]{Thread.currentThread().getName()}
@@ -998,7 +995,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             getStatsHandle().prntAggregates();
             getStatsHandle().appendTransient(true);
         } catch (StatisticException ex) {
-            LOG.log(Level.SEVERE, "Unsuccessful effort to print results.", ex);
+            _logger.log(Level.SEVERE, "Unsuccessful effort to print results.", ex);
         }
         decreaseRunningSimulations();
     }

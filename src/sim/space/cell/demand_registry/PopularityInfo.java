@@ -231,7 +231,7 @@ public class PopularityInfo {
      * requests.
      */
     public double computePopularity3(ContentDocument item) {
-        TraceLoader trcLoader = this.getCell().getSim().getTrcLoader();
+        TraceLoader trcLoader = this.getCell().getSimulation().getTrcLoader();
         return trcLoader.frequency(item.getID());
     }
 

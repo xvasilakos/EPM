@@ -46,7 +46,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 //    List<RequestedChunk> _consumedChunksInSequence = null;
     public DocumentRequest(TraceWorkloadRecord workloadRecord, CachingUser requesterUser) {
 
-        super(workloadRecord.getSim(), workloadRecord.sizeInBytes(), workloadRecord.getID(), workloadRecord.getTime());
+        super(workloadRecord.getSimulation(), workloadRecord.sizeInBytes(), workloadRecord.getID(), workloadRecord.getTime());
         _consumeReady = true;
 
         _issuedAtSimTime = simTime();
@@ -63,8 +63,8 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 
         Collection<Chunk> chunksInSequence = referredContentDocument().getChunksInSequence().values();
 
-        _uncompletedPolicies = getSim().getCachingPolicies().size();
-        for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+        _uncompletedPolicies = getSimulation().getCachingStrategies().size();
+        for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
             _unconsumedChunksInSequence.put(policy, new ArrayList<>(chunksInSequence));
             _completitionTimes.put(policy, -1);
             _chunksConsumedHistoryFromMCWhileConnectedToSC.put(policy, new ArrayList<Chunk>());
@@ -175,7 +175,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             return new ArrayList<>();//return empty in this case
         }
 
-        double chunkSizeInBytes = getSim().chunkSizeInBytes();
+        double chunkSizeInBytes = getSimulation().chunkSizeInBytes();
 
         // Expected values based on parameter values.
         // Needed to compute which chunks wil be requested.
@@ -286,7 +286,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             return new ArrayList<>();//return empty in this case
         }
 
-        double chunkSizeInBytes = getSim().chunkSizeInBytes();
+        double chunkSizeInBytes = getSimulation().chunkSizeInBytes();
 
         // Expected values based on parameter values.
         // Needed to compute which chunks wil be requested.
@@ -475,7 +475,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             Map<AbstractCachingPolicy, Set<Chunk>> hitsNowInCachePerPolicy
                     = new HashMap<>(5);
 
-            for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
 
                 long maxBudget = (long) Math.ceil(sizeInChunks());
 
@@ -518,14 +518,14 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             double minSCorBHRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromBH,
             Map<AbstractCachingPolicy, List<Chunk>> fillInWithMissedPerPolicy) {
 
-        Boolean isSoft = Boolean.parseBoolean(getSim().getScenario().stringProperty(Space.MU__ISSOFT, false));
+        Boolean isSoft = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT, false));
         // if soft, then the macro IS never used
 
         if (!_consumeReady) {
             return;
         }
 
-        long chunkSizeInBytes = getSim().chunkSizeInBytes();
+        long chunkSizeInBytes = getSimulation().chunkSizeInBytes();
 
         boolean userConnected = getRequesterUser().isConnected();
 
@@ -534,7 +534,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         if (!userConnected) {
             if (!isSoft) {
                 maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-                for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+                for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
                     Map<AbstractCachingPolicy, List<Chunk>> consumedMCwSCDiscon
                             = consumeFromMCwSCDiscon(policy, maxBudget);
                     mergeToFirstMap(fillInWithDownloadedFromMC, consumedMCwSCDiscon);
@@ -546,7 +546,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                     = new HashMap<>(5);
 
             maxBudget = Math.round(scRateSlice / chunkSizeInBytes);
-            for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
 
 //
 //
@@ -983,7 +983,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 
     public void forceComplete(int time) {
         _uncompletedPolicies = 0;
-        for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+        for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
             _completitionTimes.put(policy, time);
         }
     }

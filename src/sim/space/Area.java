@@ -650,13 +650,13 @@ public class Area implements ISimulationMember, ISynopsisString {
     }
 
     @Override
-    public final sim.run.SimulationBaseRunner getSim() {
+    public final sim.run.SimulationBaseRunner getSimulation() {
         return simulation;
     }
 
     @Override
     public final int simTime() {
-        return getSim().simTime();
+        return getSimulation().simTime();
     }
 
     @Override
@@ -666,7 +666,7 @@ public class Area implements ISimulationMember, ISynopsisString {
 
     @Override
     public final CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
     public Point[] getPoints(Collection<String> positions) {
@@ -794,7 +794,7 @@ public class Area implements ISimulationMember, ISynopsisString {
         }
 
         Area area = (Area) b;
-        return area.getSim() == this.getSim();
+        return area.getSimulation() == this.getSimulation();
     }
 
     @Override

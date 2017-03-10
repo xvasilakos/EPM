@@ -146,7 +146,7 @@ public class MobileUser extends CachingUser {
                 builder.__simulation,
                 builder._cachingPolicies
         );
-        this._softUser = Boolean.parseBoolean(getSim().getScenario().stringProperty(Space.MU__ISSOFT, false));
+        this._softUser = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT, false));
 
         this._lastTimeReqsUpdt = -1;
 
@@ -194,7 +194,7 @@ public class MobileUser extends CachingUser {
             _maxProbDirectionAtInitState = this._maxProbDirection = -1;
         }
 
-        _mobAccuracy = getSim().getScenario().doubleProperty(Space.MU__MOBILITYACCURACY);
+        _mobAccuracy = getSimulation().getScenario().doubleProperty(Space.MU__MOBILITYACCURACY);
         
         _connectedSinceSC = _lastHandoffTime = _lastHandoverDuration = -1;
         _lastResetStatusTime = simTime();
@@ -205,10 +205,10 @@ public class MobileUser extends CachingUser {
 
         this._muTransitionDecisions = builder.__transitionDecisions;
 
-        connectToMC(getSim().macrocell());
+        connectToMC(getSimulation().macrocell());
         try {
             SmallCell sc;
-            if ((sc = CellUtilities.findHandoffcandidates(getSim().
+            if ((sc = CellUtilities.findHandoffcandidates(getSimulation().
                     getCellRegistry(), this, _connectionPolicySC))
                     != null) {
                 updtTheMostRecentConnStatus(CONNECTED_FIRST_TIME_TO_SC, sc, false);
@@ -269,13 +269,13 @@ public class MobileUser extends CachingUser {
         int lastConnTime = _lastKnownGotdisconnected.get(disconFrom.getID());
         _lastHandoverDuration = _lastKnownGotConnected.get(conTo.getID()) - lastConnTime;
 
-        getSim().getCellRegistry().updtHandoverTransitionTime(
+        getSimulation().getCellRegistry().updtHandoverTransitionTime(
                 this,
                 disconFrom,
                 conTo,
                 _lastHandoverDuration
         );
-        getSim().getStatsHandle().incHandoverscount();
+        getSimulation().getStatsHandle().incHandoverscount();
 
     }
 
@@ -302,7 +302,7 @@ public class MobileUser extends CachingUser {
         Integer disconnTime = _lastKnownGotdisconnected.get(residentInID);
         setLastResidenceDuration(disconnTime - connTime);
 
-        getSim().getCellRegistry().updtResidenceTime(
+        getSimulation().getCellRegistry().updtResidenceTime(
                 this.getUserGroup(), comingFrom, residentIn,
                 (int) getLastResidenceDuration()
         );
@@ -326,7 +326,7 @@ public class MobileUser extends CachingUser {
 //                }
 //            }
 
-            CellRegistry cellRegistry = getSim().getCellRegistry();
+            CellRegistry cellRegistry = getSimulation().getCellRegistry();
             Couple<Double, Double> residenceStats = cellRegistry.getResidenceDurationBetween(this.getUserGroup(), hostingSC, targetSC, true);
 
             Double expectedResidenceDuration = residenceStats.getFirst();
@@ -362,7 +362,7 @@ public class MobileUser extends CachingUser {
 
     public final void cancelAndDeregisterPCOrders(SmallCell sc) {
         for (DocumentRequest nxtRequest : getRequests()) {
-            for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
+            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
                 if (policy instanceof MaxPop) {
                     // cached object stay permanently in cache.
                     continue;
@@ -512,7 +512,7 @@ public class MobileUser extends CachingUser {
         _currentCoordinates = pointAfterReseting();
 
 //        //xxx debugging only
-//        __startCoordinates = _currentCoordinates = getSim().getArea().getPointAt(70, 70);//xxx
+//        __startCoordinates = _currentCoordinates = getSim().getTheArea().getPointAt(70, 70);//xxx
         getCoordinates().addUser(this);
 
         this._lastKnownConnectedSC = null;
@@ -521,16 +521,16 @@ public class MobileUser extends CachingUser {
         this._lastKnownGotConnected.clear();
         this._lastKnownGotdisconnected.clear();
 
-        this.connectToMC(getSim().getCellRegistry().getMacroCell());
+        this.connectToMC(getSimulation().getCellRegistry().getMacroCell());
         SmallCell sc;
-        if ((sc = CellUtilities.findHandoffcandidates(getSim().getCellRegistry(), this, _connectionPolicySC))
+        if ((sc = CellUtilities.findHandoffcandidates(getSimulation().getCellRegistry(), this, _connectionPolicySC))
                 != null) {
             updtTheMostRecentConnStatus(CONNECTED_FIRST_TIME_TO_SC, sc, false);
         } else {
             updtTheMostRecentConnStatus(REMAINS_DISCONNECTED_WAS_NEVER_CONNECTED, null, false);
         }
-        getSim().removeHaveExitedPrevCell(this);// otherwise it can cause issues
-        getSim().removeHaveHandedOver(this);// otherwise it can cause issues
+        getSimulation().removeHaveExitedPrevCell(this);// otherwise it can cause issues
+        getSimulation().removeHaveHandedOver(this);// otherwise it can cause issues
 
         return _mostRecentConnStatusUpdate;
     }
@@ -542,16 +542,16 @@ public class MobileUser extends CachingUser {
                 newPoint = _startCoordinates;
                 break;
             case Values.RANDOM:
-                int randX = getSim().getRandomGenerator().randIntInRange(0, _area.getLengthX() - 1);
-                int randY = getSim().getRandomGenerator().randIntInRange(0, _area.getLengthY() - 1);
+                int randX = getSimulation().getRandomGenerator().randIntInRange(0, _area.getLengthX() - 1);
+                int randY = getSimulation().getRandomGenerator().randIntInRange(0, _area.getLengthY() - 1);
                 _startCoordinates = newPoint = _area.getPointAt(randX, randY);
                 break;
             case Values.RANDOM_X:
-                randX = getSim().getRandomGenerator().randIntInRange(0, _area.getLengthX() - 1);
+                randX = getSimulation().getRandomGenerator().randIntInRange(0, _area.getLengthX() - 1);
                 _startCoordinates = newPoint = _area.getPointAt(randX, _startCoordinates.getY());
                 break;
             case Values.RANDOM_Y:
-                randY = getSim().getRandomGenerator().randIntInRange(0, _area.getLengthY() - 1);
+                randY = getSimulation().getRandomGenerator().randIntInRange(0, _area.getLengthY() - 1);
                 _startCoordinates = newPoint = _area.getPointAt(_startCoordinates.getX(), randY);
                 break;
             default:
@@ -720,7 +720,7 @@ public class MobileUser extends CachingUser {
          */ Couple<Point, Boolean> newPointLoopedCouple = null;
 
         int pos = -1;
-        double rand = getSim().getRandomGenerator().randProbability();
+        double rand = getSimulation().getRandomGenerator().randProbability();
         double sum = 0;
 
         switch (_muTransitionDecisions) {
@@ -745,7 +745,7 @@ public class MobileUser extends CachingUser {
                 break;
 
             case Values.PER_CELL_NEIGHBOURHOOD:
-                CellRegistry cellRegistry = getSim().getCellRegistry();
+                CellRegistry cellRegistry = getSimulation().getCellRegistry();
 
                 Map<Integer, Double> cell_probs = cellRegistry.getTransitionNeighborsOf(_currentlyConnectedSC);
 
@@ -784,8 +784,8 @@ public class MobileUser extends CachingUser {
             throws WrongOrImproperArgumentException,
             InvalidOrUnsupportedException,
             CriticalFailureException {
-        Scenario scenario = getSim().getScenario();
-        CellRegistry cellReg = getSim().getCellRegistry();
+        Scenario scenario = getSimulation().getScenario();
+        CellRegistry cellReg = getSimulation().getCellRegistry();
 
         SmallCell handoffSC = null;
         if (!this.getCoordinates().getCoveringSCs().isEmpty()) {
@@ -879,7 +879,7 @@ public class MobileUser extends CachingUser {
 
                 updtLastHandoverDuration(_previouslyConnectedSC, sc, isLooped);
 
-                getSim().addHaveHandedOver(this);
+                getSimulation().addHaveHandedOver(this);
 
                 break;
 
@@ -903,8 +903,8 @@ public class MobileUser extends CachingUser {
 
                 updtLastHandoverDuration(_previouslyConnectedSC, sc, isLooped);
 
-                getSim().addHaveExitedPrevCell(this);
-                getSim().addHaveHandedOver(this);
+                getSimulation().addHaveExitedPrevCell(this);
+                getSimulation().addHaveHandedOver(this);
 
                 break;
 
@@ -928,7 +928,7 @@ public class MobileUser extends CachingUser {
                     updtResidenceTime(originatingFromSC, residentInSC, isLooped);
                 }
 
-                getSim().addHaveExitedPrevCell(this);
+                getSimulation().addHaveExitedPrevCell(this);
                 break;
 
             default:
@@ -975,14 +975,14 @@ public class MobileUser extends CachingUser {
             }
 
 //////////// updt local demand if no stationary requests used            
-            if (!getSim().stationaryRequestsUsed()) {
+            if (!getSimulation().stationaryRequestsUsed()) {
                 // in this case, local demand is defined by the connected mobiles
                 _currentlyConnectedSC.getDmdLclForW().registerLclDmdForW(this, 1.0 / _currentlyConnectedSC.getConnectedMUs().size());
                 _previouslyConnectedSC.getDmdLclForW().deregisterLclDmdForW(this, 1.0 / 1.0 / _previouslyConnectedSC.getConnectedMUs().size());
             }
 
 //////////// take oracle cache decisions            
-            Couple<Double, Double> residenceDuration = getSim().getCellRegistry().getResidenceDurationBetween(getUserGroup(),
+            Couple<Double, Double> residenceDuration = getSimulation().getCellRegistry().getResidenceDurationBetween(getUserGroup(),
                     _previouslyConnectedSC,
                     _currentlyConnectedSC, true
             );
@@ -1012,7 +1012,7 @@ public class MobileUser extends CachingUser {
      */
     public void updtMoveDirectionClockwise() {
         int pos = -1;
-        double rand = getSim().getRandomGenerator().randProbability();
+        double rand = getSimulation().getRandomGenerator().randProbability();
         double sum = 0;
 
         while (pos < _probsTransition.length) {
@@ -1104,7 +1104,7 @@ public class MobileUser extends CachingUser {
     }
 
     private void updtHandoverProbs() {
-        getSim().getCellRegistry().updtHandoffProbs(
+        getSimulation().getCellRegistry().updtHandoffProbs(
                 this,
                 getPreviouslyConnectedSC(),
                 getCurrentlyConnectedSC()
@@ -1132,9 +1132,9 @@ public class MobileUser extends CachingUser {
 
 //////////////////////// rates are split per each user's request
         float slice = this.getRequests().size();
-        int mcRateSliceBytes = Math.round(getSim().getRateMCWlessInBytes() / slice);
-        int scRateSliceBytes = Math.round(getSim().getRateSCWlessInBytes() / slice);
-        int bhRateSliceBytes = Math.round(getSim().getRateBHInBytes() / slice);
+        int mcRateSliceBytes = Math.round(getSimulation().getRateMCWlessInBytes() / slice);
+        int scRateSliceBytes = Math.round(getSimulation().getRateSCWlessInBytes() / slice);
+        int bhRateSliceBytes = Math.round(getSimulation().getRateBHInBytes() / slice);
 
 ///////////////////////select chunks and 
 ///////////////////////update popularity info for requests
@@ -1160,10 +1160,10 @@ public class MobileUser extends CachingUser {
                 );
                 predictedChunksNaive.addAll(nxtReq.predictChunks2Request(//                                false,
                         policy, handoverProb, isSoftUser(),
-                        getSim().getRandomGenerator().
+                        getSimulation().getRandomGenerator().
                         randDoubleInRange(0, expectedHandoffDuration),
                         0,
-                        getSim().getRandomGenerator().
+                        getSimulation().getRandomGenerator().
                         randDoubleInRange(0, expectedResidenceDuration),
                         0,
                         mcRateSliceBytes,

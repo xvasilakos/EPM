@@ -548,7 +548,7 @@ public final class StatsHandling implements ISimulationMember {
     }
 
     @Override
-    public SimulationBaseRunner getSim() {
+    public SimulationBaseRunner getSimulation() {
         return _sim;
     }
 

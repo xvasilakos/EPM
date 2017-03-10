@@ -314,7 +314,7 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
 
     @Override
     public final int simTime() {
-        return getSim().simTime();
+        return getSimulation().simTime();
     }
 
     @Override
@@ -324,17 +324,17 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
 
     @Override
     public final int simID() {
-        return getSim().getID();
+        return getSimulation().getID();
     }
 
     @Override
-    public final SimulationBaseRunner getSim() {
+    public final SimulationBaseRunner getSimulation() {
         return simulation;
     }
 
     @Override
     public final CellRegistry simCellRegistry() {
-        return getSim().getCellRegistry();
+        return getSimulation().getCellRegistry();
     }
 
     /**
@@ -384,7 +384,7 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
         }
 
         MobileGroupsRegistry rg = (MobileGroupsRegistry) b;
-        return rg.getSim().equals(getSim());
+        return rg.getSimulation().equals(getSimulation());
     }
 
     @Override

@@ -38,6 +38,7 @@ public enum Simulation implements IProperty {
 
       TYPE("simulation.clock.type", TooltipMsgs.CLOCK__TYPE),
       MAX_TIME("simulation.clock.max_time", TooltipMsgs.CLOCK__MAX_TIME),
+      INIT_TIME("simulation.clock.init_time", TooltipMsgs.CLOCK__INIT_TIME),
       MAX_REQ_NUM("simulation.clock.max_req_num", ""),
       GC_PERIOD("simulation.clock.gc_period", TooltipMsgs.CLOCK__GC_PERIOD);
 
@@ -76,7 +77,9 @@ class TooltipMsgs {
    public static final String CLOCK__TYPE
          = "Type of clock to be used";
    public static final String CLOCK__MAX_TIME
-         = "Simulation time at which simulation is completed";
+         = "Simulation time at which simulation is completed.";
+   public static final String CLOCK__INIT_TIME
+         = "Intial value for simulation time. Useful for mobility traces using custom time.";
 
    public static final String INCLUDE
          = "Path to another ini file to be included. Note that the last property-value entries"

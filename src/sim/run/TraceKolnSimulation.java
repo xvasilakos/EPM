@@ -7,7 +7,6 @@ import caching.base.AbstractCachingPolicy;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
-import exceptions.ScenarioSetupException;
 import exceptions.TraceEndedException;
 import exceptions.WrongOrImproperArgumentException;
 import java.io.BufferedReader;
@@ -24,6 +23,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import sim.space.Area;
 import sim.space.cell.CellRegistry;
 import sim.space.cell.smallcell.SmallCell;
@@ -47,15 +47,23 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     private String mobTrcLine;
     private String mobTrcCSVSep = " ";// default set to " "
 
-    private Map<Integer, TraceMU> _muByID;
+    private Map<Integer, TraceMU> muByID;
+
+    private Map<Integer, TraceMU> muImmobileByID;
+    private Map<Integer, TraceMU> muMovingByID;
+    private double muAvgVelocity;
+    private static final Logger LOG = Logger.getLogger(TraceKolnSimulation.class.getName());
+
+    private MobileGroup mobileGroup;
+    private List<String> conn2SCPolicy;
+    private String mobTransDecisions;
+
     /**
-     * Original number of mobiles, not including clone mobiles
+     * The simulation time which will be used as a threshold for loading the
+     * next batch of trace lines
      */
-    private int _totalOriginalMUsNum;
-    private Map<Integer, TraceMU> _muImmobileByID;
-    private Map<Integer, TraceMU> _muMovingByID;
-    private int _cloneMobsFactor;
-    private double _muAvgVelocity;
+    private int timeForNextBatch;
+    private Collection<TraceMU> nextBatchOfMUs;
 
     public TraceKolnSimulation(Scenario s) {
         super(s);
@@ -79,31 +87,71 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
         }
     }
 
-    private void updateTraceMU() throws IOException, NumberFormatException,
-            InconsistencyException, StatisticException, TraceEndedException {
-        int simTime = _clock.simTime();
-        int switched2moving = 0;
+    private void readMobilityTraceMeta() throws TraceEndedException {
+        while (mobTrcLine.startsWith("#")) {
+            if (mobTrcLine.toUpperCase().startsWith("#SEP=")) {
+                mobTrcCSVSep = mobTrcLine.substring(5);
+                LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
+            }
+
+            mobTraceEarlyEndingCheck();
+            mobTrcLine = _muTraceIn.nextLine();// init line
+        }
+    }
+
+    /**
+     * Read next lines from mobility trace until exceeding
+     *
+     * @throws IOException
+     * @throws NumberFormatException
+     * @throws InconsistencyException
+     * @throws StatisticException
+     * @throws TraceEndedException
+     */
+    private void readFromMobilityTrace() throws
+            IOException, NumberFormatException,
+            InconsistencyException, StatisticException,
+            TraceEndedException, NormalSimulationEndException {
 
         String trcEndStr = "The mobility trace has ended.";
+        int switched2moving = 0; // stat: num of moibiles that started to move now
+        nextBatchOfMUs = new ArrayList<>();
 
         while (mobTrcLine != null) {
             String[] csv = mobTrcLine.split(mobTrcCSVSep);
-            if (csv[0].startsWith("#")) {
-                if (!_muTraceIn.hasNextLine()) {
-                    _muTraceIn.close();
-                    throw new TraceEndedException(trcEndStr);
-                }
-                mobTrcLine = _muTraceIn.nextLine();
-                continue;
-            }
-            
+
+            //[0]: time
             int time = Integer.parseInt(csv[0]);
-            int parsedMUID = Integer.parseInt(csv[1]);
-            double dxdt = Math.ceil(Double.parseDouble(csv[2]));
-            double dydt = Math.ceil(Double.parseDouble(csv[3]));
 
-            switched2moving = updateTraceMUNxtMU(parsedMUID, dxdt, dydt, switched2moving);
+            if (time > this.timeForNextBatch) {
+                this.timeForNextBatch = time;
+                clock.tick(time);
+                break; // in this case let it be read in the next round's batch of trace lines
+            }
+            //else...
 
+            //[1] mu id
+            int parsedID = Integer.parseInt(csv[1]);
+
+            //[2] x
+            double x = Math.ceil(Double.parseDouble(csv[2]));
+
+            //[3] y
+            double y = Math.ceil(Double.parseDouble(csv[3]));
+
+            //[4] speed
+            double speed = Math.ceil(Double.parseDouble(csv[4]));
+
+            if (!muByID.containsKey(parsedID)) {
+                createMU(parsedID, (int) x, (int) y, speed);
+                switched2moving++;
+            } else {
+                switched2moving = updateMU(parsedID, x, y, switched2moving, speed);
+            }
+
+            
+            nextBatchOfMUs.add(this.muByID.get(parsedID));
+            
             if (!_muTraceIn.hasNextLine()) {
                 _muTraceIn.close();
                 throw new TraceEndedException(trcEndStr);
@@ -117,39 +165,43 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
     }
 
-    private int updateTraceMUNxtMU(int originalID, double dxdt, double dydt, int switched2moving) {
+    /**
+     * Puts the mobile with ID=muID into the right set of mobiles, i.e. moving
+     * or immobile.
+     *
+     * @param muID
+     * @param _x
+     * @param _y
+     * @param switched2moving
+     * @param _speed
+     *
+     * @return the total number of mobiles that started to move, i.e. previously
+     * had a zero speed, minus the number of mobiles that stopped to move
+     * (current speed is zero).
+     */
+    private int updateMU(int muID, double _x, double _y, int switched2moving, double _speed) {
 
-        List<Integer> cloneIDs = cloneIDs(_cloneMobsFactor, _totalOriginalMUsNum, originalID);
+        TraceMU nxtMU = muByID.get(muID);
 
-        cloneIDs.add(0, originalID);
+        double pastSpeed = nxtMU.getSpeed();
+        nxtMU.setSpeed(_speed);
 
-        for (Integer nxtID : cloneIDs) {
-            TraceMU nxtMU = _muByID.get(nxtID);
+        muAvgVelocity -= pastSpeed / muByID.size();
+        nxtMU.setdX(_x);
+        nxtMU.setdY(_y);
 
-            double prevDx = nxtMU.getDx();
-            double prevDy = nxtMU.getDy();
+        muAvgVelocity += _speed / muByID.size();
 
-            double velocity = Math.sqrt(prevDx * prevDx + prevDy * prevDy);
-
-            _muAvgVelocity -= velocity / _muByID.size();
-            nxtMU.setDx(dxdt);
-            nxtMU.setDy(dydt);
-
-            double newVelocity = Math.sqrt(dxdt * dxdt + dydt * dydt);
-
-            _muAvgVelocity += newVelocity / _muByID.size();
-
-            if (dxdt == dydt && dxdt == 0) {// if immobile in this round
-                if (_muMovingByID.containsKey(nxtID)) {// if need to change its mobility status
-                    _muMovingByID.remove(nxtID);
-                    _muImmobileByID.put(nxtID, nxtMU);
-                }
-            } else if (_muImmobileByID.containsKey(nxtID)) {// if it were previously immobile
-                switched2moving++;
-                _muImmobileByID.remove(nxtID);
-                _muMovingByID.put(nxtID, nxtMU);
+        if (_speed == 0) {// if immobile in this round
+            if (muMovingByID.containsKey(muID)) {// if need to change its mobility status
+                muMovingByID.remove(muID);
+                muImmobileByID.put(muID, nxtMU);
+                switched2moving--;
             }
-
+        } else if (muImmobileByID.containsKey(muID)) {// if it were previously immobile
+            switched2moving++;
+            muImmobileByID.remove(muID);
+            muMovingByID.put(muID, nxtMU);
         }
 
         return switched2moving;
@@ -184,308 +236,52 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                             + " must be used with one and only one group of mobile users."
                     ));
         }
-        MobileGroup nxtGroup = groupsMap.get(groupsMap.firstKey());
+        mobileGroup = groupsMap.get(groupsMap.firstKey());
 
-        List<String> conn2SCPolicy;
         conn2SCPolicy = scenario.parseConnPolicySC();
-        String mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS, false);
-        double percentage = scenario.doubleProperty(app.properties.Simulation.PROGRESS_UPDATE);
 
-        _muByID = new HashMap();
-        _muImmobileByID = new HashMap();
-        _muMovingByID = new HashMap();
+        mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS, false);
+
+        muByID = new HashMap();
+        muImmobileByID = new HashMap();
+        muMovingByID = new HashMap();
 
         List<TraceMU> musLst = new ArrayList<>();
-
-        String metaPath = scenario.stringProperty(Space.MU__TRACE__META, true);
-
-        if (!metaPath.equalsIgnoreCase(Values.NONE)) {
-            initAndConnectMUs_1(metaPath, percentage, area, nxtGroup,
-                    conn2SCPolicy, cachingPolicies, mobTransDecisions,
-                    musLst);
-        } else {// Makes a first full parse of the mobility trace file to discover meta data.
-            initAndConnectMUs_2(percentage, area, nxtGroup,
-                    conn2SCPolicy, cachingPolicies, mobTransDecisions,
-                    musLst, scenario);
-        }
-
-        // do the cloning or reduction of MUs
-        _totalOriginalMUsNum = _muByID.size();
-        utils.DebugTool.appendLn("#mobiles before cloning: " + musLst.size());
-        if (_cloneMobsFactor != 0) {
-            muCloning(musLst, area, nxtGroup, conn2SCPolicy, cachingPolicies, mobTransDecisions);
-        }
-        utils.DebugTool.appendLn("Remaining #mobiles after cloning: " + musLst.size());
-
-        //<editor-fold defaultstate="collapsed" desc="shuffle mus iff property ..">
-        String muShuffling = scenario.stringProperty(Space.MU__SHUFFLE, false);
-        switch (muShuffling) {
-            case Values.NEVER:
-                break; // do not shufle
-
-            case Values.UPON_CREATION:
-            case Values.ALWAYS:
-                Collections.shuffle(musLst, getRandomGenerator().getMersenneTwister());
-                break;
-            default:
-                throw new UnsupportedOperationException("Value " + muShuffling + " is currently not supported for "
-                        + " property " + Space.MU__SHUFFLE);
-        }
-        //</editor-fold>
 
         return musLst;
     }
 
-    private void muCloning(List<TraceMU> musLst, Area area, MobileGroup nxtGroup, List<String> conn2SCPolicy, Collection<AbstractCachingPolicy> cachingPolicies, String mobTransDecisions) throws CriticalFailureException {
-        try {
-            _cloneMobsFactor = _scenarioSetup.intProperty(Space.MU__CLONEFACTOR);
+    private TraceMU createMU(
+            int muID, int x, int y, double speed) {
 
-            if (_cloneMobsFactor < -1) {
-                throw new exceptions.ScenarioSetupException(
-                        Space.MU__CLONEFACTOR.toString()
-                        + " can be only withing [-1, infinity]"
-                );
-            } else if (_cloneMobsFactor > 0) {
-                cloneMUs(musLst, area, nxtGroup, conn2SCPolicy, cachingPolicies,
-                        mobTransDecisions, _cloneMobsFactor, _totalOriginalMUsNum);
-            } else if (_cloneMobsFactor == -1) {
-                musLst.clear();
-            } else {
-                //reduce users
-                int rmvCounter = (int) Math.abs(musLst.size() * _cloneMobsFactor);
-                while (rmvCounter > 0 && !musLst.isEmpty()) {
-                    int rand = getSim().getRandomGenerator().
-                            randIntInRange(0, musLst.size() - 1);
-                    musLst.remove(rand);
-                }
-            }
-        } catch (ScenarioSetupException scnEx) {
-            throw new exceptions.CriticalFailureException(scnEx);
-        }
-    }
-
-    private void cloneMUs(List<TraceMU> musLst, Area area, MobileGroup nxtGroup,
-            List<String> conn2SCPolicy,
-            Collection<AbstractCachingPolicy> cachingPolicies,
-            String mobTransDecisions, int cloneMobsFactor, int totalMUsNum) {
-
-        List<TraceMU> originalMUs = new ArrayList(musLst);
-        /**
-         * use tmp to avoid concurrent modification
-         */
-
-        for (TraceMU mu : originalMUs) {
-            int originalID = mu.getID();
-            List<Integer> cloneIDs = cloneIDs(cloneMobsFactor, totalMUsNum, originalID);
-
-            for (Integer nxtID : cloneIDs) {
-                createTraceMU(nxtGroup, conn2SCPolicy,
-                        cachingPolicies, nxtID,
-                        area,
-                        mobTransDecisions, musLst);
-
-            }
-        }
-
-        LOG.info(cloneMobsFactor + " clones per original mobile added.");
-    }
-
-    private List<Integer> cloneIDs(int cloneMobsFactor, int totalMUsNum, int originalID) {
-        List<Integer> cloneIDs = new ArrayList();
-
-        int count = 0;
-        while (++count <= cloneMobsFactor) {
-            int cloneID = count * totalMUsNum + originalID;
-            cloneIDs.add(cloneID);
-        }
-
-        return cloneIDs;
-    }
-
-    private void initAndConnectMUs_1(String metaDataPath,
-            double percentage, Area area, MobileGroup nxtGroup,
-            List<String> conn2SCPolicy, Collection<AbstractCachingPolicy> cachingPolicies,
-            String mobTransDecisions, List<TraceMU> musLst)
-            throws CriticalFailureException, InconsistencyException, NumberFormatException {
-
-        String lineCSV, sep = " ";
-        try (BufferedReader metaIn = new BufferedReader(new FileReader(metaDataPath))) {
-            int musNum = -1;
-
-            while ((lineCSV = metaIn.readLine()) != null) {
-
-                if (lineCSV.toUpperCase().startsWith("#NUM=")) {
-                    String[] csv = lineCSV.split("=");
-                    musNum = Integer.parseInt(csv[1]);
-                    continue;
-                }
-
-                if (lineCSV.toUpperCase().startsWith("#SEP=")) {
-                    sep = mobTrcLine.substring(5);
-                    LOG.log(Level.INFO, "Metadata file for the mobility trace \"{0}\" uses separator=\"{1}\"",
-                            new Object[]{metaDataPath, mobTrcCSVSep});
-                }
-
-                if (lineCSV.startsWith("#")) {
-                    continue;
-                }
-
-                break;
-            }
-
-            LOG.log(Level.INFO,
-                    "Initializing MUs on the area:\n\t{0}/{1}", new Object[]{0, musNum});
-            int count = 0;
-            int printPer = (int) (musNum * percentage);
-            printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
-
-            do {
-
-                String[] csv = lineCSV.split(sep);
-
-                int nxtMuID = Integer.parseInt(csv[0]);
-//ignore these, zero init velocities for all mobiles                double avgdxdt = Double.parseDouble(csv[4]);
-//                double avgdydt = Double.parseDouble(csv[6]);
-
-                createTraceMU(nxtGroup, conn2SCPolicy, cachingPolicies, nxtMuID, area, mobTransDecisions, musLst);
-
-//<editor-fold defaultstate="collapsed" desc="report/log progress">
-                if (++count % 100 == 0 || count % printPer == 0) {
-                    LOG.log(Level.INFO, "\tMobiles prepared: {0} "
-                            + "out of {1}, i.e: {2}%",
-                            new Object[]{
-                                count, musNum,
-                                Math.round(10000.0 * count / musNum) / 100.0
-                            });
-                }
-//</editor-fold>
-            } while ((lineCSV = metaIn.readLine()) != null);//for every MU__CLASS in group
-        } catch (IOException ex) {
-            throw new CriticalFailureException(ex);
-        }
-
-        try {
-            updateTraceMU();
-        } catch (IOException | StatisticException ex) {
-            throw new CriticalFailureException(ex);
-        } catch (TraceEndedException ex) {
-            throw new CriticalFailureException("Trace ended too early during intiallization of mobiles", ex);
-        }
-    }
-
-    /**
-     * Makes a first full parse of the mobility trace file to discover meta
-     * data. Unless it finds #NUM, in which case it does not parse the whole
-     * file (saves memory
-     *
-     * @param percentage
-     * @param area
-     * @param nxtGroup
-     * @param conn2SCPolicy
-     * @param cachingPolicies
-     * @param mobTransDecisions
-     * @param musLst
-     * @param scenario
-     * @throws CriticalFailureException
-     * @throws InconsistencyException
-     * @throws NumberFormatException
-     */
-    private void initAndConnectMUs_2(
-            double percentage, Area area, MobileGroup nxtGroup,
-            List<String> conn2SCPolicy, Collection<AbstractCachingPolicy> cachingPolicies,
-            String mobTransDecisions, List<TraceMU> musLst, Scenario scenario)
-            throws CriticalFailureException, InconsistencyException, NumberFormatException {
-
-        String mutracePath = scenario.stringProperty(Space.MU__TRACE, true);
-        String lineCSV;
-        String sep = " ";
-
-        int musNum = 0;
-        SortedSet<Integer> ids = new TreeSet<>();
-        try (BufferedReader bin = new BufferedReader(new FileReader(mutracePath))) {
-
-            while ((lineCSV = bin.readLine()) != null) {
-
-                if (lineCSV.toUpperCase().startsWith("#SEP=")) {
-                    sep = mobTrcLine.substring(5);
-                    LOG.log(Level.INFO, "Mobility trace \"{0}\" uses separator=\"{1}\"",
-                            new Object[]{mutracePath, mobTrcCSVSep});
-                }
-
-                if (lineCSV.startsWith("#")) {
-                    continue;
-                }
-
-                String[] csv = lineCSV.split(sep);
-                int nxtMuID = Integer.parseInt(csv[1]);
-
-                if (ids.add(nxtMuID)) {
-                    musNum++;
-                }
-            }
-        } catch (IOException ex) {
-//            LOG.log(Level.SEVERE, null, ex);
-            throw new CriticalFailureException(ex);
-        }
-
-        LOG.log(Level.INFO,
-                "Initializing MUs on the area:\n\t{0}/{1}", new Object[]{0, musNum});
-
-        int count = 0;
-        int printPer = (int) (musNum * percentage);
-        printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
-
-        for (int nxtMuID : ids) {
-
-            createTraceMU(nxtGroup, conn2SCPolicy, cachingPolicies, nxtMuID, area, mobTransDecisions, musLst);
-
-//<editor-fold defaultstate="collapsed" desc="report/log progress">
-            if (++count % 100 == 0 || count % printPer == 0) {
-                LOG.log(Level.INFO, "\tMobiles prepared: {0} "
-                        + "out of {1}, i.e: {2}%",
-                        new Object[]{
-                            count, musNum,
-                            Math.round(10000.0 * count / musNum) / 100.0
-                        });
-            }
-//</editor-fold>
-        }
-
-        try {
-            updateTraceMU();
-        } catch (IOException | StatisticException ex) {
-            throw new CriticalFailureException(ex);
-        } catch (TraceEndedException ex) {
-            throw new CriticalFailureException("Trace ended too early during intiallization of mobiles", ex);
-        }
-
-    }
-
-    private void createTraceMU(MobileGroup nxtGroup, List<String> conn2SCPolicy,
-            Collection<AbstractCachingPolicy> cachingPolicies, int nxtMuID,
-            Area area, String mobTransDecisions, List<TraceMU> musLst) {
         TraceMUBuilder nxtMUBuilder = new TraceMUBuilder(
-                this, nxtGroup, area.getRandPoint(),
-                conn2SCPolicy, cachingPolicies, 0, 0
+                this, mobileGroup, theArea.getRandPoint(),
+                conn2SCPolicy, cachingStrategies, 0, 0
         );
 
-        nxtMUBuilder.setId(nxtMuID);
+        nxtMUBuilder.setId(muID);
 
-        nxtMUBuilder.setArea(area);
+        nxtMUBuilder.setArea(theArea);
 
         nxtMUBuilder.setTransitionDecisions(mobTransDecisions);
 
         TraceMU mu = nxtMUBuilder.build();
 
-        musLst.add(mu);
         int id = mu.getID();
 
-        _muByID.put(id, mu);
-        mu.setDx(5.25);
-        mu.setDy(5.25);// 5.25 is the sqrt of 27.6, which is the average walking speed 5km/h, only in 20 sec
-        _muMovingByID.put(id, mu);
-        _muAvgVelocity = 27.6;
+        muByID.put(id, mu);
+        mu.setdX(x);
+        mu.setdY(y);
+        muMovingByID.put(id, mu);
+        muAvgVelocity += speed / muByID.size();
 
+        if (speed > 0) {
+            muMovingByID.put(id, mu);
+        } else {
+            muImmobileByID.put(id, mu);
+        }
+
+        return mu;
     }
 
     @Override
@@ -494,35 +290,26 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
         try {
 
-            while (!Thread.currentThread().isInterrupted()
-                    && isDuringWarmupPeriod(getTrcLoader())) {
-                _clock.tick();
+            readMobilityTraceMeta();
 
-                try {
-                    updateTraceMU();
-                } catch (TraceEndedException tee) {
-                    throw new NormalSimulationEndException(tee);
-                }
-            };
+            initSimClockTime();
 
-            /*
-             * if warmup period has passed..
+            mobTraceEarlyEndingCheck();
+
+            /* load next line and extract the simulation time
+             * which will be used as a threshold for loading the next batch 
+             * of trace lines
              */
+            mobTrcLine = _muTraceIn.nextLine();
+            String[] csv = mobTrcLine.split(mobTrcCSVSep);
+            timeForNextBatch = Integer.parseInt(csv[0]);
+
             WHILE_THREAD_NOT_INTERUPTED:
             while (!Thread.currentThread().isInterrupted()) {
-                _clock.tick();
+                readFromMobilityTrace();
 
-                try {
-                    updateTraceMU();
-                } catch (TraceEndedException tee) {
-                    throw new NormalSimulationEndException(tee);
-                }
-
-//////////////////////////////////////////////////                
-//yyy                runGoldenRatioSearchEMPCLC();
-//////////////////////////////////////////////////
                 if (stationaryRequestsUsed()) {/*
-                     * Concume data and keep gain stats for stationary users
+                     * Consume data and keep gain stats for stationary users
                      */
                     for (SmallCell nxtSC : smallCells()) {
                         StationaryUser nxtSU = nxtSC.getStationaryUser();
@@ -534,34 +321,26 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 }
 
 /////////////////////////////////////
-                List<TraceMU> shuffldMUs = shuffledMUs();
+                
                 _haveExitedPrevCell.clear();
                 _haveHandedOver.clear();
                 getStatsHandle().resetHandoverscount();
 
-                for (TraceMU nxtMU : shuffldMUs) {
-                    if (_muImmobileByID.containsKey(nxtMU.getID())) {
-                        // avoid expensive call to move() if possible
-                        if (nxtMU.isSoftUser()) {
-                            nxtMU.consumeTryAllAtOnceFromSC();
-                        } else {
-                            nxtMU.consumeDataTry(1);// consume in one simulation time step
-                        }
-                        continue;
+                for (TraceMU nxtMU : nextBatchOfMUs) {
+                    if (!muImmobileByID.containsKey(nxtMU.getID())) {
+                        nxtMU.move(false, false); // otherwise avoid expensive call to move() if possible
                     }
-                    nxtMU.move(false, false);
                     if (nxtMU.isSoftUser()) {
                         nxtMU.consumeTryAllAtOnceFromSC();
                     } else {
                         nxtMU.consumeDataTry(1);// consume in one simulation time step
                     }
-
                 }// for all all MUs
 
                 getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-                for (AbstractCachingPolicy nxtPolicy : _cachingPolicies) {/*
+                for (AbstractCachingPolicy nxtPolicy : cachingStrategies) {/*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */
@@ -636,6 +415,43 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
         } finally {
             runFinish();
         }
+    }
+
+    private void mobTraceEarlyEndingCheck() throws TraceEndedException {
+        if (!_muTraceIn.hasNextLine()) {
+            _muTraceIn.close();
+            throw new TraceEndedException("The mobility trace has ended too early.");
+        }
+    }
+
+    /**
+     * To be called to read first line of data from the trace in order to
+     * initilize the simulation clock time.
+     *
+     * @throws NumberFormatException
+     * @throws NormalSimulationEndException
+     */
+    private void initSimClockTime() throws NumberFormatException, NormalSimulationEndException {
+        String[] csv = mobTrcLine.split(mobTrcCSVSep);
+
+        //[0]: time
+        int time = Integer.parseInt(csv[0]);
+        clock.tick(time);
+
+        //[1] mu id
+        int parsedID = Integer.parseInt(csv[1]);
+
+        //[2] x
+        double x = Math.ceil(Double.parseDouble(csv[2]));
+
+        //[3] y
+        double y = Math.ceil(Double.parseDouble(csv[3]));
+
+        //[4] speed
+        double speed = Math.ceil(Double.parseDouble(csv[4]));
+
+        createMU(parsedID, (int) x, (int) y, speed);
+
     }
 
     @Override

@@ -16,7 +16,7 @@ public interface ISimulationMember {
 
    public int simID();
 
-   public SimulationBaseRunner<?> getSim();
+   public SimulationBaseRunner<?> getSimulation();
 
    public CellRegistry simCellRegistry();
    

@@ -15,21 +15,23 @@ import utilities.Couple;
  */
 public class TraceMU extends MobileUser {
 
-    private static final Logger LOGGER = Logger.getLogger(TraceMU.class.getCanonicalName());
+    private static final Logger LOG = Logger.getLogger(TraceMU.class.getCanonicalName());
 
-    private double _dx;
-    private double _dy;
+    private double dX;
+    private double dY;
+    private double speed;
     private final int _areaMaxX;
     private final int _areaMaxY;
 
     public TraceMU(TraceMUBuilder muBuilder) throws CriticalFailureException {
         super(muBuilder);
+        this.speed = 0;
 
-        _areaMaxX = getSim().getArea().getLengthX();
-        _areaMaxY = getSim().getArea().getLengthY();
+        _areaMaxX = getSimulation().getTheArea().getLengthX();
+        _areaMaxY = getSimulation().getTheArea().getLengthY();
 
-        _dx = muBuilder.getDx();
-        _dy = muBuilder.getDy();
+        dX = muBuilder.getDx();
+        dY = muBuilder.getDy();
     }
 
     @Override
@@ -43,18 +45,6 @@ public class TraceMU extends MobileUser {
         if (conTo.equals(disconFrom) && !isLooped) {
             String mthd = new Object() {
             }.getClass().getEnclosingMethod().getName();
-//xxx            LOGGER.log(Level.WARNING,
-//                    "{0} invocation with disconFrom and conTo cells being the "
-//                    + "same. This may happen if the mobile moves back and forth "
-//                    + "and will be ignored. "
-//                    + "Previous coordinates: {1}; "
-//                    + "Current coordinates: {2}",
-//                    new Object[]{
-//                        mthd,
-//                        getCoordinatesPrevious().toSynopsisString(),
-//                        getCoordinates().toSynopsisString()
-//                    }
-//            );
             return;
         }
 
@@ -68,18 +58,7 @@ public class TraceMU extends MobileUser {
         if (residentIn.equals(comingFrom)) {
             String mthd = new Object() {
             }.getClass().getEnclosingMethod().getName();
-//xxx            LOGGER.log(Level.WARNING,
-//                    "{0} invocation with residence and origins cells being the "
-//                    + "same. This may happen if the mobile moves back and forth "
-//                    + "and will be ignored. "
-//                    + "Previous coordinates: {1}; "
-//                    + "Current coordinates: {2}",
-//                    new Object[]{
-//                        mthd,
-//                        getCoordinatesPrevious().toSynopsisString(),
-//                        getCoordinates().toSynopsisString()
-//                    }
-//            );
+
             return;
         }
 
@@ -87,31 +66,31 @@ public class TraceMU extends MobileUser {
     }
 
     /**
-     * @return the _dx
+     * @return the dX
      */
-    public double getDx() {
-        return _dx;
+    public double getdX() {
+        return dX;
     }
 
     /**
-     * @param _dx the _dx to set
+     * @param dX the dX to set
      */
-    public void setDx(double _dx) {
-        this._dx = _dx;
+    public void setdX(double dX) {
+        this.dX = dX;
     }
 
     /**
-     * @return the _dy
+     * @return the dY
      */
-    public double getDy() {
-        return _dy;
+    public double getdY() {
+        return dY;
     }
 
     /**
-     * @param _dy the _dy to set
+     * @param dY the dY to set
      */
-    public void setDy(double _dy) {
-        this._dy = _dy;
+    public void setdY(double dY) {
+        this.dY = dY;
     }
 
     private Couple<Point, Boolean> selectNewCoordinate(double dx, double dy) {
@@ -174,10 +153,29 @@ public class TraceMU extends MobileUser {
 
 
         /* Point after moving. if looped to the other side of the area, 
+         * the boolean field is true./* Point after moving. if looped to the other side of the area, 
+         * the boolean field is true./* Point after moving. if looped to the other side of the area, 
+         * the boolean field is true./* Point after moving. if looped to the other side of the area, 
          * the boolean field is true.
-         */ Couple<Point, Boolean> newPointLoopedCouple = selectNewCoordinate(_dx, _dy);
+         */ Couple<Point, Boolean> newPointLoopedCouple = selectNewCoordinate(dX, dY);
 
         return moveToNewPoint(newPointLoopedCouple);
     }
+
+    /**
+     * @return the speed
+     */
+    public double getSpeed() {
+        return speed;
+    }
+
+    /**
+     * @param speed the speed to set
+     */
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+
 
 }

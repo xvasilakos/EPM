@@ -34,7 +34,7 @@ public final class MaxPop extends AbstractCachingPolicy {
         Iterator<ContentDocument> iterator = maxPopInfo.iterator();
         while (sc.buffAvailable(this) > 0 && iterator.hasNext()) {
             ContentDocument next = iterator.next();
-            if (next.sizeInBytes() / sc.buffCapacity(this) > sc.getSim().getMaxPopCachingCutter()) {
+            if (next.sizeInBytes() / sc.buffCapacity(this) > sc.getSimulation().getMaxPopCachingCutter()) {
                 continue; // rule of the thumb: do not cache is it occupies too much space.
             }
             for (Chunk nxtChunk : next.chunks()) {

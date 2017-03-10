@@ -27,7 +27,7 @@ public class FiniteTimeClock extends AbstractFiniteClock {
 
     @Override
     protected void defineThresholds() {
-        _timeThreshold = _setup.intProperty(Simulation.Clock.MAX_TIME);
+        _timeThreshold = setup.intProperty(Simulation.Clock.MAX_TIME);
     }
 
     @Override
