@@ -64,6 +64,15 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
      */
     private int timeForNextBatch;
     private Collection<TraceMU> nextBatchOfMUs;
+    
+    /**
+     * Each simulation round maps to a real time according to the trace of mobility.
+     * Example: If the trace uses seconds as its time unit, then setting this 
+     * variable to 3600 will map simulation rounds to hours. 
+     * This has implications such as keeping statistics and results per 3600 sec
+     * and so forth..
+     */
+    private int roundDuration = 180;
 
     public TraceKolnSimulation(Scenario s) {
         super(s);
@@ -124,7 +133,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
             int time = Integer.parseInt(csv[0]);
 
             if (time > this.timeForNextBatch) {
-                this.timeForNextBatch = time;
+                this.timeForNextBatch = time + roundDuration;
                 clock.tick(time);
                 break; // in this case let it be read in the next round's batch of trace lines
             }
@@ -149,9 +158,8 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 switched2moving = updateMU(parsedID, x, y, switched2moving, speed);
             }
 
-            
             nextBatchOfMUs.add(this.muByID.get(parsedID));
-            
+
             if (!_muTraceIn.hasNextLine()) {
                 _muTraceIn.close();
                 throw new TraceEndedException(trcEndStr);
@@ -289,30 +297,50 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     public void run() {
 
         try {
-
             readMobilityTraceMeta();
-
             initSimClockTime();
-
             mobTraceEarlyEndingCheck();
 
-            /* load next line and extract the simulation time
+            /* 
+             * Load next line and extract the simulation time, 
              * which will be used as a threshold for loading the next batch 
-             * of trace lines
+             * of trace lines.
              */
             mobTrcLine = _muTraceIn.nextLine();
             String[] csv = mobTrcLine.split(mobTrcCSVSep);
-            timeForNextBatch = Integer.parseInt(csv[0]);
+            timeForNextBatch = Integer.parseInt(csv[0]) + roundDuration;
 
+            int simRound = 0; // used for logging. See also var roundDuration.
+            
             WHILE_THREAD_NOT_INTERUPTED:
             while (!Thread.currentThread().isInterrupted()) {
+                
+                int sec = simTime();
+                int h = sec/3600;
+                sec-=h*3600;
+                
+                int m = sec/60;
+                sec -= m*60;
+                
+                
+                LOG.log(Level.INFO, "Starting simulation round:{0}\n"
+                        + "\tLast time loaded from mobility trace:{1}, "
+                        + "which is mapped to {2}:{3}:{4} in h:min:sec",
+                         
+                        new Object[]{
+                            (++simRound),
+                            simTime(),
+                            h, m, sec
+                        }
+                );
+                
                 readFromMobilityTrace();
 
                 if (stationaryRequestsUsed()) {/*
                      * Consume data and keep gain stats for stationary users
                      */
                     for (SmallCell nxtSC : smallCells()) {
-                        StationaryUser nxtSU = nxtSC.getStationaryUser();
+                        StationaryUser nxtSU = nxtSC.getStationaryUsr();
                         nxtSC.updtLclDmdByStationary(false);
                         nxtSU.consumeDataTry(1);
                         nxtSU.tryCacheRecentFromBH();// try to cache whatever not already in the cache that you just downloaded.
@@ -321,7 +349,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 }
 
 /////////////////////////////////////
-                
                 _haveExitedPrevCell.clear();
                 _haveHandedOver.clear();
                 getStatsHandle().resetHandoverscount();

@@ -248,24 +248,13 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         return cleared;
     }
 
-    /**
-     *
-     * r item.
-     *
-     * @throws java.lang.Throwable
-     */
-    public void addRequest(DocumentRequest r) throws Throwable {
+    public void addRequest(DocumentRequest r)  {
         _requests.add(r);
         _requestsInChunks.addAll(r.referredContentDocument().chunks());
     }
 
-    /**
-     *
-     * requests
-     *
-     * @throws java.lang.Throwable
-     */
-    public void addAllRequests(Collection<DocumentRequest> requests) throws Throwable {
+   
+    public void addAllRequests(Collection<DocumentRequest> requests) {
         for (DocumentRequest r : requests) {
             addRequest(r);
         }

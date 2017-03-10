@@ -64,7 +64,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     protected static int _idGen = 0;
     protected final int _id = ++_idGen;
-    protected final Logger _logger = CommonFunctions.getLoggerFor(this);
+    protected final Logger LOG = CommonFunctions.getLoggerFor(this);
 
     protected static final Object CONCURRENT_LOCK = new Object();
 
@@ -148,7 +148,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     protected final int _loggingSimTimePeriod;
     protected final List<MobileUser> _haveExitedPrevCell = new ArrayList();
     protected final List<MobileUser> _haveHandedOver = new ArrayList();
-    protected String _neighborhoodType;
+    protected String theNeighborhoodType;
     private int _loadedDocumentsNum;
     private long _maxWorklaodRequestsNum;
 
@@ -222,10 +222,10 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     }
 
     /**
-     * @return the _neighborhoodType
+     * @return the theNeighborhoodType
      */
-    public String getNeighborhoodType() {
-        return _neighborhoodType;
+    public String getTheNeighborhoodType() {
+        return theNeighborhoodType;
     }
 
     /**
@@ -447,7 +447,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     }
 
     protected void preLoad(Collection<SmallCell> scs, AbstractCachingPolicy nxtPolicy) throws CriticalFailureException {
-        _logger.log(INFO, "Preloading top most popular items for policy {0}", nxtPolicy.toString());
+        LOG.log(INFO, "Preloading top most popular items for policy {0}", nxtPolicy.toString());
         int count = 0;
         int num = scs.size();
 
@@ -463,7 +463,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             }
 
             if (++count % 100 == 0) {
-                _logger.log(INFO, "Preloading.. {0}% completed.", Math.round(10000.0 * count / num) / 100.0);
+                LOG.log(INFO, "Preloading.. {0}% completed.", Math.round(10000.0 * count / num) / 100.0);
             }
         }
     }
@@ -495,7 +495,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         synchronized (CONCURRENT_LOCK) {
             runningSimulations--;
 
-            _logger
+            LOG
                     .log(Level.INFO, "Simulation Thread {0} Ended! Currently running: {1}/{2}",
                             new Object[]{getID(), runningSimulations,
                                 SimulatorApp.getMainArgs().getMaxConcurrentWorkers()
@@ -707,8 +707,8 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             Collection<AbstractCachingPolicy> cachingPolicies);
 
     protected void initCellNeighborhood(CellRegistry reg, Scenario setup) {
-        _neighborhoodType = setup.stringProperty(app.properties.Space.SC__NEIGHBORHOOD, false);
-        switch (_neighborhoodType) {
+        theNeighborhoodType = setup.stringProperty(app.properties.Space.SC__NEIGHBORHOOD, false);
+        switch (theNeighborhoodType) {
             case Values.ALL:
 
                 for (SmallCell scI : reg.getSmallCells()) {
@@ -728,13 +728,14 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                 }
                 break;
 
+            case Values.TRACE:
             case Values.DISCOVER:
             case Values.NONE:
                 return;// do nothing in this case
 
             default:
                 throw new UnsupportedOperationException(
-                        "Value " + _neighborhoodType
+                        "Value " + theNeighborhoodType
                         + " is not supported. Check for wrong parameter value set for property \""
                         + app.properties.Space.SC__NEIGHBORHOOD
                         + "\""
@@ -748,10 +749,10 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
         try {
             CellRegistry reg = new CellRegistry(this, groupsRegistry, mc, area);
-            _logger.log(Level.INFO, "Cell registry initialized.\n");
+            LOG.log(Level.INFO, "Cell registry initialized.");
             return reg;
         } catch (InvalidOrUnsupportedException ex) {
-            _logger.log(Level.SEVERE, ex.getMessage(), ex);
+            LOG.log(Level.SEVERE, ex.getMessage(), ex);
             throw new CriticalFailureException(ex);
         }
     }
@@ -774,42 +775,69 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         return getStatsHandle().tryCommitRound();
     }
 
-    protected boolean isDuringWarmupPeriod(TraceLoader trcLoader) throws NormalSimulationEndException, Throwable {
+    /**
+     * Checks if the simulation is during the warmup period, along with
+     * preparing several prerequisites, such as:
+     *
+     * <ul>
+     * <li> Statistics about newly added requests by stationaries </li>
+     * <li> Loads item requests for mobiles and stationaries </li>
+     * <li> Runs method runWarmUpVars() </li>
+     * </ul>
+     *
+     * @param trcLoader the loader for the trace of user requests
+     *
+     * @return true if simulation time is less than the warmup period threshold.
+     *
+     * @throws NormalSimulationEndException
+     *
+     *
+     * @see #runWarmUpVars()
+     */
+    protected boolean checkWarmupDoInitialization(TraceLoader trcLoader)
+            throws NormalSimulationEndException, CriticalFailureException {
 
-        try {
-            if (simTime() < warmupPeriod) {
+        if (simTime() <= warmupPeriod) {
+            try {
                 runWarmUpVars();
-                return true;
-            } else if (simTime() == warmupPeriod) {
-                runWarmUpVars();
-                /* When simTime() == warmupPeriod, reset and prepear all mobiles.
-                 */
+            } catch (InvalidOrUnsupportedException |
+                    InconsistencyException | WrongOrImproperArgumentException | StatisticException ex) {
+                throw new CriticalFailureException(ex);
+            }
+        }
+
+        if (simTime() < warmupPeriod) {
+            return true;
+        } else if (simTime() == warmupPeriod) {
+            /* When simTime() == warmupPeriod, reset and prepear all mobiles.
+             */
+            try {
                 if (stationaryRequestsUsed()) {
                     for (SmallCell nxtSC : getCellRegistry().getSmallCells()) {
                         nxtSC.initLclDmdStationary();
                         nxtSC.updtLclDmdByStationary(true);
                     }
                 }
-                int newAddedReqs = 0;
-                for (M nxtMU : _mblUsrs) {
-                    if (usesTraceOfRequests()) {
-                        newAddedReqs += updtLoadWorkloadRequests(nxtMU, _dmdTrcReqsLoadedPerUser);
-                    }
-                }
-
-//                getSim().getStatsHandle().updtSCCmpt6(newAddedReqs,
-//                        new UnonymousCompute6(
-//                                new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
-//                );
-                return true;
+            } catch (InvalidOrUnsupportedException |
+                    InconsistencyException ex) {
+                throw new CriticalFailureException(ex);
             }
+            int newAddedReqs = 0;
+            for (M nxtMU : _mblUsrs) {
+                if (usesTraceOfRequests()) {
+                    newAddedReqs += updtLoadWorkloadRequests(nxtMU, _dmdTrcReqsLoadedPerUser);
+                }
+            }
+
+            getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
+                    new UnonymousCompute6(
+                            new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
+            );
+            return true;
+        } else {
             return false;
-        } catch (InvalidOrUnsupportedException |
-                WrongOrImproperArgumentException |
-                StatisticException |
-                InconsistencyException ex) {
-            throw new CriticalFailureException(ex);
         }
+
     }
 
     protected void runWarmUpVars()
@@ -822,7 +850,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
         for (M nxtMU : _mblUsrs) {
             ConnectionStatusUpdate updtSCConnChange = nxtMU.move(false, true);
-            if (_neighborhoodType.equalsIgnoreCase(DISCOVER)
+            if (theNeighborhoodType.equalsIgnoreCase(DISCOVER)
                     && updtSCConnChange.isHandedOver()) {
                 nxtMU.getPreviouslyConnectedSC().addNeighbor(nxtMU.getCurrentlyConnectedSC());
             }
@@ -830,8 +858,8 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-        boolean roundCommited = runUpdtStats4SimRound();
-        if (roundCommited) {
+        boolean roundCommitted = runUpdtStats4SimRound();
+        if (roundCommitted) {
             getStatsHandle().appendTransient(false);
             getStatsHandle().checkFlushTransient(false);
         }
@@ -941,7 +969,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * @throws sim.time.NormalSimulationEndException
      */
     protected int updtLoadWorkloadRequests(MobileUser mu, int loadPerUser)
-            throws NormalSimulationEndException, Throwable {
+            throws NormalSimulationEndException {
         int howManyToAdd = loadPerUser - mu.getRequests().size(); // just add what has finished
 
         int count = 0;
@@ -987,7 +1015,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         System.gc();
 
         try {
-            _logger.log(
+            LOG.log(
                     Level.INFO,
                     "Printing results for simulation {0}.",
                     new Object[]{Thread.currentThread().getName()}
@@ -995,7 +1023,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             getStatsHandle().prntAggregates();
             getStatsHandle().appendTransient(true);
         } catch (StatisticException ex) {
-            _logger.log(Level.SEVERE, "Unsuccessful effort to print results.", ex);
+            LOG.log(Level.SEVERE, "Unsuccessful effort to print results.", ex);
         }
         decreaseRunningSimulations();
     }

@@ -497,7 +497,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         try {
 
             while (!Thread.currentThread().isInterrupted()
-                    && isDuringWarmupPeriod(getTrcLoader())) {
+                    && checkWarmupDoInitialization(getTrcLoader())) {
                 clock.tick();
 
                 try {
@@ -527,7 +527,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                      * Concume data and keep gain stats for stationary users
                      */
                     for (SmallCell nxtSC : smallCells()) {
-                        StationaryUser nxtSU = nxtSC.getStationaryUser();
+                        StationaryUser nxtSU = nxtSC.getStationaryUsr();
                         nxtSC.updtLclDmdByStationary(false);
                         nxtSU.consumeDataTry(1);
                         nxtSU.tryCacheRecentFromBH();// try to cache whatever not already in the cache that you just downloaded.

@@ -48,11 +48,11 @@ import utilities.Couple;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public class CellRegistry implements ISimulationMember, ISynopsisString {
+public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
     private final SimulationBaseRunner _sim;
     private final Scenario _s;
-    private final Logger _logger;
+    private final Logger LOG;
 
     /**
      * key: ID of SC
@@ -84,7 +84,6 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
      */
     private final Map<Couple<String, String>, Couple<double[], Integer>> interCellHandoverDurationLastSamples = new HashMap<>(20, 2);
     private static final int SAMPLES_SIZE = 30;
-    
 
     /**
      * Residence duration when coming from another cell (couple.first is the
@@ -102,7 +101,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
 
         _sim = sim;
         _s = _sim.getScenario();
-        _logger = CommonFunctions.getLoggerFor(CellRegistry.class, "simID=" + getSimulation().getID());
+        LOG = CommonFunctions.getLoggerFor(CellRegistry.class, "simID=" + getSimulation().getID());
 
         _mobilityModel = _s.stringProperty(Space.MOBILITY_MODEL, false);
         _probJitter = _s.doubleProperty(Space.SC__HANDOFF_PROBABILITY__STDEV);
@@ -652,7 +651,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
             int sum = 0;
             int printPer = (int) (scsNum * percentage);
             printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
-            _logger.log(Level.INFO, "Initializing small cells on the area:\n\t{0}/{1}", new Object[]{0, scsNum});
+            LOG.log(Level.INFO, "Initializing small cells on the area:\n\t{0}/{1}", new Object[]{0, scsNum});
 //</editor-fold>
 
             // try to make it as uniform as possible
@@ -672,7 +671,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
                 //<editor-fold defaultstate="collapsed" desc="logging">
                 if (++count % printPer == 0) {
                     sum += (int) (10000.0 * printPer / scsNum) / 100;// roiunding, then percent
-                    _logger
+                    LOG
                             .log(Level.INFO, "\t{0}%", sum);
                 }
                 _init_SmallCells_random.add(nxt_sc);
@@ -698,7 +697,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
             int sum = 0;
             int printPer = (int) (scs_num * percentage);
             printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
-            _logger
+            LOG
                     .log(Level.INFO, "Initializing small cells on the area:\n\t{0}/{1}", new Object[]{0, scs_num});
 //</editor-fold>
             for (int i = 0; i < scs_num; i++) {
@@ -707,7 +706,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
                 //<editor-fold defaultstate="collapsed" desc="logging">
                 if (++count % printPer == 0) {
                     sum += (int) (10000.0 * printPer / scs_num) / 100;// roiunding, then percent
-                    _logger
+                    LOG
                             .log(Level.INFO, "\t{0}%", sum);
                 }
                 _init_SmallCells_random.add(nxt_sc);
@@ -739,7 +738,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
             int sum = 0;
             int printPer = (int) (scs_num * percentage);
             printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
-            _logger
+            LOG
                     .log(Level.INFO, "Initializing small cells on the area:\n\t{0}/{1}", new Object[]{0, scs_num});
             //</editor-fold>
             for (int i = 0; i < scs_num; i++) {
@@ -749,7 +748,7 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
                 boolean logUsrUpdt = ++count % printPer == 0;
                 if (logUsrUpdt) {
                     sum += (int) (10000.0 * printPer / scs_num) / 100;// roiunding, then percent
-                    _logger
+                    LOG
                             .log(Level.INFO, "\t{0}%", sum);
                 }
                 _init_SmallCells_random.add(nxtSC);
@@ -782,10 +781,9 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
         Scenario s = getSimulation().getScenario();
 
         String tracePath = s.stringProperty(Space.SC__TRACE_PATH, true);
-        _logger.
-                log(Level.INFO, "Initializing small cells on the area from trace: {0}",
-                        new Object[]{tracePath}
-                );
+        LOG.log(Level.INFO, "Initializing small cells on the area from trace: {0}",
+                new Object[]{tracePath}
+        );
 
         Set<SmallCell> initFromTrace = new HashSet<>();
 
@@ -871,12 +869,12 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
                 //<editor-fold defaultstate="collapsed" desc="logging progress">
                 byteConsumed += nxtSCLine.length() * 2; //16 bit chars
                 int progress = (int) (10000.0 * byteConsumed / traceSize) / 100;// rounding, then percent
-                _logger.log(Level.INFO, "\t{0}%", progress);
-                _logger.log(Level.FINE, "\tSmall Cell created: {0}", nxt_sc.toSynopsisString());
+                LOG.log(Level.INFO, "\t{0}%", progress);
+                LOG.log(Level.FINE, "\tSmall Cell created: {0}", nxt_sc.toSynopsisString());
                 //</editor-fold>
             }
 
-            _logger.log(Level.INFO, "Finished. Total small cells created: {0}", initFromTrace.size());
+            LOG.log(Level.INFO, "Finished. Total small cells created: {0}", initFromTrace.size());
             return initFromTrace;
         } catch (InvalidOrUnsupportedException | CriticalFailureException | IOException | NumberFormatException | NoSuchElementException ex) {
             String msg = "";
@@ -895,10 +893,10 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
      * Initializes Cells. Cells are added to the area by the constructor of
      * SmallCell.
      *
-     * sim area cachingPolicies
-     *
+     * @param area
+     * @param cachingPolicies
      * @return
-     * @throws exceptions.CriticalFailureException
+     * @throws CriticalFailureException
      */
     public Set<SmallCell> createSCs(Area area,
             Collection<AbstractCachingPolicy> cachingPolicies) throws CriticalFailureException {
@@ -908,11 +906,13 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
         try {
             List<String> scsInit = s.listOfStringsProperty(Space.SC__INIT, false);
             if (scsInit.isEmpty()) {
-                _logger.log(Level.WARNING, "There are no small cells defined in property {0}", Space.SC__INIT.name());
+                LOG.log(Level.WARNING, 
+                        "There are no small cells defined in property {0}", 
+                        Space.SC__INIT.name());
             }
             if (scsInit.size() == 1) {
 
-                switch (scsInit.get(0).toLowerCase()) {
+                switch (scsInit.get(0).toUpperCase()) {
 
                     case Values.RANDOM:
                         scSet = initSCsRnd(area, cachingPolicies);
@@ -926,17 +926,15 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
                         break;
 
                     default:
-                        Point center = area.getPoint(scsInit.get(0));
-                        scSet = initSCs(area, cachingPolicies, center);
-                        break;
-
+                        throw new UnsupportedOperationException(scsInit.get(0));
+//@todo most probably delete. No need to keep:
+//                        Point center = area.getPoint(scsInit.get(0));
+//                        scSet = initSCs(area, cachingPolicies, center);
+//                        break;
                 }
-
             } else {
-
                 Point[] centers = area.getPoints(scsInit);
                 scSet = initSCs(area, cachingPolicies, centers);
-
             }
 
             //<editor-fold defaultstate="collapsed" desc="discover neighbors sanity check">
@@ -949,10 +947,9 @@ public class CellRegistry implements ISimulationMember, ISynopsisString {
             //</editor-fold>
 
             return scSet;
-        } catch (CriticalFailureException | UnsupportedOperationException ex) {
+        } catch (UnsupportedOperationException ex) {
             throw new CriticalFailureException(ex);
         }
-
     }
 
     private Map<Integer, Double> initSCsTraceTokenizeNeighbs(String neighbors) {

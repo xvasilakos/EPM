@@ -80,7 +80,8 @@ public class SmallCell extends AbstractCell {
         String neighborhoodType = sim.getScenario().stringProperty(app.properties.Space.SC__NEIGHBORHOOD, false);
         _selfNeighborsAllowed
                 = sim.getScenario().isTrue(Space.SC__NEIGHBORHOOD__ALLOW_SELF)
-                || neighborhoodType.equalsIgnoreCase(Values.ALL_PLUS_SELF);
+                || neighborhoodType.equalsIgnoreCase(Values.ALL_PLUS_SELF)
+                || neighborhoodType.equalsIgnoreCase(Values.TRACE);
 
         _smoothedHandoversCount = 0;
 
@@ -166,7 +167,9 @@ public class SmallCell extends AbstractCell {
         String neighborhoodType = sim.getScenario().stringProperty(app.properties.Space.SC__NEIGHBORHOOD, false);
         _selfNeighborsAllowed
                 = sim.getScenario().isTrue(Space.SC__NEIGHBORHOOD__ALLOW_SELF)
-                || neighborhoodType.equalsIgnoreCase(Values.ALL_PLUS_SELF);
+                || neighborhoodType.equalsIgnoreCase(Values.ALL_PLUS_SELF)
+                || neighborhoodType.equalsIgnoreCase(Values.TRACE)
+                ;
 
         _smoothedHandoversCount = 0;
         _proactCachingDmd = new HashMap();
@@ -832,13 +835,13 @@ if(!cacheRequestor.isAllowedToCache()) return ;
     }
 
     public boolean updtLclDmdByStationary(boolean force) throws
-            NormalSimulationEndException, Throwable {
+            NormalSimulationEndException, CriticalFailureException {
 
         boolean shouldLoad; // Should new requests be loaded?
 //        shouldLoad = simTime() % _loadStationaryReqsJitter == 0;
         shouldLoad = simTime() % getSmoothedHandoverDuration() < 1;
 
-        _stationaryUser.setLastResidenceDuration(getSmoothedHandoverDuration());
+        stationaryUsr.setLastResidenceDuration(getSmoothedHandoverDuration());
 
         if (!shouldLoad && !force) {
             return false;
@@ -846,17 +849,17 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
         if (!force) {
             try {
-                _stationaryUser.forceCompleteRequests();
-                getSimulation().getStatsHandle().updtPerformanceStats(_stationaryUser);
+                stationaryUsr.forceCompleteRequests();
+                getSimulation().getStatsHandle().updtPerformanceStats(stationaryUsr);
             } catch (InvalidOrUnsupportedException | StatisticException ex) {
                 throw new CriticalFailureException(ex);
             }
         }
 
 ///////////////////////        
-        getDmdLclForW().deregisterLclDmdForW(_stationaryUser, 1);
+        getDmdLclForW().deregisterLclDmdForW(stationaryUsr, 1);
 
-        _stationaryUser.clearAllRequests();
+        stationaryUsr.clearAllRequests();
 
 ///////////////////////
 //load new requests
@@ -871,11 +874,11 @@ if(!cacheRequestor.isAllowedToCache()) return ;
             TraceWorkloadRecord nxtFromWorkload = iterator.next().getValue();
             iterator.remove();
 
-            DocumentRequest r = new DocumentRequest(nxtFromWorkload, _stationaryUser);
+            DocumentRequest r = new DocumentRequest(nxtFromWorkload, stationaryUsr);
             r.setConsumeReady(true);
 
             _sim.incrWrkloadConsumed();
-            _stationaryUser.addRequest(r);
+            stationaryUsr.addRequest(r);
         }
 
         return true;
@@ -904,16 +907,16 @@ if(!cacheRequestor.isAllowedToCache()) return ;
                     + "mean and standard deviation parameter values.");
         }
 
-        _stationaryUser = new StationaryUser(-1 * getID(), _sim, _sim.simTime(),
+        stationaryUsr = new StationaryUser(-1 * getID(), _sim, _sim.simTime(),
                 this, _sim.macrocell(),
                 _sim.getCachingStrategies());
     }
 
     /**
-     * @return the _stationaryUser
+     * @return the stationaryUsr
      */
-    public StationaryUser getStationaryUser() {
-        return _stationaryUser;
+    public StationaryUser getStationaryUsr() {
+        return stationaryUsr;
     }
 
     public void updtSmoothedResidenceDuration(double val, double weight) {
@@ -978,7 +981,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
     private final Set<SmallCell> neighbors = new HashSet<>();
 
     private final Map<AbstractCachingPolicy, PCDemand> _proactCachingDmd;
-    private StationaryUser _stationaryUser;
+    private StationaryUser stationaryUsr;
     private double _smoothedResidenceDuration;
     private double _smoothedHandoverDuration;
     private int _smoothedHandoversCount;

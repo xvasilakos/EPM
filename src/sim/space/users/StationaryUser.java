@@ -49,7 +49,7 @@ public class StationaryUser extends CachingUser {
     }
 
     @Override
-    public void addAllRequests(Collection<DocumentRequest> requests) throws Throwable {
+    public void addAllRequests(Collection<DocumentRequest> requests)  {
         for (DocumentRequest r : requests) {
             addRequest(r);
         }
@@ -92,7 +92,7 @@ public class StationaryUser extends CachingUser {
     }
 
     @Override
-    public void addRequest(DocumentRequest r) throws Throwable {
+    public void addRequest(DocumentRequest r)  {
         super.addRequest(r);
         _currentlyConnectedSC.getPopInfo().registerPopInfo(r);
     }

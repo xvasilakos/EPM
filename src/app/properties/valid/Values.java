@@ -53,9 +53,10 @@ public final class Values {
     ////////////////////////////////////////////////////////////////////////////////////
     public static final String NEVER = "never";
     public static final String ALWAYS = "always";
-    public static final String ALL = "all";
-    public static final String ALL_PLUS_SELF = "all+self";
-    public static final String DISCOVER = "discover";
+    public static final String ALL = "ALL";
+    public static final String ALL_PLUS_SELF = "ALL+SELF";
+    public static final String DISCOVER = "DISCOVER";
+    public static final String TRACE = "TRACE";
     public static final String UPON_CREATION = "upon_creation";
     ///////////////////////////////////////////////////////////////////////////////////
     public static final String NULL = "NULL";
@@ -64,8 +65,8 @@ public final class Values {
     public static final String LIST_SEPARATOR = ",";
     public static final String SETUP_SEPARATOR = ";";
     ///////////////////////////////////////////////////////////////////////////////////
-    public static final String RANDOM_UNIFORM = "random_uniform";
-    public static final String RANDOM = "random";
+    public static final String RANDOM_UNIFORM = "RANDOM_UNIFORM";
+    public static final String RANDOM = "RANDOM";
     public static final String RANDOM_Y = "random_y";
     public static final String RANDOM_X = "random_x";
     public static final String LOOP_PLUS_NO_RESET = "loop+no_reset";
@@ -84,7 +85,6 @@ public final class Values {
     public static final String CC = "CC";
 
     ///////////////////////////////////////////////////////////////////////////////////
-    public static final String TRACE = "trace";
     public static final String FIXED = "fixed";
     public static final String PROPAGATION_DELAY__PLUS__MC_WIRELESS = "propagation_delay+mc_wireless";
     public static final String MONETARY = "monetary";

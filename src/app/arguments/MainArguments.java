@@ -65,18 +65,19 @@ public class MainArguments {
             if (SYSTEM_SEP.equals("\\")) {
                 INSTALLATION_PATH = System.getProperty("user.home")
                         .replaceAll("\\\\", "/")
-                        + "/Dropbox/EPC/trunk";
+                        + "/Dropbox/EPC/git/EPM";
+                
             }
         }
 
-        public static final String FILES_TAG = "<files>";
+        public static final String FILES_TAG = "<FILES>";
         public static final String FILES_PATH = INSTALLATION_PATH + "/files";
 
-        public static final String SIMCORE_TAG = "<simcore>";
+        public static final String SIMCORE_TAG = "<SIMCORE>";
         public static final String CORE_FILES_PATH = FILES_PATH + "/sim/core";
 
         public static final String PROPS_PATH_TAG = "<DEFAULT_PROPS>";
-        public static final String PROPS_PATH = INSTALLATION_PATH + "/files/sim/core/default_properties";
+        public static final String PROPS_PATH = FILES_PATH + "/sim/core/default_properties";
 
         public static final String PROPS_MASTER__INI_TAG = "<DEFAULT_PROPS_MASTER__INI>";
         public static final String DEFAULT_PROPS_MASTER__INI_PATH = INSTALLATION_PATH + "/files/sim/core/default_properties/master.ini";
