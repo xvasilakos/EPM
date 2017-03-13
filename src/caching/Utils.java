@@ -50,7 +50,6 @@ public abstract class Utils {
         for (Chunk nxtReqChunk : nxtRequest.referredContentDocument().chunks()) {
             if (targetSC.bufferContains(policy, cu, nxtReqChunk)) {
                 Set<CachingUser> stillRequesting = targetSC.bufferTryEvict(cu, policy, nxtReqChunk);
-              //  targetSC.removeCacher(cu, policy, nxtReqChunk);//xxx
                 /**
                  * There may be still requesting mus, but they may be requesting
                  * with zero probability, because the item was previously

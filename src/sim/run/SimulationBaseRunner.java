@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -73,7 +74,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     /**
      * The parameters setup for this simulation.
      */
-    protected final Scenario _scenarioSetup;
+    protected final Scenario scenarioSetup;
 
     protected final long _chunkSizeInBytes;
     protected final long _rateMCWlessInBytes;
@@ -92,15 +93,8 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * A registry that contains the different groups of mobile users.
      */
     protected final MobileGroupsRegistry _musGrpsRegistry;
-    /**
-     * The list of all mobile users in the _sim.
-     *
-     * Caution Use access methods for this list rather than the list directly.
-     * The list keeps the order that the mobiles where created and thus may lead
-     * to simulation synchronization phenomena regarding mobile users' mobility,
-     * handoffs etc..
-     */
-    protected final List<M> _mblUsrs;
+   
+    protected Map<Integer, M> musByID;
     /**
      * The _sim "clock" which keeps the _sim simTime "ticking".
      */
@@ -136,7 +130,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * the time of request in the workload file.
      */
     protected SortedMap<Double, TraceWorkloadRecord> _wrkLoad;
-    protected Map<Long, ContentDocument> _trcDocs;
+    protected Map<String, ContentDocument> _trcDocs;
 
     /**
      * Defines how to compute popularity of items. This feature is used for
@@ -166,13 +160,15 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * @return a possibly shuffled unmodifiable list of mus.
      */
     public List<M> shuffledMUs() {
+        ArrayList shuffled = new ArrayList(musByID.values());
+        
         switch (getScenario().stringProperty(Space.MU__SHUFFLE, false)) {
             //<editor-fold defaultstate="collapsed" desc="shuffle iff property imposed">
             case Values.NEVER:
             case Values.UPON_CREATION:
                 break; // do not shufle
             case Values.ALWAYS:
-                Collections.shuffle(_mblUsrs, getRandomGenerator().getMersenneTwister());
+                Collections.shuffle(shuffled, getRandomGenerator().getMersenneTwister());
                 break;
             default:
                 throw new UnsupportedOperationException(
@@ -180,7 +176,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                 );
         }
         //</editor-fold>
-        return Collections.unmodifiableList(_mblUsrs);
+        return shuffled;
     }
 
     @Override
@@ -256,7 +252,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     /**
      * @return the documents of the trace
      */
-    public Map<Long, ContentDocument> pop() {
+    public Map<String, ContentDocument> pop() {
         return Collections.unmodifiableMap(getTrcDocs());
     }
 
@@ -284,7 +280,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     /**
      * @return the _trcDocs
      */
-    public Map<Long, ContentDocument> getTrcDocs() {
+    public Map<String, ContentDocument> getTrcDocs() {
         return _trcDocs;
     }
 
@@ -324,7 +320,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * @throws CriticalFailureException
      */
     protected SimulationBaseRunner(Scenario s) throws CriticalFailureException {
-        _scenarioSetup = s;
+        scenarioSetup = s;
         constructorInit(s);
 
         try {
@@ -339,12 +335,12 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             // global variables for data rates
             // 125000 bytes <=> 1Mbps
             _chunkSizeInBytes = Math.round(125000 * getSimulation().getScenario().doubleProperty(Networking.Rates.CHUNK_SIZE));
-            _rateMCWlessInBytes = (long) (125000 * _scenarioSetup.doubleProperty(Networking.Rates.MC_WIRELESS));
-            _rateSCWlessInBytes = (long) (125000 * _scenarioSetup.doubleProperty(Networking.Rates.SC_WIRELESS));
-            _rateBHInBytes = (long) (125000 * _scenarioSetup.doubleProperty(Networking.Rates.SC_BACKHAUL));
+            _rateMCWlessInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.MC_WIRELESS));
+            _rateSCWlessInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.SC_WIRELESS));
+            _rateBHInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.SC_BACKHAUL));
 
             warmupPeriod = getScenario().intProperty(Space.SC__WARMUP_PERIOD);
-            _itemPopCmptType = _scenarioSetup.stringProperty(Space.ITEM__POP_CMPT, false);
+            _itemPopCmptType = scenarioSetup.stringProperty(Space.ITEM__POP_CMPT, false);
             _decimalFormat = s.stringProperty(app.properties.Simulation.DecimalFormat, false);
 
             loadDmdTraceDocs(s);
@@ -386,7 +382,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         cachingStrategies = s.loadCachingPolicies();
         _maxPopCachingCutter = s.doubleProperty(CACHING__POLICIES__MAXPOP_CUTTER);
         // initialize the theArea //
-        theArea = s.initArea(this);
+        theArea = initArea();
 
         // itialize cells //
         MacroCell macroCell = s.initMC(this, theArea);
@@ -402,7 +398,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         _statsHandle = new StatsHandling(this);
 
         // initilize mobile users and arrange initial connectivity and proactive caching  status //
-        _mblUsrs = initAndConnectMUs(s, _musGrpsRegistry, theArea, _cellRegistry, getCachingStrategies());
+        musByID = initAndConnectMUs(s, _musGrpsRegistry, theArea, _cellRegistry, getCachingStrategies());
 
         _loadedDocumentsNum = 0;
         _maxWorklaodRequestsNum = 0;
@@ -508,7 +504,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * @return the currSetup
      */
     public Scenario getScenario() {
-        return _scenarioSetup;
+        return scenarioSetup;
     }
 
     /**
@@ -701,7 +697,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * @param cachingPolicies
      * @return
      */
-    abstract protected List<M> initAndConnectMUs(
+    abstract protected Map<Integer, M> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
             Collection<AbstractCachingPolicy> cachingPolicies);
@@ -823,7 +819,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                 throw new CriticalFailureException(ex);
             }
             int newAddedReqs = 0;
-            for (M nxtMU : _mblUsrs) {
+            for (M nxtMU : musByID.values()) {
                 if (usesTraceOfRequests()) {
                     newAddedReqs += updtLoadWorkloadRequests(nxtMU, _dmdTrcReqsLoadedPerUser);
                 }
@@ -848,8 +844,8 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         getStatsHandle().resetHandoverscount();
         _haveExitedPrevCell.clear();
 
-        for (M nxtMU : _mblUsrs) {
-            ConnectionStatusUpdate updtSCConnChange = nxtMU.move(false, true);
+        for (M nxtMU : musByID.values()) {
+            ConnectionStatusUpdate updtSCConnChange = nxtMU.moveRelatively(false, true);
             if (theNeighborhoodType.equalsIgnoreCase(DISCOVER)
                     && updtSCConnChange.isHandedOver()) {
                 nxtMU.getPreviouslyConnectedSC().addNeighbor(nxtMU.getCurrentlyConnectedSC());
@@ -972,16 +968,16 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             throws NormalSimulationEndException {
         int howManyToAdd = loadPerUser - mu.getRequests().size(); // just add what has finished
 
+
         int count = 0;
         do {
-            loadFromWrkloadIfNeeded(loadPerUser * _mblUsrs.size());
+            loadFromWrkloadIfNeeded(loadPerUser * this.musByID.size());
             Iterator<Map.Entry<Double, TraceWorkloadRecord>> iterator = _wrkLoad.entrySet().iterator();
             while (iterator.hasNext() && howManyToAdd-- > 0) {
                 TraceWorkloadRecord nxtWorkloadRecord = iterator.next().getValue();
 
                 DocumentRequest loadedRequest = new DocumentRequest(nxtWorkloadRecord, mu);
 
-                //DebugTool.append("Loaded record from trace: " + loadedRequest.toSynopsisString());
                 incrWrkloadConsumed();
 
                 iterator.remove();
@@ -1041,7 +1037,6 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * trace were loaded.
      */
     public void loadFromWrkloadIfNeeded(int threshold) throws NormalSimulationEndException {
-
         if (_wrkLoad.size() < threshold) {
             try {
                 // just to be sure enough are loaded
@@ -1093,6 +1088,21 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      */
     public double getMaxPopCachingCutter() {
         return _maxPopCachingCutter;
+    }
+
+    public Area initArea() throws CriticalFailureException {
+        Area tmpArea = new Area(this,
+                scenarioSetup.intProperty(Space.AREA__Y),
+                scenarioSetup.intProperty(Space.AREA__X));
+
+        LOG.log(Level.INFO, "{0}: {1}x{2} area; number of points={3}\n",
+                new Object[]{
+                    simTime(),
+                    scenarioSetup.intProperty(Space.AREA__Y),
+                    scenarioSetup.intProperty(Space.AREA__X),
+                    tmpArea.size()
+                });
+        return tmpArea;
     }
 
 }

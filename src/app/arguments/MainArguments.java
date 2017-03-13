@@ -16,26 +16,10 @@ import java.util.logging.Logger;
  */
 public class MainArguments {
 
-    public static String replaceAllTags(String str) {
+    public static String replaceAllTags(String taggedPath) {
 
-        String ret = str.
-                replaceAll(
-                        MainArguments.Defaults.INSTALLATION_PATH_TAG,
-                        MainArguments.Defaults.INSTALLATION_PATH
-                ).replaceAll(
-                        MainArguments.Defaults.FILES_TAG,
-                        MainArguments.Defaults.FILES_PATH
-                ).replaceAll(
-                        MainArguments.Defaults.SIMCORE_TAG,
-                        MainArguments.Defaults.CORE_FILES_PATH
-                ).replaceAll(MainArguments.Defaults.PROPS_PATH_TAG,
-                        MainArguments.Defaults.PROPS_PATH
-                ).replaceAll(MainArguments.Defaults.PROPS_MASTER__INI_TAG,
-                        MainArguments.Defaults.DEFAULT_PROPS_MASTER__INI_PATH
-                );
+        return Defaults.replaceAllTagsWithPaths(taggedPath);
 
-      
-        return ret;
     }
 
     public static boolean containsSomeTag(String str) {
@@ -51,24 +35,7 @@ public class MainArguments {
         public static final String SYSTEM_SEP = System.getProperty("file.separator");
 
         public static final String INSTALLATION_PATH_TAG = "<INSTALLATION_PATH>";
-        public static String INSTALLATION_PATH;
-
-        static {
-            
-            
-//        WRONG--> path = path.replaceAll("\\", "/");
-//        This will fail during execution giving you a PatternSyntaxException, 
-//        because the fisr String is a regular expression 
-//        So, writing it as a RegEx, as @jlordo gave in his answer:
-//        path = path.replaceAll("\\\\", "/");
-            
-            if (SYSTEM_SEP.equals("\\")) {
-                INSTALLATION_PATH = System.getProperty("user.home")
-                        .replaceAll("\\\\", "/")
-                        + "/Dropbox/EPC/git/EPM";
-                
-            }
-        }
+        public static String INSTALLATION_PATH = xtr.InstallationDirPath.INSTALLATION_PATH;
 
         public static final String FILES_TAG = "<FILES>";
         public static final String FILES_PATH = INSTALLATION_PATH + "/files";
@@ -82,14 +49,30 @@ public class MainArguments {
         public static final String PROPS_MASTER__INI_TAG = "<DEFAULT_PROPS_MASTER__INI>";
         public static final String DEFAULT_PROPS_MASTER__INI_PATH = INSTALLATION_PATH + "/files/sim/core/default_properties/master.ini";
 
+        public static String replaceAllTagsWithPaths(String taggedPAth) {
+            return taggedPAth.
+                    replaceAll(
+                            MainArguments.Defaults.INSTALLATION_PATH_TAG,
+                            MainArguments.Defaults.INSTALLATION_PATH
+                    ).replaceAll(
+                            MainArguments.Defaults.FILES_TAG,
+                            MainArguments.Defaults.FILES_PATH
+                    ).replaceAll(
+                            MainArguments.Defaults.SIMCORE_TAG,
+                            MainArguments.Defaults.CORE_FILES_PATH
+                    ).replaceAll(MainArguments.Defaults.PROPS_PATH_TAG,
+                            MainArguments.Defaults.PROPS_PATH
+                    ).replaceAll(MainArguments.Defaults.PROPS_MASTER__INI_TAG,
+                            MainArguments.Defaults.DEFAULT_PROPS_MASTER__INI_PATH
+                    );
+        }
+
         private Defaults() {// do not instanciate
         }
 
         private static final String ARGUMENTS__INI_CLASSPATH
                 = "/" + MainArguments.class.getPackage().toString().substring(8).trim().replace('.', '/')
                 + "/default_arg_values.ini";
-
-        public static final String DEFAULT_PROPERTIES_MASTER__INI = DEFAULT_PROPS_MASTER__INI_PATH + "/master.ini";
 
         private static Properties loadFromProperties() {
             Properties loadedProps = new Properties();
@@ -193,7 +176,7 @@ public class MainArguments {
     private int parallelSimsNum;
 
     private void defaults() {
-        propertiesPath = Defaults.DEFAULT_PROPERTIES_MASTER__INI;
+        propertiesPath = Defaults.DEFAULT_PROPS_MASTER__INI_PATH;
         parallelSimsNum = Defaults.PARALLEL;
     }
 
@@ -227,15 +210,8 @@ public class MainArguments {
             } else if (Flag.PROPERTIES_FULL_PATH.equals(nxtArg) || Flag.PP.equals(nxtArg)) {
                 //<editor-fold defaultstate="collapsed" desc="handle properties input path">
                 if (i < args.length) {
-                    if (args[i].startsWith(Defaults.PROPS_PATH_TAG)) {
-                        loaded.propertiesPath = Defaults.DEFAULT_PROPS_MASTER__INI_PATH
-                                + args[i].substring(
-                                        Defaults.PROPS_PATH_TAG.length()
-                                );
-                        i++;
-                    } else {
-                        loaded.propertiesPath = MainArguments.replaceAllTags(args[i++]);
-                    }
+                    loaded.propertiesPath = MainArguments.replaceAllTags(args[i++]);
+
                 } else {
                     String msg = "Argument \"" + nxtArg + "\" requires a path to a file";
                     throw new WrongOrImproperArgumentException(msg);

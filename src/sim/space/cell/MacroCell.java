@@ -44,6 +44,8 @@ public class MacroCell extends AbstractCell {
         // compute _radius //
         int lowX = area.getLengthX() - 1;  // _center uses floor, thus compute _radius based on low right corner
         int lowY = area.getLengthY() - 1;  // _center uses floor, thus compute _radius based on low right corner
+      
+        
         double radius = DistanceComparator.euclidianDistance(center, area.getPointAt(lowX, lowY));
 
         macrocell = new MacroCell(sim, center.getY(), center.getX(), radius, area);

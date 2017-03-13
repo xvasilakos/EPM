@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,7 +26,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import sim.ISimulationMember;
@@ -50,8 +50,8 @@ import utilities.Couple;
  */
 public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
-    private final SimulationBaseRunner _sim;
-    private final Scenario _s;
+    private final SimulationBaseRunner sim;
+    private final Scenario scenario;
     private final Logger LOG;
 
     /**
@@ -59,7 +59,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      *
      * Value: SmallCell with the given ID
      */
-    private final Map<Integer, SmallCell> _smallCells;
+    private final Map<Integer, SmallCell> smallCells;
     private final MacroCell _macroCell;
     /**
      * Number of Handoffs from a source smaller, mapped to a key that depends on
@@ -91,30 +91,30 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      */
     private final Map<Couple<String, String>, Double> interCellResidenceDuration = new HashMap<>(20, 2);
     private final Map<Couple<String, String>, Couple<double[], Integer>> interCellResidenceDurationLastSamples = new HashMap<>(20, 2);
-    private final String _mobilityModel;
-    private final MobileGroupsRegistry _muGroupRegistry;
-    private final double _probJitter;
+    private final String mobModel;
+    private final MobileGroupsRegistry muGroupRegistry;
+    private final double probJitter;
 
     public CellRegistry(
-            SimulationBaseRunner sim, MobileGroupsRegistry groupRegistry,
+            SimulationBaseRunner simulation, MobileGroupsRegistry groupRegistry,
             MacroCell mc, Area area) throws InvalidOrUnsupportedException {
 
-        _sim = sim;
-        _s = _sim.getScenario();
+        sim = simulation;
+        scenario = sim.getScenario();
         LOG = CommonFunctions.getLoggerFor(CellRegistry.class, "simID=" + getSimulation().getID());
 
-        _mobilityModel = _s.stringProperty(Space.MOBILITY_MODEL, false);
-        _probJitter = _s.doubleProperty(Space.SC__HANDOFF_PROBABILITY__STDEV);
+        mobModel = scenario.stringProperty(Space.MOBILITY_MODEL, false);
+        probJitter = scenario.doubleProperty(Space.SC__HANDOFF_PROBABILITY__STDEV);
 
-        this._muGroupRegistry = groupRegistry;
+        muGroupRegistry = groupRegistry;
 
-        this._smallCells = new TreeMap<>();
-        Collection<SmallCell> scs = createSCs(area, sim.getCachingStrategies());
+        smallCells = new TreeMap<>();
+        Collection<SmallCell> scs = createSCs(area, simulation.getCachingStrategies());
         Iterator<SmallCell> cellsIter = scs.iterator();
         while (cellsIter.hasNext()) {
             SmallCell sc = cellsIter.next();
             int scID = sc.getID();
-            this._smallCells.put(scID, sc);
+            this.smallCells.put(scID, sc);
         }
 
         this._macroCell = mc;
@@ -123,18 +123,18 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
     @Override
     public String toString() {
-        return this._sim.toString() + " "
-                + this._muGroupRegistry.toString() + " "
-                + "; Cells: <" + CommonFunctions.toString(_smallCells)
+        return this.sim.toString() + " "
+                + this.muGroupRegistry.toString() + " "
+                + "; Cells: <" + CommonFunctions.toString(smallCells)
                 + ">; macrocell: " + _macroCell.toString()
-                + "; mobility model: " + _mobilityModel
-                + "; probability jitter: " + _probJitter;
+                + "; mobility model: " + mobModel
+                + "; probability jitter: " + probJitter;
     }
 
     public String toSynopsisString() {
-        return this._sim.toString() + " "
-                + this._muGroupRegistry.toSynopsisString() + " "
-                + "; Cells: <" + CommonFunctions.toString(_smallCells)
+        return this.sim.toString() + " "
+                + this.muGroupRegistry.toSynopsisString() + " "
+                + "; Cells: <" + CommonFunctions.toString(smallCells)
                 + ">";
     }
 
@@ -156,7 +156,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      * @return the cellRegistry
      */
     public Collection<SmallCell> getSmallCells() {
-        return Collections.unmodifiableCollection(_smallCells.values());
+        return Collections.unmodifiableCollection(smallCells.values());
     }
 
     /**
@@ -173,7 +173,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
         Collection<SmallCell> scs = getSmallCells();
 
         int size = scs.size();
-        int rnd = _sim.getRandomGenerator().randIntInRange(0, size - 1);
+        int rnd = sim.getRandomGenerator().randIntInRange(0, size - 1);
         int i = 0;
         for (SmallCell cell : scs) {
             if (i == rnd) {
@@ -204,23 +204,23 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
         }
 
         int lastPos = coveringSmallerCells.size() - 1;
-        int rndPos = _sim.getRandomGenerator().randIntInRange(0, lastPos);
+        int rndPos = sim.getRandomGenerator().randIntInRange(0, lastPos);
         return coveringSmallerCells.get(rndPos);
     }
 
     @Override
     public final int simID() {
-        return _sim.getID();
+        return sim.getID();
     }
 
     @Override
     public final SimulationBaseRunner getSimulation() {
-        return _sim;
+        return sim;
     }
 
     @Override
     public final int simTime() {
-        return _sim.simTime();
+        return sim.simTime();
     }
 
     @Override
@@ -247,7 +247,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
         }
 
         String comingFromID, residenceID;
-        switch (_mobilityModel) {
+        switch (mobModel) {
             case Values.LOCATION:
                 comingFromID = comingFrom.getID() + "";
                 residenceID = residenceSC.getID() + "";
@@ -259,7 +259,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + _mobilityModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
                         + " set for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
 
@@ -296,7 +296,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
         }
 
         String disconFromID, conToID;
-        switch (_mobilityModel) {
+        switch (mobModel) {
             case Values.LOCATION:
                 disconFromID = disconFrom.getID() + "";
                 conToID = conTo.getID() + "";
@@ -308,7 +308,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + _mobilityModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
                         + " set for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
 
@@ -348,7 +348,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
         String srcID, destID;
         // increase transtion-counting maps //
-        switch (_mobilityModel) {
+        switch (mobModel) {
             case Values.LOCATION:
                 srcID = src.getID() + "";
                 destID = dest.getID() + "";
@@ -360,7 +360,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + _mobilityModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
                         + " set for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
         Couple couple = new Couple(srcID, destID);
@@ -381,7 +381,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
         String srcID, destID;
         // increase transtion-counting maps //
-        switch (_mobilityModel) {
+        switch (mobModel) {
 
             case Values.LOCATION:
                 srcID = src.getID() + "";
@@ -394,7 +394,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + _mobilityModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
         Double num = _handoffsBetween.get(new Couple(srcID, destID));
@@ -407,7 +407,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     public Couple<Double, Double> getResidenceDurationBetween(UserGroup grp, SmallCell fromSC, SmallCell residentSC, boolean use95percentile) {
         String comingFromSCID, residentSCID;
         // increase transtion-counting maps //
-        switch (_mobilityModel) {
+        switch (mobModel) {
 
             case Values.LOCATION:
                 comingFromSCID = fromSC.getID() + "";
@@ -420,7 +420,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + _mobilityModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
 
@@ -452,7 +452,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
         String disconSCID, connSCID;
         // increase transtion-counting maps //
-        switch (_mobilityModel) {
+        switch (mobModel) {
 
             case Values.LOCATION:
                 disconSCID = disconSC.getID() + "";
@@ -465,7 +465,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + _mobilityModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
 
@@ -496,7 +496,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
         String srcID;
         // increase transtion-counting maps //
-        switch (_mobilityModel) {
+        switch (mobModel) {
 
             case Values.LOCATION:
                 srcID = src.getID() + "";
@@ -507,7 +507,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + _mobilityModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
         Double num = _handoffsOutgoing.get(srcID);
@@ -522,7 +522,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
         UserGroup grp = mu.getUserGroup();
         String destID;
         // increase transtion-counting maps //
-        switch (_mobilityModel) {
+        switch (mobModel) {
 
             case Values.LOCATION:
                 destID = dest.getID() + "";
@@ -533,7 +533,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + _mobilityModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
         Double num = _handoffsIncoming.get(destID);
@@ -564,7 +564,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             return 0.0;
         }
 
-        double prob = getSimulation().getRandomGenerator().getGaussian(1.0, _probJitter)
+        double prob = getSimulation().getRandomGenerator().getGaussian(1.0, probJitter)
                 /*robustness testing: intentional random error*/
                 * handoffsBetweenCells / outgoingHandoffs;
 
@@ -572,7 +572,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     public SmallCell getCellCenteredAt(Point point) {
-        for (SmallCell smallerCell : _smallCells.values()) {
+        for (SmallCell smallerCell : smallCells.values()) {
             if (smallerCell.getCoordinates().getX() == point.getX()
                     && smallerCell.getCoordinates().getY() == point.getY()) {
                 return smallerCell;
@@ -592,7 +592,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             return null;
         }
 
-        return this._smallCells.get(_ID);
+        return this.smallCells.get(_ID);
 
     }
 
@@ -616,33 +616,33 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 61 * hash + Objects.hashCode(this._sim);
-        hash = 61 * hash + Objects.hashCode(this._smallCells);
+        hash = 61 * hash + Objects.hashCode(this.sim);
+        hash = 61 * hash + Objects.hashCode(this.smallCells);
         return hash;
     }
 
     /**
      * @return the mobilityModel
      */
-    public String getMobilityModel() {
-        return _mobilityModel;
+    public String getMobModel() {
+        return mobModel;
     }
 
     public SmallCell getCellByID(Integer id) {
-        return _smallCells.get(id);
+        return smallCells.get(id);
     }
 
     public Map<Integer, Double> getTransitionNeighborsOf(SmallCell _currentlyConnectedSC) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private Set<SmallCell> initSCsRndUniform(
+    private List<SmallCell> initSCsRndUniform(
             Area area, Collection<AbstractCachingPolicy> cachingMethods)
             throws CriticalFailureException {
         Scenario s = getSimulation().getScenario();
 
         try {
-            Set<SmallCell> _init_SmallCells_random = new HashSet<>();
+            List<SmallCell> scsRndUnif = new ArrayList<>();
             int scsNum = s.intProperty(Space.SC__NUM);
             //<editor-fold defaultstate="collapsed" desc="logging">
             int count = 0;
@@ -674,25 +674,25 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                     LOG
                             .log(Level.INFO, "\t{0}%", sum);
                 }
-                _init_SmallCells_random.add(nxt_sc);
+                scsRndUnif.add(nxt_sc);
 //</editor-fold>
             }
-            return _init_SmallCells_random;
+            return scsRndUnif;
         } catch (Exception ex) {
             throw new CriticalFailureException(ex);
         }
     }
 
-    private Set<SmallCell> initSCsRnd(
+    private List<SmallCell> initSCsRnd(
             Area area, Collection<AbstractCachingPolicy> cachingMethods)
             throws CriticalFailureException {
 
         try {
-            Set<SmallCell> _init_SmallCells_random = new HashSet<>();
-            int scs_num = _s.intProperty(Space.SC__NUM);
+            List<SmallCell> scsRnd = new ArrayList<>();
+            int scs_num = scenario.intProperty(Space.SC__NUM);
             //<editor-fold defaultstate="collapsed" desc="logging">
             int count = 0;
-            double percentage = _s.doubleProperty(Simulation.PROGRESS_UPDATE);
+            double percentage = scenario.doubleProperty(Simulation.PROGRESS_UPDATE);
 
             int sum = 0;
             int printPer = (int) (scs_num * percentage);
@@ -702,29 +702,29 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 //</editor-fold>
             for (int i = 0; i < scs_num; i++) {
                 Point randCenter = area.getRandPoint();
-                SmallCell nxt_sc = new SmallCell(_sim, randCenter, area, cachingMethods);
+                SmallCell nxt_sc = new SmallCell(sim, randCenter, area, cachingMethods);
                 //<editor-fold defaultstate="collapsed" desc="logging">
                 if (++count % printPer == 0) {
                     sum += (int) (10000.0 * printPer / scs_num) / 100;// roiunding, then percent
                     LOG
                             .log(Level.INFO, "\t{0}%", sum);
                 }
-                _init_SmallCells_random.add(nxt_sc);
+                scsRnd.add(nxt_sc);
 //</editor-fold>
             }
-            return _init_SmallCells_random;
+            return scsRnd;
         } catch (Exception ex) {
             throw new CriticalFailureException(ex);
         }
     }
 
-    private Set<SmallCell> initSCs(
+    private List<SmallCell> initSCs(
             Area area, Collection<AbstractCachingPolicy> cachingMethods,
             Point... center) throws CriticalFailureException {
 
         try {
-            Set<SmallCell> _init_SmallCells_random = new HashSet<>();
-            int scs_num = _s.intProperty(Space.SC__NUM);
+            List<SmallCell> initSCs = new ArrayList<>();
+            int scs_num = scenario.intProperty(Space.SC__NUM);
             if (scs_num != center.length) {
                 throw new InconsistencyException(
                         "Number of SCs in parameter " + Space.SC__NUM.name() + "= " + scs_num
@@ -733,7 +733,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             }
             //<editor-fold defaultstate="collapsed" desc="logging">
             int count = 0;
-            double percentage = _s.doubleProperty(Simulation.PROGRESS_UPDATE);
+            double percentage = scenario.doubleProperty(Simulation.PROGRESS_UPDATE);
 
             int sum = 0;
             int printPer = (int) (scs_num * percentage);
@@ -743,7 +743,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             //</editor-fold>
             for (int i = 0; i < scs_num; i++) {
                 Point nxtCenter = center[i];
-                SmallCell nxtSC = new SmallCell(_sim, nxtCenter, area, cachingMethods);
+                SmallCell nxtSC = new SmallCell(sim, nxtCenter, area, cachingMethods);
                 //<editor-fold defaultstate="collapsed" desc="log user update">
                 boolean logUsrUpdt = ++count % printPer == 0;
                 if (logUsrUpdt) {
@@ -751,10 +751,10 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                     LOG
                             .log(Level.INFO, "\t{0}%", sum);
                 }
-                _init_SmallCells_random.add(nxtSC);
+                initSCs.add(nxtSC);
                 //</editor-fold>
             }
-            return _init_SmallCells_random;
+            return initSCs;
         } catch (Exception ex) {
             throw new CriticalFailureException(ex);
         }
@@ -772,109 +772,137 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      * @return
      * @throws CriticalFailureException
      */
-    private Set<SmallCell> initSCsTrace(
-            Area area, Collection<AbstractCachingPolicy> cachingMethods) throws CriticalFailureException {
+    private List<SmallCell> initSCsTrace(
+            Area area, Collection<AbstractCachingPolicy> cachingMethods
+    ) throws CriticalFailureException {
 
-        int countLines = 0;
-        String nxtSCLine = "";
+        Area.RealArea theRealDimensions = area.getREAL_AREA();
+        int minX = theRealDimensions.minX,
+                minY = theRealDimensions.minY,
+                maxX = theRealDimensions.maxX,
+                maxY = theRealDimensions.maxY;
+
+//        String metadataPath = s.stringProperty(Space.SC__TRACE_METADATA_PATH, true);
+//        File metaF = (new File(metadataPath)).getAbsoluteFile();
+//        Couple<Point, Point> areaDimensions = Cells.extractAreaFromMetadata(metaF, minX, minY, maxX, maxY);
+//        
+//        minX = areaDimensions.getFirst().getX();
+//        minY = areaDimensions.getFirst().getY();
+//        maxX = areaDimensions.getSecond().getX();
+//        maxY = areaDimensions.getSecond().getY();
+        String nxtLn = "";
 
         Scenario s = getSimulation().getScenario();
 
         String tracePath = s.stringProperty(Space.SC__TRACE_PATH, true);
-        LOG.log(Level.INFO, "Initializing small cells on the area from trace: {0}",
-                new Object[]{tracePath}
+
+        double meanR = s.doubleProperty(Space.SC__RADIUS__MEAN);
+        double stdevR = s.doubleProperty(Space.SC__RADIUS__STDEV);
+
+        LOG.log(Level.INFO, "Initializing small cells on the area with mean "
+                + "radius size {0} (std.dev. {1}) based on trace: \"{2}\". ",
+                new Object[]{
+                    meanR,
+                    stdevR,
+                    tracePath
+                }
         );
 
-        Set<SmallCell> initFromTrace = new HashSet<>();
+        List<SmallCell> initFromTrace = new ArrayList<>();
 
         File traceF = null;
         long byteConsumed = 0;
         long traceSize = 0;
         try {
             traceF = (new File(tracePath)).getCanonicalFile();
-            //<editor-fold defaultstate="collapsed" desc="checking traceF">
+            traceSize = traceF.length();
+
             if (!traceF.exists()) {
-                throw new FileNotFoundException("Path to trace file for initializing small "
-                        + "cells on the area does not exist: " + traceF.getCanonicalPath());
+                throw new FileNotFoundException("Path to file for initializing small "
+                        + "cells not exist: "
+                        + "\""
+                        + traceF.getCanonicalPath()
+                        + "\"");
             }
-            if (!traceF.canRead()) {
-                throw new IOException("Cannot read from path to trace file for "
-                        + "initializing small cells on the area: " + traceF.getCanonicalPath());
-            }
-            //</editor-fold>
-            //<editor-fold defaultstate="collapsed" desc="about logging progress update">
-            traceSize = traceF.length(); // rough estimation
-            byteConsumed = 0; // howmany bytes consumed from trace file.          
-            //</editor-fold>
+
         } catch (IOException iOException) {
             throw new CriticalFailureException(iOException);
         }
 
+        int countLines = 0;
         try (BufferedReader traceR = new BufferedReader(new FileReader(traceF))) {
-            while (null != (nxtSCLine = traceR.readLine())) {
+            while (null != (nxtLn = traceR.readLine())) {
                 countLines++;
 
-                if (nxtSCLine.startsWith("#") || nxtSCLine.isEmpty()) {
+                if (nxtLn.startsWith("#") || nxtLn.isEmpty()) {
                     continue; // ignore comments
                 }
 
-                String nxtSC_descr;
-                //<editor-fold defaultstate="collapsed" desc="get rid of comments in line">
-                StringTokenizer commnetTok = new StringTokenizer(nxtSCLine, "#");
-                if (commnetTok.hasMoreTokens()) {
-                    nxtSC_descr = commnetTok.nextToken(); // the first token is the one we want
-                } else {
-                    nxtSC_descr = nxtSCLine;
-                }
-                //</editor-fold>
-                StringTokenizer tokens = new StringTokenizer(nxtSC_descr, ";");
+                String[] tokens = nxtLn.split(" ");
 
                 Point center = null;
-                double radius = 0;
-                String neighbors;
 
-                int id = Integer.parseInt(tokens.nextToken().trim());
+                int id = (int) Double.parseDouble(tokens[0]);
 
-                int x = Integer.parseInt(tokens.nextToken().trim());
-                int y = Integer.parseInt(tokens.nextToken().trim());
-                center = new Point(x, y);
-
-                radius = Double.parseDouble(tokens.nextToken().trim());
-                if (radius == -1) {
-                    radius
-                            = _sim.getRandomGenerator().getGaussian(
-                                    s.doubleProperty(Space.SC__RADIUS__MEAN),
-                                    s.doubleProperty(Space.SC__RADIUS__STDEV)
-                            );
+                int x = (int) Double.parseDouble(tokens[1]);
+                if (x > maxX || x < minX) {
+                    throw new InconsistencyException(
+                            "Cell with id " + id + " has dimension x="
+                            + x + " out of bounds:"
+                            + " ["
+                            + minX
+                            + ","
+                            + maxX
+                            + "]."
+                    );
                 }
 
-                neighbors = tokens.nextToken().trim();
-                Map<Integer, Double> cellID_probs = null;
-                if (!(neighbors.equals(Values.UNDEFINED)
-                        || neighbors.equals(Values.NULL)
-                        || neighbors.equals(Values.NONE)
-                        || neighbors.equals(""))) {
-                    cellID_probs = initSCsTraceTokenizeNeighbs(neighbors);
+                int y = (int) Double.parseDouble(tokens[2]);
+                if (y > maxY || y < minY) {
+                    throw new InconsistencyException(
+                            "Cell with id " + id + " has dimension y="
+                            + y + " out of bounds:"
+                            + " ["
+                            + minY
+                            + ","
+                            + maxY
+                            + "]."
+                    );
                 }
 
-                long capacity = utils.CommonFunctions.parseSizeToBytes(s.stringProperty(Space.SC__BUFFER__SIZE, false));
+                // use relative dimensions as area will be translated 
+                // relatively to starting point [0,0]
+                center = new Point(x - minX, y - minY);
 
-                SmallCell nxt_sc = new SmallCell(
-                        id, _sim, center, radius,
-                        area, cellID_probs, cachingMethods, capacity
+                //use a random radius ..
+                int radius = (int) sim.getRandomGenerator().
+                        getGaussian(meanR, stdevR);
+
+                long capacity = utils.CommonFunctions.parseSizeToBytes(
+                        s.stringProperty(Space.SC__BUFFER__SIZE, false));
+
+                SmallCell newSC = new SmallCell(
+                        id, sim, center, radius,
+                        area, cachingMethods, capacity
                 );
 
-                initFromTrace.add(nxt_sc);
+                initFromTrace.add(newSC);
 
                 //<editor-fold defaultstate="collapsed" desc="logging progress">
-                byteConsumed += nxtSCLine.length() * 2; //16 bit chars
+                byteConsumed += nxtLn.length() * 2; //16 bit chars
                 int progress = (int) (10000.0 * byteConsumed / traceSize) / 100;// rounding, then percent
                 LOG.log(Level.INFO, "\t{0}%", progress);
-                LOG.log(Level.FINE, "\tSmall Cell created: {0}", nxt_sc.toSynopsisString());
+                LOG.log(Level.INFO, "\tSmall Cell created: {0}", newSC.toSynopsisString());
                 //</editor-fold>
             }
 
-            LOG.log(Level.INFO, "Finished. Total small cells created: {0}", initFromTrace.size());
+            LOG.log(Level.INFO, "Finished. {0} small cells created: {1}",
+                    new Object[]{initFromTrace.size(), CommonFunctions.toString(initFromTrace)}
+            );
+
+            
+
+
             return initFromTrace;
         } catch (InvalidOrUnsupportedException | CriticalFailureException | IOException | NumberFormatException | NoSuchElementException ex) {
             String msg = "";
@@ -883,7 +911,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 msg = "Trace file is mulformed at line "
                         + countLines
                         + ":\n\t"
-                        + nxtSCLine;
+                        + nxtLn;
             }
             throw new CriticalFailureException(msg, ex);
         }
@@ -898,16 +926,16 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      * @return
      * @throws CriticalFailureException
      */
-    public Set<SmallCell> createSCs(Area area,
+    public List<SmallCell> createSCs(Area area,
             Collection<AbstractCachingPolicy> cachingPolicies) throws CriticalFailureException {
         Scenario s = getSimulation().getScenario();
 
-        Set<SmallCell> scSet = null;
+        List<SmallCell> theSCs = null;
         try {
             List<String> scsInit = s.listOfStringsProperty(Space.SC__INIT, false);
             if (scsInit.isEmpty()) {
-                LOG.log(Level.WARNING, 
-                        "There are no small cells defined in property {0}", 
+                LOG.log(Level.WARNING,
+                        "There are no small cells defined in property {0}",
                         Space.SC__INIT.name());
             }
             if (scsInit.size() == 1) {
@@ -915,14 +943,14 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 switch (scsInit.get(0).toUpperCase()) {
 
                     case Values.RANDOM:
-                        scSet = initSCsRnd(area, cachingPolicies);
+                        theSCs = initSCsRnd(area, cachingPolicies);
                         break;
                     case Values.RANDOM_UNIFORM:
-                        scSet = initSCsRndUniform(area, cachingPolicies);
+                        theSCs = initSCsRndUniform(area, cachingPolicies);
                         break;
 
                     case Values.TRACE:
-                        scSet = initSCsTrace(area, cachingPolicies);
+                        theSCs = initSCsTrace(area, cachingPolicies);
                         break;
 
                     default:
@@ -934,11 +962,11 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 }
             } else {
                 Point[] centers = area.getPoints(scsInit);
-                scSet = initSCs(area, cachingPolicies, centers);
+                theSCs = initSCs(area, cachingPolicies, centers);
             }
 
             //<editor-fold defaultstate="collapsed" desc="discover neighbors sanity check">
-            if (_sim.getCachingStrategies().contains(Values.CACHING__NAIVE__TYPE03)
+            if (sim.getCachingStrategies().contains(Values.CACHING__NAIVE__TYPE03)
                     && s.intProperty(Space.SC__WARMUP_PERIOD) < 100) {
                 throw new CriticalFailureException(Values.CACHING__NAIVE__TYPE03 + " is enabled. Finding neighbors for each SC is mandatory."
                         + " But the time interval for discovering neighbors is too small: "
@@ -946,24 +974,10 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             }
             //</editor-fold>
 
-            return scSet;
+            return theSCs;
         } catch (UnsupportedOperationException ex) {
             throw new CriticalFailureException(ex);
         }
-    }
-
-    private Map<Integer, Double> initSCsTraceTokenizeNeighbs(String neighbors) {
-        StringTokenizer tokens = new StringTokenizer(neighbors, ",");
-        Map<Integer, Double> toReturnMap = new HashMap<>(tokens.countTokens() / 2);
-
-        while (tokens.hasMoreElements()) {
-            int id = Integer.parseInt(tokens.nextToken());
-            double prob = Double.parseDouble(tokens.nextToken());
-
-            toReturnMap.put(id, prob);
-        }
-
-        return toReturnMap;
     }
 
 }

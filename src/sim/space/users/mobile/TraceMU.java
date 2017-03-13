@@ -1,6 +1,7 @@
 package sim.space.users.mobile;
 
 import exceptions.CriticalFailureException;
+import exceptions.InconsistencyException;
 import exceptions.InvalidOrUnsupportedException;
 import exceptions.WrongOrImproperArgumentException;
 import java.util.logging.Logger;
@@ -22,9 +23,13 @@ public class TraceMU extends MobileUser {
     private double speed;
     private final int _areaMaxX;
     private final int _areaMaxY;
+    private int dTraceTime;
+    private int traceTime;
 
     public TraceMU(TraceMUBuilder muBuilder) throws CriticalFailureException {
         super(muBuilder);
+        this.dTraceTime = 0;
+        this.traceTime = 0;
         this.speed = 0;
 
         _areaMaxX = getSimulation().getTheArea().getLengthX();
@@ -75,7 +80,7 @@ public class TraceMU extends MobileUser {
     /**
      * @param dX the dX to set
      */
-    public void setdX(double dX) {
+    public void setDX(double dX) {
         this.dX = dX;
     }
 
@@ -89,7 +94,7 @@ public class TraceMU extends MobileUser {
     /**
      * @param dY the dY to set
      */
-    public void setdY(double dY) {
+    public void setDY(double dY) {
         this.dY = dY;
     }
 
@@ -128,19 +133,8 @@ public class TraceMU extends MobileUser {
         return newPointisLoopedCoupled;
     }
 
-    /**
-     * Moves this MU based on the most recently set dx, dy marginal coordinate
-     * differences.
-     *
-     * @param overrideMinResidence
-     * @param overrideStartRoaming
-     * @return an update on the connectivity status
-     * @throws exceptions.InvalidOrUnsupportedException
-     * @throws exceptions.WrongOrImproperArgumentException
-     *
-     */
     @Override
-    public ConnectionStatusUpdate move(
+    public ConnectionStatusUpdate moveRelatively(
             boolean overrideMinResidence,
             boolean overrideStartRoaming)
             throws InvalidOrUnsupportedException,
@@ -150,16 +144,29 @@ public class TraceMU extends MobileUser {
                 || (!overrideStartRoaming && !afterStartingRoaming())) {
             return _mostRecentConnStatusUpdate;
         }
+        return moveRelatively();
+    }
 
+    /**
+     * Moves the mobile user by interpreting the latest set coordinates of the
+     * mobile user as relative to its current absolute coordinates.
+     *
+     * @return an update on the connectivity status
+     * @throws exceptions.InvalidOrUnsupportedException
+     * @throws exceptions.WrongOrImproperArgumentException
+     *
+     */
+    public ConnectionStatusUpdate moveRelatively() throws InvalidOrUnsupportedException,
+            WrongOrImproperArgumentException, InconsistencyException {
+        /* Point after moving. if looped to the other side of the area,
+        * the boolean field is true./* Point after moving. if looped to the other side of the area,
+        * the boolean field is true./* Point after moving. if looped to the other side of the area,
+        * the boolean field is true./* Point after moving. if looped to the other side of the area,
+        * the boolean field is true.
+         */
+        Couple<Point, Boolean> newPointLoopedCouple = selectNewCoordinate(dX, dY);
 
-        /* Point after moving. if looped to the other side of the area, 
-         * the boolean field is true./* Point after moving. if looped to the other side of the area, 
-         * the boolean field is true./* Point after moving. if looped to the other side of the area, 
-         * the boolean field is true./* Point after moving. if looped to the other side of the area, 
-         * the boolean field is true.
-         */ Couple<Point, Boolean> newPointLoopedCouple = selectNewCoordinate(dX, dY);
-
-        return moveToNewPoint(newPointLoopedCouple);
+        return moveToNewRelativePoint(newPointLoopedCouple);
     }
 
     /**
@@ -176,6 +183,33 @@ public class TraceMU extends MobileUser {
         this.speed = speed;
     }
 
+    public void setTraceTime(int t) {
+        this.traceTime = t;
+    }
 
+    public void setDTraceTime(int dt) {
+        this.dTraceTime = dt;
+    }
+
+    /**
+     * @return the dTraceTime
+     */
+    public int getdTraceTime() {
+        return dTraceTime;
+    }
+
+    /**
+     * @param dTraceTime the dTraceTime to set
+     */
+    public void setdTraceTime(int dTraceTime) {
+        this.dTraceTime = dTraceTime;
+    }
+
+    /**
+     * @return the traceTime
+     */
+    public int getTraceTime() {
+        return traceTime;
+    }
 
 }

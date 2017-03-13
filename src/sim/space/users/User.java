@@ -20,6 +20,7 @@ import sim.content.Chunk;
 import sim.space.cell.CellRegistry;
 import sim.space.cell.MacroCell;
 import sim.space.cell.smallcell.SmallCell;
+import utils.DebugTool;
 
 /**
  *
@@ -47,7 +48,6 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         _requestsInChunks = new ArrayList<>();
 
         _lastResidenceDuration = -1;
-
     }
 
     public User(int id, SimulationBaseRunner<?> sim, int connectedSinceSC, SmallCell connectionSC, MacroCell connectionMC) {
@@ -145,8 +145,8 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
                 + ", _lastResidenceDuration=" + _lastResidenceDuration
                 + ", _userGroup=" + _userGroup.getId()
                 + ", _lastTimeReqsUpdt=" + _lastTimeReqsUpdt
-                + (_currConnectedMC!=null ? ", _currConnectedMC=" + _currConnectedMC.getID() : "NONE")
-                + (_currentlyConnectedSC!=null ? ", _currentlyConnectedSC=" + _currentlyConnectedSC.getID() : "NONE")
+                + (_currConnectedMC != null ? ", _currConnectedMC=" + _currConnectedMC.getID() : "NONE")
+                + (_currentlyConnectedSC != null ? ", _currentlyConnectedSC=" + _currentlyConnectedSC.getID() : "NONE")
                 + ", _connectedSinceSC=" + _connectedSinceSC + '}';
     }
 
@@ -238,6 +238,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         while (iterator.hasNext()) {
             DocumentRequest nxtRequest = iterator.next();
             if (nxtRequest.isFullyConsumed()) {
+
                 iterator.remove();
                 _requestsInChunks.removeAll(nxtRequest.referredContentDocument().chunks());
             }
@@ -248,12 +249,11 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         return cleared;
     }
 
-    public void addRequest(DocumentRequest r)  {
+    public void addRequest(DocumentRequest r) {
         _requests.add(r);
         _requestsInChunks.addAll(r.referredContentDocument().chunks());
     }
 
-   
     public void addAllRequests(Collection<DocumentRequest> requests) {
         for (DocumentRequest r : requests) {
             addRequest(r);
@@ -281,6 +281,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
     }
 
     public abstract void consumeDataTry(int timeWindow) throws Throwable;
+
     public abstract void consumeTryAllAtOnceFromSC() throws Throwable;
 
     /**

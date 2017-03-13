@@ -36,6 +36,7 @@ import static sim.space.connectivity.ConnectionStatusUpdate.HANDOVER_DIRECTLY;
 import static sim.space.connectivity.ConnectionStatusUpdate.REMAINS_CONNECTED_TO_SAME_SC;
 import sim.space.users.CachingUser;
 import utilities.Couple;
+import utils.DebugTool;
 
 /**
  *
@@ -115,7 +116,7 @@ public class MobileUser extends CachingUser {
      * Used for handover and residence time accuracy
      */
     private final double _mobAccuracy;
-    
+
     private final double[] _probsTransition;
     private final double[] _probsTransitionInitState;
     /**
@@ -195,7 +196,7 @@ public class MobileUser extends CachingUser {
         }
 
         _mobAccuracy = getSimulation().getScenario().doubleProperty(Space.MU__MOBILITYACCURACY);
-        
+
         _connectedSinceSC = _lastHandoffTime = _lastHandoverDuration = -1;
         _lastResetStatusTime = simTime();
 
@@ -215,6 +216,7 @@ public class MobileUser extends CachingUser {
             } else {
                 updtTheMostRecentConnStatus(REMAINS_DISCONNECTED_WAS_NEVER_CONNECTED, null, false);
             }
+
         } catch (WrongOrImproperArgumentException | InvalidOrUnsupportedException ex) {
             throw new CriticalFailureException(ex);
         }
@@ -235,10 +237,9 @@ public class MobileUser extends CachingUser {
 
         _probsTransition = null;
         _probsTransitionInitState = null;
-        
+
         _mobAccuracy = -1.0;
 
-        
         _maxProbDirection = -1;
         _maxProbDirectionAtInitState = -1;
         _connectionPolicySC = null;
@@ -296,7 +297,6 @@ public class MobileUser extends CachingUser {
 //                    + (_lastKnownConnectedSC == null ? "" : ", _lastKnownConnectedSC=" + _lastKnownConnectedSC.toSynopsisString())
 //            );
 //        }
-
         int residentInID = residentIn.getID();
         Integer connTime = _lastKnownGotConnected.get(residentInID);
         Integer disconnTime = _lastKnownGotdisconnected.get(residentInID);
@@ -493,7 +493,7 @@ public class MobileUser extends CachingUser {
         }
 
         _penultimateTimeMoved = simTime();// use sim time. See why needed in code for consuming data 
-        _lastTimeMoved = simTime();//keep the time of reset to compute duration of move for consuming data
+        _lastTimeMoved = simTime();//keep the time of reset to compute duration of moveRelatively for consuming data
         _lastHandoffTime = -1;
         _lastHandoverDuration = -1;
         setLastResidenceDuration(-1);
@@ -511,8 +511,6 @@ public class MobileUser extends CachingUser {
 
         _currentCoordinates = pointAfterReseting();
 
-//        //xxx debugging only
-//        __startCoordinates = _currentCoordinates = getSim().getTheArea().getPointAt(70, 70);//xxx
         getCoordinates().addUser(this);
 
         this._lastKnownConnectedSC = null;
@@ -623,7 +621,7 @@ public class MobileUser extends CachingUser {
                  */
 
                 break;
-            case 4: // does not move
+            case 4: // does not moveRelatively
                 return new Couple<>(getCoordinates(), false); // no need to check for resetting
             case 5: // right
                 newPointisLoopedCoupled = _area.east(loop, this.getCoordinates(), muVelocity);/*
@@ -656,9 +654,20 @@ public class MobileUser extends CachingUser {
         return newPointisLoopedCoupled;
     }
 
-    protected ConnectionStatusUpdate moveToNewPoint(Couple<Point, Boolean> newPointLoopedCouple) throws InconsistencyException, WrongOrImproperArgumentException, InvalidOrUnsupportedException {
+    /**
+     * Moves the mobile user by interpreting the latest set coordinates of the
+     * mobile user as relative to its current absolute coordinates.
+     *
+     * @param newPointLoopedCouple
+     * @return
+     * @throws InconsistencyException
+     * @throws WrongOrImproperArgumentException
+     * @throws InvalidOrUnsupportedException
+     */
+    protected ConnectionStatusUpdate moveToNewRelativePoint(Couple<Point, Boolean> newPointLoopedCouple)
+            throws InconsistencyException, WrongOrImproperArgumentException, InvalidOrUnsupportedException {
         if (newPointLoopedCouple != null) {// if not got out of area and not looped to the other side of the area.
-            // in case did not move due to transition probability [1][1] 
+            // in case did not moveRelatively due to transition probability [1][1] 
             if (getCoordinates().equals(newPointLoopedCouple.getFirst())) {
                 return _mostRecentConnStatusUpdate;
             }
@@ -683,16 +692,19 @@ public class MobileUser extends CachingUser {
 
     /**
      * Moves this MU. The mobile moves to another position are based only on
-     * transition probabilities. Therefore, the mobile may not move if the
-     * inertia transition probability [1][1] is non-zero. The mobile may also
-     * not move if the force parameter is passed as false, in which case it
-     * allows this mobile to move if and only if a) this mobile has remained
-     * connected for the minimum specified time and b) the specified minimum
-     * simulation time before starting to move has elapsed.
+     * transition probabilities. Therefore, the mobile may not moveRelatively if
+     * the inertia transition probability [1][1] is non-zero. The mobile may
+     * also not moveRelatively if the force parameter is passed as false, in
+     * which case it allows this mobile to moveRelatively if and only if a) this
+     * mobile has remained connected for the minimum specified time and b) the
+     * specified minimum simulation time before starting to moveRelatively has
+     * elapsed.
      *
      *
      * overrideResidencePeriodInSCExpiration overrideStartRoamingTime
      *
+     * @param overrideResidencePeriodInSCExpiration
+     * @param overrideStartRoamingTime
      * @throws exceptions.WrongOrImproperArgumentException
      *
      * #resetStatus()
@@ -701,7 +713,7 @@ public class MobileUser extends CachingUser {
      * @return an update on the connectivity status
      *
      */
-    public ConnectionStatusUpdate move(
+    public ConnectionStatusUpdate moveRelatively(
             boolean overrideResidencePeriodInSCExpiration,
             boolean overrideStartRoamingTime)
             throws InvalidOrUnsupportedException,
@@ -770,7 +782,7 @@ public class MobileUser extends CachingUser {
 
         }
 
-        return moveToNewPoint(newPointLoopedCouple);
+        return moveToNewRelativePoint(newPointLoopedCouple);
     }
 
     /**
@@ -943,6 +955,8 @@ public class MobileUser extends CachingUser {
      *
      * newPoint isLooped
      *
+     * @param newPoint
+     * @param isLooped
      * @throws InconsistencyException upon passing a null newPoint parameter
      * value.
      * @throws exceptions.WrongOrImproperArgumentException
@@ -961,6 +975,15 @@ public class MobileUser extends CachingUser {
 
         _currentCoordinates = newPoint;
         newPoint.addUser(this);
+
+        DebugTool.appendln(
+                "Moved "
+                + getID()
+                + " from "
+                + _previousCoordinates.toSynopsisString()
+                + " to "
+                + newPoint.toSynopsisString()
+        );
 
         _penultimateTimeMoved = _lastTimeMoved;
         _lastTimeMoved = simTime();
@@ -1171,26 +1194,7 @@ public class MobileUser extends CachingUser {
                         scRateSliceBytes)
                 );
 
-                //xxx
-//        if (targetSC.getID() == 13
-//                && policy == caching.incremental.EMC.instance()) {
-//            double utilization = Math.round(1000 * targetSC.getBuffer(policy).utilization()) / 10.0;
-//            DebugTool.appendLn(utilization + "%," 
-//                    + predictedChunks.size() 
-////                    + "," + predictedChunksNaive.size());
-//                    + "," + expectedHandoffDuration
-//                    + "," + expectedResidenceDuration
-//                    + "," + nxtReq.sizeInMBs()
-//                    + "," + nxtReq.sizeInChunks()
-//            );
-//        }
-//xxx
-///////////////////////update probs for chunks
-//            for (Entry<Chunk, Double> nxtChunkProbMapped : predictedChunksToCache.entrySet()) {
-//                cachingSC.getDmdPC(policy).registerUpdtInfoPC(nxtChunkProbMapped.getKey(), this, handoverProb);
-//            }
                 for (Chunk nxtChunk : predictedChunks) {
-//                    DebugTool.appendLn(nxtReq.isConsumeReady() + "," + nxtChunk.getSequenceNum());
                     targetSC.getDmdPC(policy).registerUpdtInfoPC(nxtChunk, this, handoverProb);
                 }
 
@@ -1338,6 +1342,7 @@ public class MobileUser extends CachingUser {
     public boolean isSoftUser() {
         return _softUser;
     }
+
     public boolean isHardUser() {
         return !_softUser;
     }

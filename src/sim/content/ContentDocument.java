@@ -18,7 +18,7 @@ public class ContentDocument extends AbstractContent implements Comparable<Conte
     private final int _appType;
     private final SortedMap<Long, Chunk> _chunksInSequence;
 
-    public ContentDocument(long id, SimulationBaseRunner sim, long sizeInBytes,
+    public ContentDocument(String id, SimulationBaseRunner sim, long sizeInBytes,
             int totalRequests, int appType) {
         super(id, sim, sizeInBytes);
 
@@ -101,7 +101,7 @@ public class ContentDocument extends AbstractContent implements Comparable<Conte
     @Override
     public int compareTo(ContentDocument t) {
         //descending order
-        return (int) (t.getID() - this.getID());
+        return t.getID().compareTo(this.getID());
     }
 
     public final SortedMap<Long, Chunk> getChunksInSequence() {

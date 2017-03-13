@@ -75,7 +75,7 @@ public class LocalDemand {
      * A map used for mapping details (either from a currently connected or a
      * past connected mobile) to the requested content's ID.
      */
-    private final Map<Long, RegistrationInfo> _demandMap;
+    private final Map<String, RegistrationInfo> _demandMap;
 
     final AbstractCell _cell;
 
@@ -93,7 +93,7 @@ public class LocalDemand {
     /**
      * @return the _demandMap
      */
-    public Set<Long> getRegistertedItemIDs() {
+    public Set<String> getRegistertedItemIDs() {
         return Collections.unmodifiableSet(_demandMap.keySet());
     }
 
@@ -115,7 +115,7 @@ public class LocalDemand {
     }
 
     public void registerLclDmdForW(CachingUser cu, double weight) {
-        long trcDocumentID;
+        String trcDocumentID;
         for (DocumentRequest nxt : cu.getRequests()) {
             trcDocumentID = nxt.referredContentDocument().getID();
 

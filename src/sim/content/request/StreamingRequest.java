@@ -115,23 +115,9 @@ public class StreamingRequest extends DocumentRequest {
             historyChunkHits.add(chunkConsumed);
             currentChunkHits.add(chunkConsumed);
 
-//                if (getSim().__tmpMaxPopSetXXX2.contains(nxtChunk)) {
-//                    throw new RuntimeException();
-//                }
-//                if (getSim().__tmpMaxPopSetXXX.contains(nxtChunk.referredContentDocument())) {
-//                    throw new RuntimeException();
-//                }
+
         }
-//            if (_requesterUser.getClass() == StationaryUser.class
-//                    && policy.getClass() == EMPC_LC_Full.class) {
-//xxx
-//                Utils.trackUser(false,
-//                        "\n\t\t budget remained: " + policyBudget
-//                        + " out of a maxBudget: " + maxBudget
-//                        + "\n\t\t hits now : " + nowChunkHits.size()
-//                        + "\n\t\t hits history : " + hitsByPolicyHistory.size(),
-//                        getRequesterUser(), true);
-//            }
+
 
         if (unconsumed.isEmpty()) {
             if (_completitionTimes.get(policy) == -1) {
@@ -159,7 +145,6 @@ public class StreamingRequest extends DocumentRequest {
             if (_completitionTimes.get(policy) == -1) {
                 _completitionTimes.put(policy, simTime());
                 _uncompletedPolicies--;
-//                    DebugTool.printer.print("\n****Consumed Fully " + getID());
             }
             return bhCurrentConsumptionPerPolicy;
         }
@@ -172,30 +157,15 @@ public class StreamingRequest extends DocumentRequest {
         int hitsNum = hitChunks == null ? 0 : hitChunks.size();
         long budgetForPolicy = maxbudget - hitsNum;
 
-//xxx            if (_requesterUser.getClass() == StationaryUser.class
-//                    && policy.getClass() == EMPC_LC_Full.class) {
-//
-//                        Utils.trackUser(false,
-//                        "\n\t BH: budgetForPolicy = policyBudget /*maxbudget*/  - hitsNum = "
-//                        + policyBudget + "/*" + maxbudget + "*/ -" + hitsNum + "="
-//                        + budgetForPolicy,
-//                        getRequesterUser(), true);
-//            }            // if room in HB rate slice, then consumeTry from the unconsumed chunks
-//            long xxx = budgetForPolicy;
+        
         Iterator<Chunk> unconsumedIt = getUnconsumedChunksInSequence(policy).iterator(); // in ascending order of keys
         while (unconsumedIt.hasNext() && budgetForPolicy-- > 0) {
             Chunk chunkConsumed = unconsumedIt.next();
-//                xxx++;
+
             unconsumedIt.remove();
             bhHistororyConsumption.add(chunkConsumed);
             bhCurrentConsumption.add(chunkConsumed);
         }
-//xxx            if (_requesterUser.getClass() == StationaryUser.class
-//                    && policy.getClass() == EMPC_LC_Full.class) {
-//                Utils.trackUser(false,
-//                        "\n\t\t consumed from BH: " + (xxx - budgetForPolicy),
-//                        getRequesterUser(), true);
-//            }
 
         if (unconsumed.isEmpty()) {
             if (_completitionTimes.get(policy) == -1) {

@@ -6,11 +6,12 @@ import app.properties.valid.Values;
 import caching.base.AbstractCachingPolicy;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.logging.Level;
 import sim.space.Area;
@@ -51,12 +52,12 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
      * @return
      */
     @Override
-    protected List<MobileUser> initAndConnectMUs(
+    protected Map<Integer, MobileUser> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
             Collection<AbstractCachingPolicy> cachingPolicies) {
 
-        List<MobileUser> musLst = new ArrayList<>();
+        Map<Integer, MobileUser> musLst = new HashMap<>();
 
         List<String> conn2SCPolicy;
 
@@ -111,7 +112,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
 
                 MobileUser mu = nxtMUBuilder.build();
                 //</editor-fold>
-                musLst.add(mu);
+                musLst.put(mu.getID(), mu);
 
                 //<editor-fold defaultstate="collapsed" desc="report/log progress">
                 if (++count % printPer == 0) {
@@ -121,21 +122,6 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
             }//for every MU__CLASS in group
         }
 
-        //<editor-fold defaultstate="collapsed" desc="shuffle mus iff property ..">
-        String muShuffling = scenario.stringProperty(Space.MU__SHUFFLE, false);
-        switch (muShuffling) {
-            case Values.NEVER:
-                break; // do not shufle
-
-            case Values.UPON_CREATION:
-            case Values.ALWAYS:
-                Collections.shuffle(musLst, getRandomGenerator().getMersenneTwister());
-                break;
-            default:
-                throw new UnsupportedOperationException("Value " + muShuffling + " is currently not supported for "
-                        + " property " + Space.MU__SHUFFLE);
-        }
-        //</editor-fold>
         return musLst;
     }
 
@@ -176,7 +162,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                 getStatsHandle().resetHandoverscount();
 
                 for (MobileUser nxtMU : shuffldMUs) {
-                    nxtMU.move(false, false);
+                    nxtMU.moveRelatively(false, false);
                     if (nxtMU.isSoftUser()) {
                         nxtMU.consumeTryAllAtOnceFromSC();
                     } else {

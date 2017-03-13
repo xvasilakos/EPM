@@ -33,7 +33,9 @@ public class Area implements ISimulationMember, ISynopsisString {
 
     private final Logger _logger;
     /**
-     * An array used to include the points that compose the area.
+     * An array used to include the points that compose the area. The
+     * coordinates start from upper left corner (0,0) and end up to lower right
+     * corner of the are (maxX-1, MaxY-1).
      */
     private final Point[][] pointArray;
     private final int lengthY;
@@ -43,12 +45,15 @@ public class Area implements ISimulationMember, ISynopsisString {
     private final sim.run.SimulationBaseRunner simulation;
 
     /**
+     * The real area dimensions that is simulated.
+     */
+    private RealArea REAL_AREA;
+
+    /**
      * Simply creates an area of points, which is empty of cells and mobile
      * users.
      *
-     *  sim
-     *  lengthY
-     *  lengthX
+     * sim lengthY lengthX
      */
     public Area(sim.run.SimulationBaseRunner sim, int lengthY, int lengthX) {
         simulation = sim;
@@ -74,7 +79,7 @@ public class Area implements ISimulationMember, ISynopsisString {
             for (int x = 0; x < rowY.length; x++) {
                 rowY[x] = new Point(x, y);
                 if (++count % printPer == 0) {
-                    _logger.log(Level.INFO, 
+                    _logger.log(Level.INFO,
                             "\t {0}% of the area completed.", Math.round(10000.0 * count / total) / 100.0);
                 }
             }
@@ -102,6 +107,15 @@ public class Area implements ISimulationMember, ISynopsisString {
         return lengthX;
     }
 
+    /**
+     * Returns the point at coordinates (x, y).
+     * <b>Caution:</b> the point returned is actually (y,x) in the underlying
+     * array.
+     *
+     * @param x
+     * @param y
+     * @return the point at coordinates (x,y)
+     */
     public Point getPointAt(int x, int y) {
         return getPointArray()[y][x];
     }
@@ -111,7 +125,7 @@ public class Area implements ISimulationMember, ISynopsisString {
         int x = simulation.getRandomGenerator().randIntInRange(0, lengthX - 1);
         return getPointArray()[y][x];
     }
-    
+
     public Point getRandPoint(int fromY, int toY, int fromX, int toX) {
         int y = simulation.getRandomGenerator().randIntInRange(fromY, toY - 1);
         int x = simulation.getRandomGenerator().randIntInRange(fromX, toX - 1);
@@ -183,6 +197,14 @@ public class Area implements ISimulationMember, ISynopsisString {
         return Collections.unmodifiableSet(_mus);
     }
 
+    /**
+     * <b>Caution:</b> the underlying array maps coordinates (x, y) to position
+     * (y,x) in the array, as y maps to the row of the array (starting from the
+     * upper left corner of the area and ending at the lower right one) and x to
+     * the column in the row y
+     *
+     * @return
+     */
     public Point[][] getPointArray() {
         return pointArray;
     }
@@ -810,7 +832,7 @@ public class Area implements ISimulationMember, ISynopsisString {
     public String toSynopsisString() {
         StringBuilder _toString = new StringBuilder();
         _toString.append("Height=").append(lengthY);
-        _toString.append("; Length x=").append(lengthX);
+        _toString.append("; Length=").append(lengthX);
 
         return _toString.toString();
     }
@@ -822,6 +844,37 @@ public class Area implements ISimulationMember, ISynopsisString {
         _toString.append("\n List of mobile users:").append(CommonFunctions.toString("\n\t", _mus));
 
         return _toString.toString();
+    }
+
+    public void setRealAreaDimensions(int minX, int minY, int maxX, int maxY) {
+        REAL_AREA = new RealArea(minX, minY, maxX, maxY);
+    }
+
+    /**
+     * @return the real area dimensions that is simulated.
+     *
+     */
+    public RealArea getREAL_AREA() {
+        return REAL_AREA;
+    }
+
+    /**
+     * The real area dimensions that is simulated.
+     */
+    public final class RealArea {
+
+        public final int minX;
+        public final int minY;
+        public final int maxX;
+        public final int maxY;
+
+        private RealArea(int minX, int minY, int maxX, int maxY) {
+            this.minX = minX;
+            this.minY = minY;
+            this.maxX = maxX;
+            this.maxY = maxY;
+        }
+
     }
 
 }

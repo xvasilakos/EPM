@@ -230,9 +230,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                 seqNum <= lastValidSeq;
                 seqNum++) {
             Chunk chunk = chunksInSequence.get(seqNum);
-            if (chunk == null) {
-                throw new RuntimeException();//xxx
-            }
+            
             chunks.add(chunk);
         }
 
@@ -278,11 +276,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 //////////////////////   
         List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
 
-        DebugTool.append(deb, unconsumed.size() + ",");
-
         if (unconsumed.isEmpty()) {//early skip if possible
-            DebugTool.append(deb, "-0\n");
-
             return new ArrayList<>();//return empty in this case
         }
 
@@ -298,24 +292,14 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                         ? Math.round(expectedHandoffDuration * mcRateSliceBytes / chunkSizeInBytes)
                         : 0;
 
-        DebugTool.append(deb, expectedHandoffDuration + ",");
-        DebugTool.append(deb, mcRateSliceBytes + ",");
-        DebugTool.append(deb, consumedFromMCDuringHandoff + ",");
-
         long consumedFromMCDuringHandoffConf
                 = Math.round(conf95HandoffDur * mcRateSliceBytes / chunkSizeInBytes);
 
         long cachableChunksDuringHandoff
                 = Math.round((expectedHandoffDuration + 2 * conf95HandoffDur) * bhRateSliceBytes / chunkSizeInBytes);
 
-        DebugTool.append(deb, cachableChunksDuringHandoff + ",");
-
         long consumableChunksDuringSCConnection
                 = Math.round((expectedResidenceDuration + 2 * conf95ResidenceDur) * scRateSliceBytes / chunkSizeInBytes);
-
-        DebugTool.append(deb, (expectedResidenceDuration + 2 * conf95ResidenceDur) + ",");
-        DebugTool.append(deb, scRateSliceBytes + ",");
-        DebugTool.append(deb, consumableChunksDuringSCConnection + ",");
 
         long firstChunkSequenceNum
                 = unconsumed.get(0).getSequenceNum()// first unconsumed chunk in sequence
@@ -331,19 +315,15 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 //            return chunks;
 //        }
         if (chunksInSequence.lastKey() <= firstChunkSequenceNum) {
-            DebugTool.append(deb, "-1\n");
             return new ArrayList<>();//return empty in this case
-
         }
 
-        DebugTool.append(deb, firstChunkSequenceNum + ",");
 
         long cachableChunks = Math.min(
                 cachableChunksDuringHandoff,
                 consumableChunksDuringSCConnection
         );
 
-        DebugTool.append(deb, cachableChunks + ",");
 
         long lastValidSeq = Math.min(
                 chunksInSequence.lastKey(),
@@ -353,13 +333,9 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                 seqNum <= lastValidSeq;
                 seqNum++) {
             Chunk chunk = chunksInSequence.get(seqNum);
-            if (chunk == null) {
-                throw new RuntimeException();//xxx
-            }
             chunks.add(chunk);
         }
 
-        DebugTool.append(deb, lastValidSeq + "\n");
 
 //        //yyy
 //        getSim().getStatsHandle().updtSCCmpt6(consumedFromMCDuringHandoff,
@@ -510,6 +486,14 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
      * the small-cellular rate fillInWithCacheHits minSCorBHRateSlice the
      * assumed slice per request of the rate through the backhaul and from the
      * small cell fillInWithDownloadedFromBH fillInWithMissedPerPolicy
+     *
+     * @param mcRateSlice
+     * @param fillInWithDownloadedFromMC
+     * @param scRateSlice
+     * @param fillInWithCacheHits
+     * @param minSCorBHRateSlice
+     * @param fillInWithDownloadedFromBH
+     * @param fillInWithMissedPerPolicy
      */
     @Override
     public void consumeTry(
@@ -661,16 +645,6 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             }
         }
 
-//            if (_requesterUser.getClass() == StationaryUser.class
-//                    && policy.getClass() == EMPC_LC_Full.class) {
-//xxx
-//                Utils.trackUser(false,
-//                        "\n\t\t budget remained: " + policyBudget
-//                        + " out of a maxBudget: " + maxBudget
-//                        + "\n\t\t hits now : " + nowChunkHits.size()
-//                        + "\n\t\t hits history : " + hitsByPolicyHistory.size(),
-//                        getRequesterUser(), true);
-//            }
         return currentHitsInCachePerPolicy;
     }
 
@@ -690,7 +664,6 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             if (_completitionTimes.get(policy) == -1) {
                 _completitionTimes.put(policy, simTime());
                 _uncompletedPolicies--;
-//                    DebugTool.printer.print("\n****Consumed Fully " + getID());
             }
             return bhCurrentConsumptionPerPolicy;
         }
@@ -739,13 +712,6 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         mcCurrentConsumptionPerPolicy.put(policy, mcCurrentConsumption = new ArrayList<>());
         List<Chunk> mcHistoryConsumption = _chunksConsumedHistoryFromMCWhileConnectedToSC.get(policy);
 
-//xxx            int xxx = 0;
-//            if (_requesterUser.getClass() == StationaryUser.class
-//                    && policy.getClass() == EMPC_LC_Full.class) {
-//                Utils.trackUser(false,
-//                        "\t #MC policyBudget " + policyBudget,
-//                        getRequesterUser(), true);
-//            }
         List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
         if (unconsumed.isEmpty()) {
             if (_completitionTimes.get(policy) == -1) {
@@ -764,7 +730,6 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                 // if already in the cache, let be consumed in the future from there
                 continue;
             }
-//                xxx++;
 
             unconsumedIt.remove();
             budgetForPolicy--;
@@ -779,13 +744,6 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             }
         }
 
-//xxx
-//            if (_requesterUser.getClass() == StationaryUser.class
-//                    && policy.getClass() == EMPC_LC_Full.class) {
-//                Utils.trackUser(false,
-//                        "\t #MC from rest " + xxx,
-//                        getRequesterUser(), true);
-//            }
         return mcCurrentConsumptionPerPolicy;
     }
 

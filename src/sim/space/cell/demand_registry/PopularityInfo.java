@@ -118,7 +118,7 @@ public class PopularityInfo {
      */
     private long _requestSerialGen = 0;
 
-    private final Map<Long, PopularityInfo.RegistrationInfo> _demandMap;
+    private final Map<String, PopularityInfo.RegistrationInfo> _demandMap;
 
     final AbstractCell _cell;
 
@@ -142,7 +142,7 @@ public class PopularityInfo {
     }
 
     public void registerPopInfo(DocumentRequest r) {
-        long rID = r.referredContentDocument().getID();
+        String rID = r.referredContentDocument().getID();
         RegistrationInfo reqDetails = _demandMap.get(rID);
 
         if (reqDetails == null) {// if this is the first time this content is registered..

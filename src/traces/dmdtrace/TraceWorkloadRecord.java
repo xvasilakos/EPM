@@ -17,7 +17,7 @@ public class TraceWorkloadRecord extends AbstractContent {
 
     private double _time;
 
-    public TraceWorkloadRecord(SimulationBaseRunner sim, long size, long id, double time) {
+    public TraceWorkloadRecord(SimulationBaseRunner sim, long size, String id, double time) {
         super(id, sim, size);
         this._time = time;
     }

@@ -55,7 +55,7 @@ final class HandlersUsed {
     final Set<UnonymousCompute5> _handlers4Iterative__sc__cmpt5;
     final Set<UnonymousCompute6> _handlers4Iterative__sc__cmpt6;
     /**
-     * choose randomly one SC and study its behavior in each _sim round
+     * choose randomly one SC and study its behavior in each theSim round
      */
     final Set<ICompute0> _handlers4Fixed_sc__cmpt0;
     final Set<ICompute0> _handlers4Fixed_sc__cmpt0__no_policy;
@@ -135,7 +135,7 @@ final class HandlersUsed {
                     continue;
                 default:
                     // for every caching policy used
-                    for (AbstractCachingPolicy nxtCachingPolicy : _statsHandlingOuter._sim.getCachingStrategies()) {
+                    for (AbstractCachingPolicy nxtCachingPolicy : _statsHandlingOuter.theSim.getCachingStrategies()) {
                         Object iCompute2Object = Class.forName(statsProp.propertyName() + "." + nxtHandlerName).getConstructor(AbstractCachingPolicy.class).newInstance(nxtCachingPolicy);
                         if (!(iCompute2Object instanceof AbstractPerformanceStat)) {
                             throw new StatisticException("No known stats handler:" + statsProp.name() + "." + nxtHandlerName);
@@ -207,7 +207,7 @@ final class HandlersUsed {
                     continue;
                 default:
                     for (SmallCell nxtMonitorSC : monitorSCs) {
-                        for (AbstractCachingPolicy nxtCachePolicy : _statsHandlingOuter._sim.getCachingStrategies()) {
+                        for (AbstractCachingPolicy nxtCachePolicy : _statsHandlingOuter.theSim.getCachingStrategies()) {
                             Object newInstance = Class.forName(statsProp.propertyName() + "." + nxtHandlerName).getConstructor(AbstractCachingPolicy.class, SmallCell.class).newInstance(nxtCachePolicy, nxtMonitorSC);
                             if (!(newInstance instanceof ICompute0)) {
                                 throw new StatisticException("No known stats handler:" + statsProp.name() + "." + nxtHandlerName);
@@ -282,7 +282,7 @@ final class HandlersUsed {
                 case Values.NULL:
                     continue;
                 default:
-                    for (AbstractCachingPolicy nxtPolicy : _statsHandlingOuter._sim.getCachingStrategies()) {
+                    for (AbstractCachingPolicy nxtPolicy : _statsHandlingOuter.theSim.getCachingStrategies()) {
                         Object newInstance = Class.forName(statsProp.propertyName() + "." + nxtHandlerName).getConstructor(AbstractCachingPolicy.class).newInstance(nxtPolicy);
                         if (!(newInstance instanceof ComputeAllPoliciesImpl)) {
                             throw new StatisticException("No known stats handler:" + statsProp.name() + "." + nxtHandlerName);
@@ -307,7 +307,7 @@ final class HandlersUsed {
                 case Values.NULL:
                     continue;
                 default:
-                    for (AbstractCachingPolicy nxtCachePolicy : _statsHandlingOuter._sim.getCachingStrategies()) {
+                    for (AbstractCachingPolicy nxtCachePolicy : _statsHandlingOuter.theSim.getCachingStrategies()) {
                         UnonymousCompute5 hndlr = new UnonymousCompute5(nxtCachePolicy, nxtHandlerTitl);
                         initHdlSet.add(hndlr);
                         _statsHandlingOuter._simStatististics.addTitle(hndlr.title());
@@ -338,12 +338,12 @@ final class HandlersUsed {
     }
 
     List<SmallCell> monitorSCs(StatsHandling sh) {
-        List<Integer> cellIDs = sh._sim.getScenario().listOfIntegersProperty(
+        List<Integer> cellIDs = sh.theSim.getScenario().listOfIntegersProperty(
                 StatsProperty.HANDLERS__FIXED_SC__MONITOR_SCS);
         List<SmallCell> cells = new ArrayList();
         for (int i = 0; i < cellIDs.size(); i++) {
             Integer nxtID = cellIDs.get(i);
-            cells.add(sh._sim.getCellRegistry().getCellByID(nxtID));
+            cells.add(sh.theSim.getCellRegistry().getCellByID(nxtID));
         }
 
         return cells;

@@ -2,6 +2,7 @@ package sim.content;
 
 import app.properties.Cost;
 import app.properties.valid.Values;
+import java.util.Objects;
 import sim.ISimulationMember;
 import sim.run.SimulationBaseRunner;
 import sim.space.cell.CellRegistry;
@@ -12,7 +13,7 @@ import sim.space.cell.CellRegistry;
  */
 public abstract class AbstractContent implements IContent, ISimulationMember {
 
-    private final long _id;
+    private final String _id;
     private final long _sizeBytes;
     private final SimulationBaseRunner<?> _sim;
 
@@ -30,7 +31,7 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
      * @param sim
      * @param sizeInBytes
      */
-    protected AbstractContent(long id, SimulationBaseRunner<?> sim, long sizeInBytes) {
+    protected AbstractContent(String id, SimulationBaseRunner<?> sim, long sizeInBytes) {
 
         _sizeBytes = sizeInBytes;
         _id = id;
@@ -70,7 +71,7 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
     }
 
     @Override
-    public final long getID() {
+    public final String getID() {
         return _id;
     }
 
@@ -98,13 +99,11 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 41 * hash + (int) (this._id ^ (this._id >>> 32));
-//        hash = 41 * hash + (int) (this._sizeBytes ^ (this._sizeBytes >>> 32));
-         //Caution!
-        // don't do that.. have it the same between different sims, so as to share between sims
-        // --> hash = 41 * hash + this._sim.hashCode();
+        hash = 79 * hash + Objects.hashCode(this._id);
         return hash;
     }
+
+   
 
    
 
@@ -132,7 +131,7 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
                 append("; size ").
                 append(sizeInMBs()).
                 append(" MB>");
-//xxx uncomment the following. tmp commenting for debugging only
+//@todo uncomment the following. tmp commenting for debugging only
 //        if (_remoteCostType.equalsIgnoreCase(Values.PROPAGATION_DELAY__PLUS__MC_WIRELESS)) {
 //            try {
 //                strBld.append("; Remote transfer+MC transfer cost=").append(costOfTransferMC_BH()).

@@ -27,7 +27,7 @@ public class CachedTraceDocuments {
 
     private final Logger _logger;
 
-    private final Map<File, Map<Long, ContentDocument>> _documentsPerTrcFile;
+    private final Map<File, Map<String, ContentDocument>> _documentsPerTrcFile;
     private final Map<File, List<Long>> _documentsMeta;
 
     public CachedTraceDocuments() {
@@ -54,22 +54,19 @@ public class CachedTraceDocuments {
      * @return the the ContentDocument to which the specified id is mapped, or
      * null if underlying map contains no mapping for the id
      */
-    public synchronized ContentDocument getDocument(File f, long id, ISimulationMember sm) {
+    public synchronized ContentDocument getDocument(File f, String id, ISimulationMember sm) {
         ContentDocument doc;
-        Map<Long, ContentDocument> documents = _documentsPerTrcFile.get(f);
+        Map<String, ContentDocument> documents = _documentsPerTrcFile.get(f);
         if (documents == null) {
             return null;
         }
 
         doc = documents.get(id);
-//        if (doc != null) {
-//xxx            sm.getSim().getStatsHandle().updtSCCmpt6(1, "MEMSAVED");
-//        }
         return doc;
     }
 
-    public synchronized void addDocument(File f, long theID, ContentDocument theDoc, ISimulationMember sm) {
-        Map<Long, ContentDocument> documents = _documentsPerTrcFile.get(f);
+    public synchronized void addDocument(File f, String theID, ContentDocument theDoc, ISimulationMember sm) {
+        Map<String, ContentDocument> documents = _documentsPerTrcFile.get(f);
         if (documents != null) {
             if (documents.put(theID, theDoc) != null) {
                 _logger.log(Level.WARNING,
@@ -85,7 +82,7 @@ public class CachedTraceDocuments {
         }
     }
 
-    public synchronized boolean contains(File f, long id) {
+    public synchronized boolean contains(File f, String id) {
         return _documentsPerTrcFile.containsKey(f) && _documentsPerTrcFile.get(f).containsKey(id);
     }
 
@@ -93,8 +90,9 @@ public class CachedTraceDocuments {
         return _documentsPerTrcFile.containsKey(f);
     }
 
-    public synchronized Map<Long, ContentDocument> getDocumentsOfTrace(File f, ISimulationMember sm) {
-        Map<Long, ContentDocument> docs = _documentsPerTrcFile.get(f);
+    public synchronized Map<String, ContentDocument> getDocumentsOfTrace(
+            File f, ISimulationMember sm) {
+        Map<String, ContentDocument> docs = _documentsPerTrcFile.get(f);
         if (docs != null) {
             _logger.log(Level.INFO,
                     "Loaded {0} cross-sim cached content documents from file {1}",

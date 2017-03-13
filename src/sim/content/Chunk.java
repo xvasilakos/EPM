@@ -11,7 +11,9 @@ public class Chunk extends AbstractContent implements ISynopsisString {
     private final ContentDocument _referedTraceDocument;
 
     protected Chunk(ContentDocument traceDocRecord, long size, long chunkSequenceNum) {
-        super(hashCodeFor(chunkSequenceNum, traceDocRecord), traceDocRecord.getSimulation(), size);
+        super(
+                String.valueOf(hashCodeFor(chunkSequenceNum, traceDocRecord)), 
+                traceDocRecord.getSimulation(), size);
         _sequenceNum = chunkSequenceNum;
         _referedTraceDocument = traceDocRecord;
     }

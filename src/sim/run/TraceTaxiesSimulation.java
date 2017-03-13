@@ -97,7 +97,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 mobTrcLine = _muTraceIn.nextLine();
                 continue;
             }
-            
+
             int time = Integer.parseInt(csv[0]);
             int parsedMUID = Integer.parseInt(csv[1]);
             double dxdt = Math.ceil(Double.parseDouble(csv[2]));
@@ -133,8 +133,8 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
             double velocity = Math.sqrt(prevDx * prevDx + prevDy * prevDy);
 
             _muAvgVelocity -= velocity / _muByID.size();
-            nxtMU.setdX(dxdt);
-            nxtMU.setdY(dydt);
+            nxtMU.setDX(dxdt);
+            nxtMU.setDY(dydt);
 
             double newVelocity = Math.sqrt(dxdt * dxdt + dydt * dydt);
 
@@ -167,7 +167,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
      * @return
      */
     @Override
-    protected List<TraceMU> initAndConnectMUs(
+    protected Map<Integer, TraceMU> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
             Collection<AbstractCachingPolicy> cachingPolicies
@@ -196,50 +196,33 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         _muImmobileByID = new HashMap();
         _muMovingByID = new HashMap();
 
-        List<TraceMU> musLst = new ArrayList<>();
+        Map<Integer, TraceMU> musByTheirID = new HashMap<>();
 
         String metaPath = scenario.stringProperty(Space.MU__TRACE__META, true);
 
         if (!metaPath.equalsIgnoreCase(Values.NONE)) {
             initAndConnectMUs_1(metaPath, percentage, area, nxtGroup,
                     conn2SCPolicy, cachingPolicies, mobTransDecisions,
-                    musLst);
+                    new ArrayList(musByTheirID.values()));
         } else {// Makes a first full parse of the mobility trace file to discover meta data.
             initAndConnectMUs_2(percentage, area, nxtGroup,
                     conn2SCPolicy, cachingPolicies, mobTransDecisions,
-                    musLst, scenario);
+                    new ArrayList(musByTheirID.values()), scenario);
         }
 
         // do the cloning or reduction of MUs
         _totalOriginalMUsNum = _muByID.size();
-        utils.DebugTool.appendLn("#mobiles before cloning: " + musLst.size());
         if (_cloneMobsFactor != 0) {
-            muCloning(musLst, area, nxtGroup, conn2SCPolicy, cachingPolicies, mobTransDecisions);
+            muCloning(new ArrayList(musByTheirID.values()), area, nxtGroup,
+                    conn2SCPolicy, cachingPolicies, mobTransDecisions);
         }
-        utils.DebugTool.appendLn("Remaining #mobiles after cloning: " + musLst.size());
 
-        //<editor-fold defaultstate="collapsed" desc="shuffle mus iff property ..">
-        String muShuffling = scenario.stringProperty(Space.MU__SHUFFLE, false);
-        switch (muShuffling) {
-            case Values.NEVER:
-                break; // do not shufle
-
-            case Values.UPON_CREATION:
-            case Values.ALWAYS:
-                Collections.shuffle(musLst, getRandomGenerator().getMersenneTwister());
-                break;
-            default:
-                throw new UnsupportedOperationException("Value " + muShuffling + " is currently not supported for "
-                        + " property " + Space.MU__SHUFFLE);
-        }
-        //</editor-fold>
-
-        return musLst;
+        return musByTheirID;
     }
 
     private void muCloning(List<TraceMU> musLst, Area area, MobileGroup nxtGroup, List<String> conn2SCPolicy, Collection<AbstractCachingPolicy> cachingPolicies, String mobTransDecisions) throws CriticalFailureException {
         try {
-            _cloneMobsFactor = _scenarioSetup.intProperty(Space.MU__CLONEFACTOR);
+            _cloneMobsFactor = scenarioSetup.intProperty(Space.MU__CLONEFACTOR);
 
             if (_cloneMobsFactor < -1) {
                 throw new exceptions.ScenarioSetupException(
@@ -483,8 +466,8 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         int id = mu.getID();
 
         _muByID.put(id, mu);
-        mu.setdX(5.25);
-        mu.setdY(5.25);// 5.25 is the sqrt of 27.6, which is the average walking speed 5km/h, only in 20 sec
+        mu.setDX(5.25);
+        mu.setDY(5.25);// 5.25 is the sqrt of 27.6, which is the average walking speed 5km/h, only in 20 sec
         _muMovingByID.put(id, mu);
         _muAvgVelocity = 27.6;
 
@@ -543,7 +526,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
                 for (TraceMU nxtMU : shuffldMUs) {
                     if (_muImmobileByID.containsKey(nxtMU.getID())) {
-                        // avoid expensive call to move() if possible
+                        // avoid expensive call to moveRelatively() if possible
                         if (nxtMU.isSoftUser()) {
                             nxtMU.consumeTryAllAtOnceFromSC();
                         } else {
@@ -551,7 +534,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                         }
                         continue;
                     }
-                    nxtMU.move(false, false);
+                    nxtMU.moveRelatively(false, false);
                     if (nxtMU.isSoftUser()) {
                         nxtMU.consumeTryAllAtOnceFromSC();
                     } else {
@@ -616,8 +599,6 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 if (roundCommited) {
                     getStatsHandle().appendTransient(false);
                     getStatsHandle().checkFlushTransient(false);
-
-//                    DebugTool.printProbs(shuffldMUs.get(0).getUserGroup(), getCellRegistry());
                 }
             }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 

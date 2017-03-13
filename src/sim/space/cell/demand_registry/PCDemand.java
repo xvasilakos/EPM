@@ -18,7 +18,7 @@ public class PCDemand {
     /**
      * @return the _demandMap
      */
-    public Map<Long, RegistrationInfo> getDemandMap() {
+    public Map<String, RegistrationInfo> getDemandMap() {
         return Collections.unmodifiableMap(_demandMap);
     }
 
@@ -85,7 +85,7 @@ public class PCDemand {
      * connected or a past connected mobile) to the theChunk IDs that the
      * requests were made for.
      */
-    private final Map<Long, RegistrationInfo> _demandMap;
+    private final Map<String, RegistrationInfo> _demandMap;
 
     final AbstractCell _cell;
 

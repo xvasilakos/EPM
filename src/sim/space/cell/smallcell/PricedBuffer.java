@@ -121,27 +121,6 @@ public class PricedBuffer extends BufferBase {
         double used4Price = 0.0;
         double price4Rplc = getPrice4Rplc();
 
-//        if (price4Rplc > 0) {
-//            DebugTool.appendLog("#util computation for non-zero price: " + price4Rplc,
-//                    _cell, (AbstractCachingPolicy) mthd);
-//            Set<Item> cachedChunksUnmodifiable = getCachedItems();
-//            for (Chunk nxtItem : cachedChunksUnmodifiable) {
-//                double assessment = mthd.assess(nxtItem, _cell) / nxtItem.sizeInMBs();
-//
-//                DebugTool.appendLog("#gain/size " + assessment,
-//                        _cell, (AbstractCachingPolicy) mthd);
-//
-//                if (assessment >= price4Rplc) {
-//                    used4Price += nxtItem.sizeInBytes();
-//
-//                    DebugTool.appendLog("#theChnk included in utilization computation",
-//                            _cell, (AbstractCachingPolicy) mthd);
-//                }
-//
-//                DebugTool.appendLog("#updated util = " + (used4Price / _capacity),
-//                        _cell, (AbstractCachingPolicy) mthd);
-//            }
-//        } else {
         Set<Chunk> cachedItems = getCachedItems();
         for (Chunk nxtItem : cachedItems) {
             if (mthd.assess(nxtItem, _cell) / nxtItem.sizeInMBs() >= price4Rplc) {
@@ -159,12 +138,12 @@ public class PricedBuffer extends BufferBase {
      * actionFlag parameter value).
      *
      * Note that the price does not reflect whether there is available space for
- caching the theChnk or not.
-
-
- deallocateTry true if this call is for evicting the items, false if it is
- for adding the items. theChnk the theChnk polled to be cached or evicted
- from items.
+     * caching the theChnk or not.
+     *
+     *
+     * deallocateTry true if this call is for evicting the items, false if it is
+     * for adding the items. theChnk the theChnk polled to be cached or evicted
+     * from items.
      *
      * @return The polled price
      */
@@ -204,7 +183,7 @@ public class PricedBuffer extends BufferBase {
      * value dynamic.type_01 is _used.
      *
      * theChnk the chunk polled to add/evict deallocateTry true for eviction,
- otherwise false for addition.
+     * otherwise false for addition.
      *
      * @return
      */
@@ -218,18 +197,6 @@ public class PricedBuffer extends BufferBase {
         pricePolled = getPrice() + getGamma() * (polledUtil - getTrgtUtililzation());
         pricePolled = pricePolled < 0 ? 0 : pricePolled; // do not allow negative values
 
-//        DebugTool.appendLn(
-//                "\ntheChnk.sizeInMBs=" + theChnk.sizeInMBs()
-//                + "\tpolledUtil=" + polledUtil
-//                + "\tgetTrgtUtililzation()=" + getTrgtUtililzation()
-//                + "\tpricePolled=" + pricePolled
-//        );
-//        DebugTool.appendLn(
-        //                "\ntheChnk.sizeInMBs=" + theChnk.sizeInMBs()
-//                polledUtil
-//                + "," + getTrgtUtililzation()
-//                + "," + pricePolled
-//        );
         return pricePolled;
     }
 
@@ -261,7 +228,7 @@ public class PricedBuffer extends BufferBase {
      * value dynamic.type_02 is _used.
      *
      * theChnk the list of items polled to add/evict deallocateTry true for
- eviction, otherwise false for addition.
+     * eviction, otherwise false for addition.
      *
      * @return
      */

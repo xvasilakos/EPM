@@ -38,7 +38,7 @@ import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6.WellKnownTitle;
 import utils.CommonFunctions;
 
 /**
- * Methods for handling statistics for this _sim.
+ * Methods for handling statistics for this theSim.
  */
 public final class StatsHandling implements ISimulationMember {
 
@@ -50,7 +50,7 @@ public final class StatsHandling implements ISimulationMember {
     private final Queue<String> _resultsTransientQ;
     private final boolean _printStddev;
     private final int _clockMaxTime;
-    private final int _minTime;
+    private final int theMinTime;
     private final Statistics.ConfidenceInterval confInterval;
     private final boolean _printMean;
     private final boolean _printAggregates;
@@ -61,12 +61,12 @@ public final class StatsHandling implements ISimulationMember {
     private boolean _isPrintingLocked = false;
     private final HandlersUsed _handlersUsed;
 
-    protected final SimulationBaseRunner<?> _sim;
+    protected final SimulationBaseRunner<?> theSim;
     protected final Scenario _scenarioSetup;
     protected final Statistics _simStatististics;
 
     public StatsHandling(final SimulationBaseRunner<?> sim) {
-        this._sim = sim;
+        this.theSim = sim;
         this._logger = CommonFunctions.getLoggerFor(StatsHandling.class);
 
         this._scenarioSetup = sim.getScenario();
@@ -89,20 +89,20 @@ public final class StatsHandling implements ISimulationMember {
                 throw new RuntimeException("Parameter " + app.properties.Simulation.Clock.MAX_TIME.propertyName() + " does not accept negative interger or zero values: " + _clockMaxTime);
             }
 
-            _minTime = _scenarioSetup.intProperty(StatsProperty.STATS__MIN_TIME);
-            if (_minTime < 0) {
+            theMinTime = _scenarioSetup.intProperty(StatsProperty.STATS__MIN_TIME);
+            if (theMinTime < 0) {
                 //
                 throw new RuntimeException(StatsProperty.STATS__MIN_TIME + "  property can not be a negative integer value.");
             }
 
-            if (_minTime >= _clockMaxTime) {
+            if (theMinTime >= _clockMaxTime) {
                 //
-                throw new RuntimeException(StatsProperty.STATS__MIN_TIME.name() + " property = " + _minTime + " can not be set to less than property " + app.properties.Simulation.Clock.MAX_TIME.name() + " = " + _clockMaxTime);
+                throw new RuntimeException(StatsProperty.STATS__MIN_TIME.name() + " property = " + theMinTime + " can not be set to less than property " + app.properties.Simulation.Clock.MAX_TIME.name() + " = " + _clockMaxTime);
             }
 
             String _confIntervalZ = _scenarioSetup.stringProperty(StatsProperty.STATS__CONF_INTERVAL_Z, false);
             confInterval = Statistics.ConfidenceInterval.find(_confIntervalZ);
-            String currSimStatsDirPath = SimulatorApp.getStatsDirPath();
+            String currSimStatsDirPath = SimulatorApp.getResultFilesPath();
             this._simStatististics = new Statistics(sim);
 
             //<editor-fold defaultstate="collapsed" desc="initialize printers for aggregated and transient results">
@@ -138,7 +138,7 @@ public final class StatsHandling implements ISimulationMember {
     }
 
     public boolean isStatsMinTimeExceeded() {
-        return _sim.simTime() > _minTime;
+        return theSim.simTime() > theMinTime;
     }
 
     public void updtFixedSC() throws StatisticException {
@@ -181,8 +181,7 @@ public final class StatsHandling implements ISimulationMember {
             IComputePercent nxtHandler = stat_iter.next();
             _simStatististics.addValuesForTime(recordingTime,
                     nxtHandler.title(),
-                    nxtHandler.computePercent(
-                            _sim, mu, mu.getCurrentlyConnectedSC()
+                    nxtHandler.computePercent(theSim, mu, mu.getCurrentlyConnectedSC()
                     )
             );
         }
@@ -248,7 +247,7 @@ public final class StatsHandling implements ISimulationMember {
 
         int recordingTime = statRecordingAvgPeriodTime();
         if (!_handlersUsed._handlers4Iterative__sc__cmpt4.isEmpty()) {
-            Iterator<SmallCell> scIterator = _sim.getCellRegistry().getSmallCells().iterator();
+            Iterator<SmallCell> scIterator = theSim.getCellRegistry().getSmallCells().iterator();
             while (scIterator.hasNext()) {
                 SmallCell nxtSC = scIterator.next();
                 for (ComputeAllPoliciesImpl nxtStatHandler : _handlersUsed._handlers4Iterative__sc__cmpt4) {
@@ -273,7 +272,7 @@ public final class StatsHandling implements ISimulationMember {
 
         int recordingTime = statRecordingAvgPeriodTime();
         if (!_handlersUsed._handlers4Iterative__sc__cmpt4_no_policies.isEmpty()) {
-            Iterator<SmallCell> scIterator = _sim.getCellRegistry().getSmallCells().iterator();
+            Iterator<SmallCell> scIterator = theSim.getCellRegistry().getSmallCells().iterator();
             while (scIterator.hasNext()) {
                 SmallCell nxtSC = scIterator.next();
                 for (ICompute4<SmallCell> nxtStatHandler : _handlersUsed._handlers4Iterative__sc__cmpt4_no_policies) {
@@ -345,14 +344,14 @@ public final class StatsHandling implements ISimulationMember {
     public int statRecordingAvgPeriodTime() {
         // e.g. 20 * ((int) 18 / 20) =20 * ((int) 0.9) = 0
         // e.g. 20 * (21 / 20) = 20 * ((int)1.05) = 20 * 1 = 20
-        return _aggregatesAvgPeriod * (_sim.simTime() / _aggregatesAvgPeriod);
+        return _aggregatesAvgPeriod * (theSim.simTime() / _aggregatesAvgPeriod);
     }
 
     /**
      * Committing implies finalizing and thus compressing state in each record.
      *
-     * This method must be called after recording all statistics for a give _sim
-     * simTime, to commit all statistics recorded for this _sim simTime.
+     * This method must be called after recording all statistics for a give theSim
+ simTime, to commit all statistics recorded for this theSim simTime.
      *
      * @return true iff stats are committed
      * @throws statistics.StatisticException
@@ -364,9 +363,9 @@ public final class StatsHandling implements ISimulationMember {
      */
     public boolean tryCommitRound() throws StatisticException {
         int statRecordingAvgPeriodTime = statRecordingAvgPeriodTime();
-        /*Caution must use this averaging period simTime instead of actual _sim clock simTime;
+        /*Caution must use this averaging period simTime instead of actual theSim clock simTime;
              * otherwise it tries to finalize times that may have not been recorded*/
-        if (_aggregatesAvgPeriod == 1 || _sim.simTime() + 1 == statRecordingAvgPeriodTime) {
+        if (_aggregatesAvgPeriod == 1 || theSim.simTime() + 1 == statRecordingAvgPeriodTime) {
             // finalize if this is the last recorded series of _simStatististics
             _simStatististics.finalizeState(statRecordingAvgPeriodTime);
             return true;
@@ -407,7 +406,7 @@ public final class StatsHandling implements ISimulationMember {
                         aggregatedValues = _simStatististics.resultsAggregated(_printMean,
                                 _printStddev,
                                 confInterval,
-                                (int) Math.max(_minTime, 0.75 * simTime())/*count ony the last 25% of results*/,
+                                (int) Math.max(theMinTime, 0.75 * simTime())/*count ony the last 25% of results*/,
                                 simTime(),
                                 true, false);
                         _isPrintingLocked = false;
@@ -468,7 +467,7 @@ public final class StatsHandling implements ISimulationMember {
                 aggregatedValues = _simStatististics.resultsAggregated(_printMean,
                         _printStddev,
                         confInterval,
-                        (int) Math.max(_minTime, 0.75 * simTime())/*count ony the last 25% of results*/,
+                        (int) Math.max(theMinTime, 0.75 * simTime())/*count ony the last 25% of results*/,
                         simTime(), false, true);
             } catch (StatisticException | InvalidOrUnsupportedException ex) {
                 _logger.log(Level.SEVERE, null, ex);
@@ -534,7 +533,7 @@ public final class StatsHandling implements ISimulationMember {
 
     @Override
     public int simTime() {
-        return _sim.simTime();
+        return theSim.simTime();
     }
 
     @Override
@@ -544,17 +543,17 @@ public final class StatsHandling implements ISimulationMember {
 
     @Override
     public int simID() {
-        return _sim.simID();
+        return theSim.simID();
     }
 
     @Override
     public SimulationBaseRunner getSimulation() {
-        return _sim;
+        return theSim;
     }
 
     @Override
     public CellRegistry simCellRegistry() {
-        return _sim.simCellRegistry();
+        return theSim.simCellRegistry();
     }
 
 }

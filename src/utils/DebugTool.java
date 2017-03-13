@@ -1,6 +1,7 @@
 package utils;
 
 import app.SimulatorApp;
+import app.arguments.MainArguments;
 import caching.base.AbstractCachingPolicy;
 import caching.incremental.EMC;
 import java.io.File;
@@ -51,7 +52,7 @@ public class DebugTool {
             Date now = new Date();
             String name = sdfTime.format(now) + "runInfo.txt";
 
-            String parent = SimulatorApp.getStatsDirPath() + "[" + sdfDate.format(now) + "]";
+            String parent = MainArguments.Defaults.FILES_PATH + "/debugInfo/[" + sdfDate.format(now) + "]";
             new File(parent).mkdirs();
 
             printer = new PrintStream(parent + "/" + name);
@@ -147,7 +148,7 @@ public class DebugTool {
         printer.append(msg);
     }
 
-    public static void appendLn(String msg) {
+    public static void appendln(String msg) {
         printer.append("\n").append(msg);
     }
 
@@ -158,14 +159,14 @@ public class DebugTool {
         printer.append(msg);
     }
 
-    public static void appendLn(boolean check, String msg) {
+    public static void appendln(boolean check, String msg) {
         if (!check) {
             return;
         }
         printer.append("\n").append(msg);
     }
 
-    public static void appendLn(int tabs, String msg) {
+    public static void appendln(int tabs, String msg) {
         printer.append("\n");
         for (int i = 0; i < tabs; i++) {
             printer.append("\t");
@@ -189,6 +190,10 @@ public class DebugTool {
                 printer.append(nxtP + ", ");
             }
         }
+    }
+
+    public static void println(String msg) {
+        appendln(msg); 
     }
 
 }

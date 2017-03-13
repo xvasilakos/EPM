@@ -63,14 +63,10 @@ public class SmallCell extends AbstractCell {
     public SmallCell(
             int id, SimulationBaseRunner sim, Point center, double radius,
             Area area,
-            Map<Integer, Double> cellNeighborhood,
             Collection<AbstractCachingPolicy> cachingPolicys, long capacity)
             throws InvalidOrUnsupportedException {
 
-        super(
-                id, sim, center.getY(), center.getX(), radius,
-                area, cellNeighborhood
-        );
+        super(id, sim, center.getY(), center.getX(), radius, area);
 
         _empcLCnoRplcInterval = new EPCLCnoRplcState(0, sim.getScenario().
                 intProperty(app.properties.Caching.CACHING__RPLC__MINGAIN__SUM__HEURISTIC__TIME__DYNAMIC_MAX_BOUND));
@@ -184,6 +180,10 @@ public class SmallCell extends AbstractCell {
         area.updtCoverageByRadius(this);
     }
 
+    
+    
+    
+    
     private void fillMaps(Collection<AbstractCachingPolicy> cachingPolicies, SimulationBaseRunner sim, long capacity)
             throws InvalidOrUnsupportedException {
         for (AbstractCachingPolicy thePolicy : cachingPolicies) {
@@ -206,6 +206,8 @@ public class SmallCell extends AbstractCell {
         }
     }
 
+    
+    
     /**
      * @return a randomly chosen point or null if the area is empty of points.
      */
@@ -272,7 +274,9 @@ public class SmallCell extends AbstractCell {
      */
     public void addCacher(CachingUser cu, AbstractCachingPolicy cachingPolicy,
             Chunk item) throws WrongOrImproperArgumentException {
-//xxx uncomment this        if (!(cachingPolicy instanceof IRplcBase)) {
+//@todo have no clue what to do with this piece of... code ..
+//     initially, i thought like:   uncomment this        
+//            if (!(cachingPolicy instanceof IRplcBase)) {
 //            throw new exceptions.WrongOrImproperArgumentException(
 //                    "Method addCacher() must NOT be called if the caching policy in use"
 //                    + "does not support replacements due to "
@@ -385,7 +389,6 @@ public class SmallCell extends AbstractCell {
 
 if(!cacheRequestor.isAllowedToCache()) return ;
 
-//        DebugTool.appendLn(chunksRequested.size() + "");
 
 //TODO recheck the implementation of these policies            /**
 //            * Update access to items for LRU methods.
@@ -454,11 +457,6 @@ if(!cacheRequestor.isAllowedToCache()) return ;
          * Perform caching for types stemming from IGainRplc
          */
         if (policy instanceof IGainRplc) {
-//hack to lighten simulations
-//            if (policy instanceof caching.rplc.mingain.no_price.EMC_LC_Full) {//xxx
-////            if (policy instanceof caching.base.no_price.AbstractGainRplc) {//xxx
-//                return;//xxx
-//            }
 
             PriorityQueue<Chunk> cachedOrderByGain
                     = targetSC.getCachedChunksOrderedByGain((IGainRplc) policy);

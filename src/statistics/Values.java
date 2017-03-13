@@ -129,9 +129,6 @@ public class Values {
             return finalizedBean.getMean();
         }
 
-        if (sum != 0 && values.size() == 0) {
-            throw new StatisticException();//xxx
-        }
         double mean = sum / values.size();
         return round(mean);
     }

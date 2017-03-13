@@ -120,31 +120,32 @@ public final class Preprocessor {
      */
     private void loadNameValuesPairs(String pth) throws IOException {
 
-        int sep = pth.lastIndexOf("/");
-        if (sep == -1) {
-            sep = pth.lastIndexOf("\\");
-        }
-
-        // case of flags: -d or --default
-        if (sep != -1) {
-            String flagstr = pth.substring(sep + 1);
-
-            if (flagstr.startsWith("--")) {
-                flagstr = flagstr.substring(2).toUpperCase();
-            } else if (flagstr.startsWith("-")) {
-                flagstr = flagstr.substring(1).toUpperCase();
-            }
-
-            if (MainArguments.Flag.isValidFlag(flagstr)) {
-                MainArguments.Flag theFlag = MainArguments.Flag.valueOf(flagstr);
-                if (theFlag == MainArguments.Flag.DEFAULT
-                        || theFlag == MainArguments.Flag.D) {
-                    pth = pth.replace(theFlag.toString(),
-                            MainArguments.Defaults.DEFAULT_PROPERTIES_MASTER__INI);
-                }
-
-            }
-        }
+        //@todo ocnsider if these lines not need (..?)
+//        int sep = pth.lastIndexOf("/");
+//        if (sep == -1) {
+//            sep = pth.lastIndexOf("\\");
+//        }
+//
+//        // case of flags: -d or --default
+//        if (sep != -1) {
+//            String flagstr = pth.substring(sep + 1);
+//
+//            if (flagstr.startsWith("--")) {
+//                flagstr = flagstr.substring(2).toUpperCase();
+//            } else if (flagstr.startsWith("-")) {
+//                flagstr = flagstr.substring(1).toUpperCase();
+//            }
+//
+//            if (MainArguments.Flag.isValidFlag(flagstr)) {
+//                MainArguments.Flag theFlag = MainArguments.Flag.valueOf(flagstr);
+//                if (theFlag == MainArguments.Flag.DEFAULT
+//                        || theFlag == MainArguments.Flag.D) {
+//                    pth = pth.replace(theFlag.toString(),
+//                            MainArguments.Defaults.DEFAULT_PROPS_MASTER__INI_PATH);
+//                }
+//
+//            }
+//        }
 
 
         File pFile = new File(pth);

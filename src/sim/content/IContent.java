@@ -14,7 +14,7 @@ public interface IContent {
     @Override
     public boolean equals(Object obj);
 
-    public long getID();
+    public String getID();
 
     @Override
     public int hashCode();

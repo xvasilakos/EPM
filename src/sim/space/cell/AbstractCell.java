@@ -31,7 +31,7 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
     private static int generateNxtID() {
         return ++_idGen;
     }
-    private final int _id;
+    private final int identityNum;
     /////////////////////////////////////////
     private final Point _center;
     private final double _radius;
@@ -51,7 +51,7 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
     protected AbstractCell(int id) {
         this._lclDmd = new LocalDemand(this);
         this._popInfo = new PopularityInfo(this);
-        this._id = id;
+        this.identityNum = id;
 
         this._sim = null;
 
@@ -81,7 +81,7 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
         this._lclDmd = new LocalDemand(this);
         this._popInfo = new PopularityInfo(this);
 
-        this._id = generateNxtID();
+        this.identityNum = generateNxtID();
 
         String sanityMsg = "Center out range: ";
         if (centerY > area.getLengthY() || centerY < 0) {
@@ -113,14 +113,13 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
      * @param centerX
      * @param radius
      * @param area the area to register fo this new cell
-     * @param transitionNeighbors
      */
     public AbstractCell(int id, SimulationBaseRunner sim, int centerY, int centerX,
-            double radius, Area area, Map<Integer, Double> transitionNeighbors) {
+            double radius, Area area) {
         this._lclDmd = new LocalDemand(this);
         this._popInfo = new PopularityInfo(this);
 
-        this._id = id;
+        this.identityNum = id;
         //<editor-fold defaultstate="collapsed" desc="check _center getCoordinates">
         String sanityMsg = "Center out of range: ";
         if (centerY >= area.getLengthY() || centerY < 0) {
@@ -146,9 +145,10 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 17 * hash + Objects.hashCode(this._sim);
-        hash = 17 * hash + this._id;
+        int hash = this.identityNum;
+//        int hash = 3;
+//        hash = 17 * hash + Objects.hashCode(this._sim);
+//        hash = 17 * hash + this._id;
         return hash;
     }
 
@@ -164,10 +164,11 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
             return false;
         }
         final AbstractCell other = (AbstractCell) obj;
-        if (this._id != other._id) {
+        if (this.identityNum != other.identityNum) {
             return false;
         }
-        return Objects.equals(this._sim, other._sim);
+
+        return true;
     }
 
     /**
@@ -273,7 +274,7 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
     }
 
     public int getID() {
-        return _id;
+        return identityNum;
     }
 
     @Override
@@ -416,5 +417,4 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
         return _center;
     }
 
-  
 }

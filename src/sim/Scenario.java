@@ -99,7 +99,7 @@ public class Scenario implements Comparable<Scenario> {
  scenarios running in parallel.
      */
     private final SortedSet<Couple<String, String>> _replicationProperties;
-    private final Logger _logger;
+    private final Logger LOG;
 
     {// initilization block shared by all constructors
         _customProps = new HashMap<>(10, 0.25f);
@@ -157,7 +157,7 @@ public class Scenario implements Comparable<Scenario> {
         _level = 0;
 
         _id = ++idGen;
-        _logger = CommonFunctions.getLoggerFor(Scenario.class, "scenarioID=" + _id);
+        LOG = CommonFunctions.getLoggerFor(Scenario.class, "scenarioID=" + _id);
         _idStr = _id + "";
     }
 
@@ -185,7 +185,7 @@ public class Scenario implements Comparable<Scenario> {
         _level = original._level + 1;
 
         _id = ++idGen;
-        _logger = CommonFunctions.getLoggerFor(Scenario.class, "scenarioID=" + _id);
+        LOG = CommonFunctions.getLoggerFor(Scenario.class, "scenarioID=" + _id);
         _idStr = original._idStr + (_level < 10 ? ".0" : ".") + _level;
     }
 
@@ -553,9 +553,7 @@ public class Scenario implements Comparable<Scenario> {
             } else if (toreturn.startsWith(MainArguments.Defaults.INSTALLATION_PATH_TAG)) {
                 toreturn = toreturn.replace(MainArguments.Defaults.INSTALLATION_PATH_TAG, MainArguments.Defaults.INSTALLATION_PATH);
             }
-        } else if (toreturn.startsWith(MainArguments.Defaults.PROPS_PATH_TAG) || toreturn.startsWith(MainArguments.Defaults.FILES_TAG) || toreturn.startsWith(MainArguments.Defaults.INSTALLATION_PATH_TAG)) {
-            throw new RuntimeException("xxx");
-        }
+        } 
         return toreturn;
     }
 
@@ -777,7 +775,7 @@ public class Scenario implements Comparable<Scenario> {
                     sb.append(CommonFunctions.toString(transProbability1)).append('\n');
                 }
             }
-            _logger.info(sb.toString());
+            LOG.info(sb.toString());
         }
 
         return Collections.unmodifiableList(transProbabilities);
@@ -789,7 +787,7 @@ public class Scenario implements Comparable<Scenario> {
             MacroCell macro = MacroCell.createMacrocell(simulation, area);
             return macro;
         } catch (Exception ex) {
-            _logger
+            LOG
                     .log(Level.SEVERE, ex.getMessage(), ex);
             throw new CriticalFailureException(ex);
         }
@@ -809,20 +807,7 @@ public class Scenario implements Comparable<Scenario> {
         return randGen;
     }
 
-    public Area initArea(sim.run.SimulationBaseRunner sim) throws CriticalFailureException {
-        Area theArea = new Area(sim,
-                intProperty(Space.AREA__Y),
-                intProperty(Space.AREA__X));
-        _logger
-                .log(Level.INFO, "{0}: {1}x{2} area; number of points={3}\n",
-                        new Object[]{
-                            sim.simTime(),
-                            intProperty(Space.AREA__Y),
-                            intProperty(Space.AREA__X),
-                            theArea.size()
-                        });
-        return theArea;
-    }
+   
 
     public AbstractClock initClock(sim.run.SimulationBaseRunner sim) throws CriticalFailureException {
         AbstractClock clock = null;
@@ -838,7 +823,7 @@ public class Scenario implements Comparable<Scenario> {
 
             return clock = (AbstractClock) clockInstance;
         } catch (Exception ex) {
-            _logger
+            LOG
                     .log(Level.SEVERE, ex.getMessage(), ex);
             throw new CriticalFailureException(ex);
         }

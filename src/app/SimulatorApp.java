@@ -32,7 +32,7 @@ import utils.DebugTool;
 public final class SimulatorApp {
 
     private static final Logger LOG = CommonFunctions.getLoggerFor(SimulatorApp.class);
-    private static String _statsDirPath;
+    private static String resultFilesPath;
 
     public static final CachedTraceDocuments CROSS_SIM_TRC_DOCS = new CachedTraceDocuments();
     public static Preprocessor _preprocessedProps;
@@ -88,12 +88,11 @@ public final class SimulatorApp {
         } catch (WrongOrImproperArgumentException ex) {
             exitByFail("Failed to load arguments propertly..\n", ex, -10);
         }
-        
 
         //<editor-fold defaultstate="collapsed" desc="defaultPreprocessor properties">
         try {
             String path = _mainArgs.getPropertiesPath();
-            
+
             LOG.log(Level.INFO, "Parsing properties file from path \"{0}\"\n", path);
             _preprocessedProps = Preprocessor.process(path);
             LOG.log(Level.INFO, "Simulation properties file parsed successfully from path \"{0}\"\n", path);
@@ -101,8 +100,6 @@ public final class SimulatorApp {
             exitByFail("Loading properties failed: " + ex.getMessage(), ex, -20);
         }
         //</editor-fold>
-
-        
 
         //<editor-fold defaultstate="collapsed" desc="init ScenariosFactory">
         try {
@@ -135,7 +132,7 @@ public final class SimulatorApp {
                             Level.INFO, launched.getFirst().getName() + " thread for scenario {0} launched.\n",
                             nxtScenario.getIDStr()
                     );
-                
+
                     LOG.log(
                             Level.FINEST, "Details:\n{0}\n", nxtScenario.toString()
                     );
@@ -155,19 +152,23 @@ public final class SimulatorApp {
         LOG.exiting(SimulatorApp.class.getCanonicalName(), "main");
     }
 
-    public static String getStatsDirPath() {
-        return _statsDirPath;
+    public static String getResultFilesPath() {
+        return resultFilesPath;
     }
 
     private static void initStatsDir() {
         try {
-            _statsDirPath
-                    = System.getProperty("user.home") + "/"
-                    + _preprocessedProps.getValues(app.properties.StatsProperty.STATS__OUTPUTDIR)
-                    .getFirst().get(0);
+            resultFilesPath
+                    = MainArguments.replaceAllTags(
+                            _preprocessedProps.getValues(
+                                    app.properties.StatsProperty.STATS__OUTPUTDIR
+                            ).getFirst().get(0)
+                    );
+
+            System.err.println("resultFilesPath=" + resultFilesPath);
 
             //AggregatorApp.STATS_DIR_PATH;//@TODO temporary solution
-            File parent = new File(_statsDirPath);
+            File parent = new File(resultFilesPath);
             parent.mkdirs();
 
             String runsRecorded = "runs_recorded.txt";
@@ -181,9 +182,9 @@ public final class SimulatorApp {
             //<editor-fold defaultstate="collapsed" desc="case: error with creating recorded runs">
             if (statusRecorded == 3) {
                 int nxtRunNum = (int) (1000 * Math.random());
-                _statsDirPath = _statsDirPath + "/rand_stat_id-" + nxtRunNum;
+                resultFilesPath = resultFilesPath + "/rand_stat_id-" + nxtRunNum;
                 String msg = "Cannot create file " + runsRecorded + "in path \"" + parent.getCanonicalPath() + "\". Results will be saved in directory:\n"
-                        + " \"" + _statsDirPath + " \"";
+                        + " \"" + resultFilesPath + " \"";
                 LOG.log(Level.WARNING, msg);
                 System.out.println("Press enter to continue ..");
                 System.in.read();
@@ -193,7 +194,7 @@ public final class SimulatorApp {
                 try (BufferedWriter bout = new BufferedWriter(new FileWriter(file));) {
                     bout.append("0");
                 }
-                _statsDirPath += "/000";
+                resultFilesPath += "/000";
             } //</editor-fold>
             try (BufferedReader bin = new BufferedReader(new FileReader(file));) {
                 //<editor-fold defaultstate="collapsed" desc="case: keeping stats at consequent times">
@@ -205,18 +206,18 @@ public final class SimulatorApp {
                         nxtRunNum = Integer.parseInt(nxtRunNum_str) + 1;
 
                         if (nxtRunNum < 100 && nxtRunNum > 9) {
-                            _statsDirPath = _statsDirPath + "/0" + nxtRunNum;
+                            resultFilesPath = resultFilesPath + "/0" + nxtRunNum;
                         } else if (nxtRunNum < 10) {
-                            _statsDirPath = _statsDirPath + "/00" + nxtRunNum;
+                            resultFilesPath = resultFilesPath + "/00" + nxtRunNum;
                         } else {
-                            _statsDirPath = _statsDirPath + "/" + nxtRunNum;
+                            resultFilesPath = resultFilesPath + "/" + nxtRunNum;
                         }
                     } catch (IOException | NumberFormatException ex) {
                         //<editor-fold defaultstate="collapsed" desc="case: error with reading recorded runs">
                         nxtRunNum = (int) (1000 * Math.random());
-                        _statsDirPath = _statsDirPath + "/rand_stat_id-" + nxtRunNum;
+                        resultFilesPath = resultFilesPath + "/rand_stat_id-" + nxtRunNum;
                         String msg = "Cannot read from file " + runsRecorded + ". Results will be saved in directory:\n"
-                                + " \"" + _statsDirPath + " \"";
+                                + " \"" + resultFilesPath + " \"";
                         LOG.log(Level.WARNING, msg, ex);
                         System.out.println("Press enter to continue ..");
                         System.in.read();
@@ -227,9 +228,9 @@ public final class SimulatorApp {
                     } catch (IOException ex) {
                         //<editor-fold defaultstate="collapsed" desc="case: error with writting to recorded runs">
                         nxtRunNum = (int) (1000 * Math.random());
-                        _statsDirPath = _statsDirPath + "/rand_stat_id-" + nxtRunNum;
+                        resultFilesPath = resultFilesPath + "/rand_stat_id-" + nxtRunNum;
                         String msg = "Cannot write to file " + runsRecorded + ". Results will be saved in directory:\n"
-                                + " \"" + _statsDirPath + " \"";
+                                + " \"" + resultFilesPath + " \"";
                         LOG.log(Level.WARNING, msg, ex);
                         System.out.println("Press enter to continue ..");
                         System.in.read();
@@ -243,10 +244,10 @@ public final class SimulatorApp {
         } catch (Exception ex) {
             try {
                 int nxtRunNum = (int) (1000 * Math.random());
-                _statsDirPath = _statsDirPath + "/rand_stat_id-" + nxtRunNum;
+                resultFilesPath = resultFilesPath + "/rand_stat_id-" + nxtRunNum;
                 String msg = "Problem with intiliazing path to output dir for statistics results.";
                 LOG.log(Level.WARNING, msg, ex);
-                System.out.println("Results will be logged in: " + _statsDirPath);
+                System.out.println("Results will be logged in: " + resultFilesPath);
                 System.out.println("Press enter to continue ..");
                 System.in.read();
             } catch (IOException ex1) {

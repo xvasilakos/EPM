@@ -2,29 +2,28 @@ package sim.run;
 
 import sim.Scenario;
 import app.properties.Space;
-import app.properties.valid.Values;
 import caching.base.AbstractCachingPolicy;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
+import exceptions.InvalidOrUnsupportedException;
 import exceptions.TraceEndedException;
 import exceptions.WrongOrImproperArgumentException;
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sim.space.Area;
+import sim.space.Point;
 import sim.space.cell.CellRegistry;
 import sim.space.cell.smallcell.SmallCell;
 import sim.time.NormalSimulationEndException;
@@ -36,6 +35,9 @@ import sim.space.users.mobile.TraceMU;
 import sim.space.users.mobile.TraceMUBuilder;
 import statistics.StatisticException;
 import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
+import traces.area.Cells;
+import utilities.Couple;
+import utils.DebugTool;
 
 /**
  *
@@ -47,11 +49,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     private String mobTrcLine;
     private String mobTrcCSVSep = " ";// default set to " "
 
-    private Map<Integer, TraceMU> muByID;
-
-    private Map<Integer, TraceMU> muImmobileByID;
-    private Map<Integer, TraceMU> muMovingByID;
-    private double muAvgVelocity;
     private static final Logger LOG = Logger.getLogger(TraceKolnSimulation.class.getName());
 
     private MobileGroup mobileGroup;
@@ -63,16 +60,26 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
      * next batch of trace lines
      */
     private int timeForNextBatch;
-    private Collection<TraceMU> nextBatchOfMUs;
-    
+    private Collection<TraceMU> batchOfMUsOfCurrRound;
+
     /**
-     * Each simulation round maps to a real time according to the trace of mobility.
-     * Example: If the trace uses seconds as its time unit, then setting this 
-     * variable to 3600 will map simulation rounds to hours. 
-     * This has implications such as keeping statistics and results per 3600 sec
-     * and so forth..
+     * Each simulation round maps to a real time according to the trace of
+     * mobility. Example: If the trace uses seconds as its time unit, then
+     * setting this variable to 3600 will map simulation rounds to hours. This
+     * has implications such as keeping statistics and results per 3600 sec and
+     * so forth..
      */
-    private int roundDuration = 180;
+    private int roundDuration = 6; // 180;
+
+    /**
+     * To be defined by parsed metadata for cells' trace.
+     */
+    private int minX, minY, maxX, maxY, areaLengthX, areaLengthY;
+    /**
+     * Indicates the simulation round, based on the current simulation time
+     * loaded from the mobile trace and the the round duration.
+     */
+    private int simRound = 0;
 
     public TraceKolnSimulation(Scenario s) {
         super(s);
@@ -89,23 +96,55 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                     mobTrcCSVSep = mobTrcLine.substring(5);
                     LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
                 }
+
+                mobTraceEarlyEndingCheck();
                 mobTrcLine = _muTraceIn.nextLine();// init line
             }
-        } catch (IOException ioe) {
-            throw new CriticalFailureException(ioe);
+        } catch (IOException | TraceEndedException | NoSuchElementException e) {
+            throw new CriticalFailureException("On attempt to load from file: "
+                    + "\""
+                    + mutracePath
+                    + "\"", e);
         }
     }
 
-    private void readMobilityTraceMeta() throws TraceEndedException {
-        while (mobTrcLine.startsWith("#")) {
-            if (mobTrcLine.toUpperCase().startsWith("#SEP=")) {
-                mobTrcCSVSep = mobTrcLine.substring(5);
-                LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
-            }
+    /**
+     * Read the small cells' metadata to define minimum and maximum coordinates
+     * for area dimensions.
+     *
+     * Using such information leads to relative dimension used in the
+     * simulation.
+     *
+     * @return
+     * @throws CriticalFailureException
+     */
+    @Override
+    public Area initArea() throws CriticalFailureException {
 
-            mobTraceEarlyEndingCheck();
-            mobTrcLine = _muTraceIn.nextLine();// init line
-        }
+        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_METADATA_PATH, true);
+        File metaF = (new File(metadataPath)).getAbsoluteFile();
+        Couple<Point, Point> areaDimensions
+                = Cells.extractAreaFromMetadata(metaF, minX, minY, maxX, maxY);
+        minX = areaDimensions.getFirst().getX();
+        minY = areaDimensions.getFirst().getY();
+        maxX = areaDimensions.getSecond().getX();
+        maxY = areaDimensions.getSecond().getY();
+
+        areaLengthX = maxX - minX;
+        areaLengthY = maxY - minY;
+
+        Area areaTmp = new Area(this, areaLengthY, areaLengthX);
+        LOG.log(Level.INFO, "{0}: {1}x{2} area; number of points={3}\n",
+                new Object[]{
+                    simTime(),
+                    0,
+                    0,
+                    areaTmp.size()
+                });
+
+        areaTmp.setRealAreaDimensions(minX, minY, maxX, maxY);
+
+        return areaTmp;
     }
 
     /**
@@ -123,8 +162,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
             TraceEndedException, NormalSimulationEndException {
 
         String trcEndStr = "The mobility trace has ended.";
-        int switched2moving = 0; // stat: num of moibiles that started to move now
-        nextBatchOfMUs = new ArrayList<>();
+        batchOfMUsOfCurrRound = new ArrayList<>();
 
         while (mobTrcLine != null) {
             String[] csv = mobTrcLine.split(mobTrcCSVSep);
@@ -143,22 +181,48 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
             int parsedID = Integer.parseInt(csv[1]);
 
             //[2] x
-            double x = Math.ceil(Double.parseDouble(csv[2]));
+            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
 
             //[3] y
-            double y = Math.ceil(Double.parseDouble(csv[3]));
+            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
 
             //[4] speed
             double speed = Math.ceil(Double.parseDouble(csv[4]));
 
-            if (!muByID.containsKey(parsedID)) {
-                createMU(parsedID, (int) x, (int) y, speed);
-                switched2moving++;
+            TraceMU newMU;
+            if (!musByID.containsKey(parsedID)) {
+                //if new mobile ID, create a new mobile user
+
+                newMU = createMU(parsedID, x, y, speed, time);
+
+                if (usesTraceOfRequests()) {
+                    int newAddedReqs = updtLoadWorkloadRequests(newMU, _dmdTrcReqsLoadedPerUser);
+
+                    getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
+                            new UnonymousCompute6(
+                                    new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
+                    );
+                }
             } else {
-                switched2moving = updateMU(parsedID, x, y, switched2moving, speed);
+                //if a known mobile ID, state its dx, dy so as to move the mobile user
+
+                newMU = musByID.get(parsedID);
+                newMU.setSpeed(speed);
+
+                int dt = time - newMU.getTraceTime();
+                newMU.setTraceTime(time);
+                newMU.setDTraceTime(dt);
+
+                int prevX = newMU.getX();
+                int prevY = newMU.getY();
+
+                newMU.setDX(x - prevX);
+                newMU.setDY(y - prevY);
             }
 
-            nextBatchOfMUs.add(this.muByID.get(parsedID));
+            batchOfMUsOfCurrRound.add(newMU);
+
+            DebugTool.appendln(" batchOfMUsOfCurrRound.add(" + newMU.getID() + ")");
 
             if (!_muTraceIn.hasNextLine()) {
                 _muTraceIn.close();
@@ -167,52 +231,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
             mobTrcLine = _muTraceIn.nextLine();
         }
 
-        if (getStatsHandle() != null) {
-            getStatsHandle().updtSCCmpt6(switched2moving, "switched2moving");
-        }
-
-    }
-
-    /**
-     * Puts the mobile with ID=muID into the right set of mobiles, i.e. moving
-     * or immobile.
-     *
-     * @param muID
-     * @param _x
-     * @param _y
-     * @param switched2moving
-     * @param _speed
-     *
-     * @return the total number of mobiles that started to move, i.e. previously
-     * had a zero speed, minus the number of mobiles that stopped to move
-     * (current speed is zero).
-     */
-    private int updateMU(int muID, double _x, double _y, int switched2moving, double _speed) {
-
-        TraceMU nxtMU = muByID.get(muID);
-
-        double pastSpeed = nxtMU.getSpeed();
-        nxtMU.setSpeed(_speed);
-
-        muAvgVelocity -= pastSpeed / muByID.size();
-        nxtMU.setdX(_x);
-        nxtMU.setdY(_y);
-
-        muAvgVelocity += _speed / muByID.size();
-
-        if (_speed == 0) {// if immobile in this round
-            if (muMovingByID.containsKey(muID)) {// if need to change its mobility status
-                muMovingByID.remove(muID);
-                muImmobileByID.put(muID, nxtMU);
-                switched2moving--;
-            }
-        } else if (muImmobileByID.containsKey(muID)) {// if it were previously immobile
-            switched2moving++;
-            muImmobileByID.remove(muID);
-            muMovingByID.put(muID, nxtMU);
-        }
-
-        return switched2moving;
     }
 
     /**
@@ -226,7 +244,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
      * @return
      */
     @Override
-    protected List<TraceMU> initAndConnectMUs(
+    protected Map<Integer, TraceMU> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
             Collection<AbstractCachingPolicy> cachingPolicies
@@ -250,20 +268,18 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
         mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS, false);
 
-        muByID = new HashMap();
-        muImmobileByID = new HashMap();
-        muMovingByID = new HashMap();
+        musByID = new HashMap();
 
-        List<TraceMU> musLst = new ArrayList<>();
-
-        return musLst;
+        return musByID;
     }
 
     private TraceMU createMU(
-            int muID, int x, int y, double speed) {
+            int muID, int x, int y, double speed, int traceTime) {
+
+        DebugTool.appendln("createMU for " + muID);
 
         TraceMUBuilder nxtMUBuilder = new TraceMUBuilder(
-                this, mobileGroup, theArea.getRandPoint(),
+                this, mobileGroup, new Point(x, y),
                 conn2SCPolicy, cachingStrategies, 0, 0
         );
 
@@ -274,20 +290,19 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
         nxtMUBuilder.setTransitionDecisions(mobTransDecisions);
 
         TraceMU mu = nxtMUBuilder.build();
+        mu.setTraceTime(traceTime);
+        mu.setDTraceTime(traceTime);
 
         int id = mu.getID();
 
-        muByID.put(id, mu);
-        mu.setdX(x);
-        mu.setdY(y);
-        muMovingByID.put(id, mu);
-        muAvgVelocity += speed / muByID.size();
+        musByID.put(id, mu);
 
-        if (speed > 0) {
-            muMovingByID.put(id, mu);
-        } else {
-            muImmobileByID.put(id, mu);
-        }
+        DebugTool.appendln("musByID.size=" + musByID.size());
+
+        mu.setDX(0);//dx is zero when created
+        mu.setDY(0);//dy is zero when created
+
+        mu.setSpeed(speed);
 
         return mu;
     }
@@ -297,9 +312,59 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     public void run() {
 
         try {
-            readMobilityTraceMeta();
-            initSimClockTime();
-            mobTraceEarlyEndingCheck();
+
+            //<editor-fold defaultstate="collapsed" desc="init simulation clock time">
+
+            /*
+             * To be called to read first line of data from the trace in order to
+             * initilize the simulation clock time.
+             */
+            String[] csv = mobTrcLine.split(mobTrcCSVSep);
+
+//[0]: time
+            int time = Integer.parseInt(csv[0]);
+            clock.tick(time);
+
+//[1] mu id
+            int parsedID = Integer.parseInt(csv[1]);
+
+//[2] x
+            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
+
+//[3] y
+            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
+
+//[4] speed
+            double speed = Math.ceil(Double.parseDouble(csv[4]));
+
+            TraceMU newMU = createMU(parsedID, x, y, speed, time);
+
+            if (usesTraceOfRequests()) {
+                int newAddedReqs = updtLoadWorkloadRequests(newMU, _dmdTrcReqsLoadedPerUser);
+
+                getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
+                        new UnonymousCompute6(
+                                new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
+                );
+            }
+//</editor-fold>
+
+            //<editor-fold defaultstate="collapsed" desc="init stationaries' demand">
+            try {
+                if (stationaryRequestsUsed()) {
+                    for (SmallCell nxtSC : getCellRegistry().getSmallCells()) {
+                        nxtSC.initLclDmdStationary();
+                        nxtSC.updtLclDmdByStationary(true);
+                    }
+                }
+            } catch (InvalidOrUnsupportedException |
+                    InconsistencyException ex) {
+                throw new CriticalFailureException(ex);
+            }
+//</editor-fold>
+
+            // usefull for stationary ammount of data concumption 
+            int trackClockTime = simTime();
 
             /* 
              * Load next line and extract the simulation time, 
@@ -307,60 +372,49 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
              * of trace lines.
              */
             mobTrcLine = _muTraceIn.nextLine();
-            String[] csv = mobTrcLine.split(mobTrcCSVSep);
+            csv = mobTrcLine.split(mobTrcCSVSep);
             timeForNextBatch = Integer.parseInt(csv[0]) + roundDuration;
 
-            int simRound = 0; // used for logging. See also var roundDuration.
-            
+            simRound = 0; // used for logging. See also var roundDuration.
+
             WHILE_THREAD_NOT_INTERUPTED:
             while (!Thread.currentThread().isInterrupted()) {
-                
-                int sec = simTime();
-                int h = sec/3600;
-                sec-=h*3600;
-                
-                int m = sec/60;
-                sec -= m*60;
-                
-                
-                LOG.log(Level.INFO, "Starting simulation round:{0}\n"
-                        + "\tLast time loaded from mobility trace:{1}, "
-                        + "which is mapped to {2}:{3}:{4} in h:min:sec",
-                         
-                        new Object[]{
-                            (++simRound),
-                            simTime(),
-                            h, m, sec
-                        }
-                );
-                
-                readFromMobilityTrace();
 
-                if (stationaryRequestsUsed()) {/*
+                logSimulationRound();
+
+                readFromMobilityTrace();
+                int roundTimeSpan = simTime() - trackClockTime; // in time units specified by the trace
+                trackClockTime = simTime();
+
+                if (stationaryRequestsUsed()) {
+
+                    /*
                      * Consume data and keep gain stats for stationary users
                      */
                     for (SmallCell nxtSC : smallCells()) {
                         StationaryUser nxtSU = nxtSC.getStationaryUsr();
                         nxtSC.updtLclDmdByStationary(false);
-                        nxtSU.consumeDataTry(1);
+                        nxtSU.consumeDataTry(roundTimeSpan);
                         nxtSU.tryCacheRecentFromBH();// try to cache whatever not already in the cache that you just downloaded.
                     }
 
                 }
 
-/////////////////////////////////////
+                /////////////////////////////////////
                 _haveExitedPrevCell.clear();
                 _haveHandedOver.clear();
                 getStatsHandle().resetHandoverscount();
-
-                for (TraceMU nxtMU : nextBatchOfMUs) {
-                    if (!muImmobileByID.containsKey(nxtMU.getID())) {
-                        nxtMU.move(false, false); // otherwise avoid expensive call to move() if possible
+                for (TraceMU nxtMU : batchOfMUsOfCurrRound) {
+                    if (nxtMU.getSpeed() > 0.0) {
+                        nxtMU.moveRelatively(); // otherwise avoid expensive call to moveRelatively() if possible
                     }
                     if (nxtMU.isSoftUser()) {
                         nxtMU.consumeTryAllAtOnceFromSC();
                     } else {
-                        nxtMU.consumeDataTry(1);// consume in one simulation time step
+                        nxtMU.consumeDataTry(
+                                // consume based on time span since last move for user
+                                nxtMU.getdTraceTime()
+                        );
                     }
                 }// for all all MUs
 
@@ -420,10 +474,8 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 if (roundCommited) {
                     getStatsHandle().appendTransient(false);
                     getStatsHandle().checkFlushTransient(false);
-
-//                    DebugTool.printProbs(shuffldMUs.get(0).getUserGroup(), getCellRegistry());
                 }
-            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
+            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
             LOG.log(Level.INFO, "Simulation {0} ended: {1}",
@@ -444,41 +496,33 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
         }
     }
 
+    private void logSimulationRound() {
+        int sec = simTime();
+        int h = sec / 3600;
+        sec -= h * 3600;
+
+        int m = sec / 60;
+        sec -= m * 60;
+
+        if (simRound < 101 && ++simRound % 10 == 0
+                || simRound < 1001 && ++simRound % 100 == 0) {
+            LOG.log(Level.INFO, "Begining simulation round:{0}\n"
+                    + "\tLast time loaded from mobility trace:{1}, "
+                    + "which is mapped to {2}:{3}:{4} in h:min:sec",
+                    new Object[]{
+                        simRound,
+                        simTime(),
+                        h, m, sec
+                    }
+            );
+        }
+    }
+
     private void mobTraceEarlyEndingCheck() throws TraceEndedException {
         if (!_muTraceIn.hasNextLine()) {
             _muTraceIn.close();
             throw new TraceEndedException("The mobility trace has ended too early.");
         }
-    }
-
-    /**
-     * To be called to read first line of data from the trace in order to
-     * initilize the simulation clock time.
-     *
-     * @throws NumberFormatException
-     * @throws NormalSimulationEndException
-     */
-    private void initSimClockTime() throws NumberFormatException, NormalSimulationEndException {
-        String[] csv = mobTrcLine.split(mobTrcCSVSep);
-
-        //[0]: time
-        int time = Integer.parseInt(csv[0]);
-        clock.tick(time);
-
-        //[1] mu id
-        int parsedID = Integer.parseInt(csv[1]);
-
-        //[2] x
-        double x = Math.ceil(Double.parseDouble(csv[2]));
-
-        //[3] y
-        double y = Math.ceil(Double.parseDouble(csv[3]));
-
-        //[4] speed
-        double speed = Math.ceil(Double.parseDouble(csv[4]));
-
-        createMU(parsedID, (int) x, (int) y, speed);
-
     }
 
     @Override

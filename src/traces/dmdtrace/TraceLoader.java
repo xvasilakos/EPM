@@ -22,6 +22,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -31,6 +32,8 @@ import sim.run.SimulationBaseRunner;
 import sim.content.ContentDocument;
 import sim.space.cell.CellRegistry;
 import sim.time.NormalSimulationEndException;
+import utilities.CommonFunctions;
+import static utils.DebugTool.append;
 
 /**
  * Class for loading from a trace file.
@@ -68,11 +71,11 @@ public class TraceLoader implements sim.ISimulationMember {
      * A map of information about the requested items loaded by the documents
      * file of the trace. Information is mapped to the _id of requested items.
      */
-    private Map<Long, ContentDocument> _documents;
-    private Long[] _documentIDs;
+    private Map<String, ContentDocument> _documents;
+    private String[] _documentIDs;
     private final SortedSet<ContentDocument> _maxPopInfo;
     private final SortedSet<ContentDocument> _topMaxPopInfo;
-    private final Set<Long> _CDNCachedIDs; // has only the IDs of the _topMaxPopInfo sorted set
+    private final Set<String> _CDNCachedIDs; // has only the IDs of the _topMaxPopInfo sorted set
     private final SimulationBaseRunner _sim;
     private final boolean _shuffleReqTimes;
     private final boolean _randInitInTrace;
@@ -126,15 +129,15 @@ public class TraceLoader implements sim.ISimulationMember {
     /**
      * Loads all documents.
      *
-     *  rdrDoc the reader for the document file.
-     *  should the steam be closed after reading the contents of the file.
+     * rdrDoc the reader for the document file. should the steam be closed after
+     * reading the contents of the file.
      */
     private void loadFromDocs(SimulationBaseRunner sim, File docFile, long overrideSize, int traceIdx) {
         int totallyLoaded = 0;
 
         SimulatorApp.CROSS_SIM_TRC_DOCS.acquireWriteLock();
 
-        Map<Long, ContentDocument> crossSimDocs
+        Map<String, ContentDocument> crossSimDocs
                 = SimulatorApp.CROSS_SIM_TRC_DOCS.getDocumentsOfTrace(docFile, this);
 
         if (crossSimDocs != null) {/*
@@ -280,7 +283,7 @@ public class TraceLoader implements sim.ISimulationMember {
             while ((nxtLine = br.readLine()) != null) {
                 toks = new StringTokenizer(nxtLine, ", \t\r\n");
                 String idInTrace = toks.nextToken();
-                long theID = -1;
+                String theID = "UNDEFINED";
                 try {
                     theID = createID(idInTrace, _docTraceFiles.get(traceIdx));
                 } catch (NumberFormatException nfe) {
@@ -365,16 +368,6 @@ public class TraceLoader implements sim.ISimulationMember {
         meta.add(3, _sumSize);
         meta.add(4, _minItemSize);
 
-        //xxx
-//        DebugTool.appendLn("\nSimulation " + simID() + " loaded first time "
-//                + _documents.size() + " cross-sim cached content documents from file " + docFile.getAbsolutePath()
-//                + " with signature: " + _documents.hashCode()
-//                + "\n\t _overrideSizes=" + _overrideSizes
-//                + "\n\t _totalReqNum=" + _totalReqNum
-//                + "\n\t _maxItemSize=" + _maxItemSize
-//                + "\n\t _sumSize=" + _sumSize
-//                + "\n\t _minItemSize=" + _minItemSize
-//        );
         return totallyLoaded;
     }
 
@@ -390,11 +383,10 @@ public class TraceLoader implements sim.ISimulationMember {
             _topMaxPopInfo.add(next);
             _CDNCachedIDs.add(next.getID());
 
-           
             next.setCDNCached();
         }
 
-        _documentIDs = new Long[_documents.size()];
+        _documentIDs = new String[_documents.size()];
         _documents.keySet().toArray(_documentIDs);
     }
 
@@ -413,7 +405,7 @@ public class TraceLoader implements sim.ISimulationMember {
         return Collections.unmodifiableSortedSet(_maxPopInfo);
     }
 
-    public Set<Long> getCDNCachedIDs() {
+    public Set<String> getCDNCachedIDs() {
         return Collections.unmodifiableSet(_CDNCachedIDs);
     }
 
@@ -445,7 +437,7 @@ public class TraceLoader implements sim.ISimulationMember {
 
         if (_randInitInTrace) {
             int randInitPos = getSimulation().getScenario().getRandomGenerator()
-                    .randIntInRange(1, recordsInTrace -20); // /-20; empirical; because some lines are alrady read..
+                    .randIntInRange(1, recordsInTrace - 20); // /-20; empirical; because some lines are alrady read..
             while (--randInitPos > 0 && scnr.hasNextLine()) {
                 scnr.nextLine();//skip
             }
@@ -492,25 +484,39 @@ public class TraceLoader implements sim.ISimulationMember {
         return getSimulation().getCellRegistry();
     }
 
-    private static long createID(String idInTraceStr, File traceFile) {
+    private static String createID(String idInTraceStr, File traceFile) {
 
         // do not use the whole canonical path because the doc files are in a 
         // different path than the corresponding workload files
         StringBuilder fileIDPath = new StringBuilder();
+
+        // loop until you find "docs..." or "workload..." in the name path
+        Stack<String> pathStack = new Stack<>();
+        pathStack.push("");
+
+        File tmp = traceFile.getParentFile();
+        while (tmp != null
+                && !tmp.getName().toLowerCase().startsWith("docs")
+                && !tmp.getName().toLowerCase().startsWith("workload")) {
+            pathStack.push(tmp.getName());
+            tmp = tmp.getParentFile();
+        }
+        
+        while (!pathStack.empty()){
+            fileIDPath.append(pathStack.pop()).append("/");
+        }
         fileIDPath.append(traceFile.getName());
-        fileIDPath.append(traceFile.getParentFile().getName());
-        fileIDPath.append(traceFile.getParentFile().getParentFile().getName());
 
-        long idInTrace = Long.parseLong(idInTraceStr);
 
+//        long idInTrace = Long.parseLong(idInTraceStr);
         // not necessary, but let us avoid confusion by enforcing non-negative
-        long tracefileIDPathHash = Math.abs(fileIDPath.toString().hashCode());
-
-        long hash = 17;
-        hash = 31 * hash + idInTrace;
-        hash = 31 * hash + tracefileIDPathHash;
-
-        return hash;
+        // long tracefileIDPathHash = Math.abs(fileIDPath.toString().hashCode());
+//        long hash = 17;
+//        hash = 31 * hash + idInTrace;
+//        hash = 31 * hash + tracefileIDPathHash;
+//
+//        return hash;
+        return idInTraceStr + ":" + fileIDPath.toString();
     }
 
     /**
@@ -520,7 +526,8 @@ public class TraceLoader implements sim.ISimulationMember {
      * number of record lines in the trace, then there are either no more
      * records to loadFromWorkload or the loading record limit has been reached.
      *
-     *  recordLines
+     * recordLines
+     *
      * @return A map with the loaded request records from the workload file
      * mapped to the time of request in the workload file.
      * @throws IOException
@@ -587,13 +594,18 @@ public class TraceLoader implements sim.ISimulationMember {
 //                        jitter = getSim().getRandomGenerator().randDoubleInRange(0.1, 1);
                     }
                 }
-                long theID = createID(//name of docs and corresponding workload files must coinside
+                String theID = createID(//name of docs and corresponding workload files must coinside
                         toks.nextToken(), _wldTraceFiles.get(_traceIdx)
                 );
 
                 if (!_documents.containsKey(theID)) {
-                    throw new InconsistencyException(theID + " is an id loaded from workload file "
-                            + _wldTraceFiles.get(_traceIdx) + " but is not present in the loaded documents.");
+                    throw new InconsistencyException(
+                            "Content ID " + "\"" + theID + "\"" + " loaded from workload file "
+                            + _wldTraceFiles.get(_traceIdx) + " but is not present in "
+                            + "the loaded documents: "
+                            + CommonFunctions.toString(_documents.keySet())
+                    );
+
                 }
 
                 long theSizeInBytes = _overrideSizes < 0 ? Long.parseLong(toks.nextToken()) : _overrideSizes;
@@ -653,22 +665,24 @@ public class TraceLoader implements sim.ISimulationMember {
     }
 
     /**
-     *  itemID the _id of the item
+     * itemID the _id of the item
+     *
      * @return the frequency (popularity) of request for the item according to
      * the documents file of the loaded trace.
      *
      */
-    public double frequency(long itemID) {
+    public double frequency(String itemID) {
         return numTimesRequested(itemID) / (double) _totalReqNum;
     }
 
     /**
-     *  itemID the _id of the item
+     * itemID the _id of the item
+     *
      * @return the number of times the item is requested according to the
      * documents file of the loaded trace.
      *
      */
-    public int numTimesRequested(long itemID) {
+    public int numTimesRequested(String itemID) {
         ContentDocument nfo = getDocuments().get(itemID);
 
         return nfo.getTotalNumberOfRequests();
@@ -711,17 +725,12 @@ public class TraceLoader implements sim.ISimulationMember {
      *
      * @return the map of information about the requested items.
      */
-    public Map<Long, ContentDocument> getDocuments() {
+    public Map<String, ContentDocument> getDocuments() {
         return _documents;
     }
 
-    public ContentDocument getDocument(long id) {
+    public ContentDocument getDocument(String id) {
         return _documents.get(id);
-    }
-
-    public ContentDocument getRandomlyChosenDocument() {
-        long rndID = _documentIDs[_sim.getRandomGenerator().randIntInRange(0, _documentIDs.length - 1)];
-        return _documents.get(rndID);
     }
 
     /**
