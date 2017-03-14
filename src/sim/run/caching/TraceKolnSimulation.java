@@ -1,5 +1,6 @@
-package sim.run;
+package sim.run.caching;
 
+import sim.run.SimulationBaseRunner;
 import sim.Scenario;
 import app.properties.Space;
 import caching.base.AbstractCachingPolicy;
