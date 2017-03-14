@@ -36,7 +36,6 @@ import static sim.space.connectivity.ConnectionStatusUpdate.HANDOVER_DIRECTLY;
 import static sim.space.connectivity.ConnectionStatusUpdate.REMAINS_CONNECTED_TO_SAME_SC;
 import sim.space.users.CachingUser;
 import utilities.Couple;
-import utils.DebugTool;
 
 /**
  *
@@ -975,15 +974,6 @@ public class MobileUser extends CachingUser {
 
         _currentCoordinates = newPoint;
         newPoint.addUser(this);
-
-        DebugTool.appendln(
-                "Moved "
-                + getID()
-                + " from "
-                + _previousCoordinates.toSynopsisString()
-                + " to "
-                + newPoint.toSynopsisString()
-        );
 
         _penultimateTimeMoved = _lastTimeMoved;
         _lastTimeMoved = simTime();

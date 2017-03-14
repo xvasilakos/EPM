@@ -17,7 +17,6 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
     private final long _sizeBytes;
     private final SimulationBaseRunner<?> _sim;
 
-
     private final String _remoteCostType;
 
     protected double _costOfRmtTransfer;
@@ -93,7 +92,7 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
         // Caution!
         // Do not 
         return this._sizeBytes == other._sizeBytes;
-        
+
     }
 
     @Override
@@ -102,10 +101,6 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
         hash = 79 * hash + Objects.hashCode(this._id);
         return hash;
     }
-
-   
-
-   
 
     @Override
     public final long sizeInBytes() {
@@ -116,9 +111,10 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
     public final double sizeInMBs() {
         return _sizeBytes / Math.pow(1024, 2);
     }
+
     @Override
     public final double sizeInChunks() {
-        return (double)_sizeBytes / getSimulation().chunkSizeInBytes();
+        return (double) _sizeBytes / getSimulation().chunkSizeInBytes();
     }
 
     @Override
@@ -222,9 +218,5 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
                 + " passed to property " + Cost.Transfer.TRANSFER_COST_ON_MISS__TYPE);
 
     }
-
-
-
-   
 
 }

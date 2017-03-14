@@ -19,7 +19,6 @@ import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
 import sim.space.users.StationaryUser;
 import traces.dmdtrace.TraceWorkloadRecord;
-import utils.DebugTool;
 
 /**
  * @author xvas

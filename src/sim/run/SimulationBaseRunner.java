@@ -93,7 +93,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * A registry that contains the different groups of mobile users.
      */
     protected final MobileGroupsRegistry _musGrpsRegistry;
-   
+
     protected Map<Integer, M> musByID;
     /**
      * The _sim "clock" which keeps the _sim simTime "ticking".
@@ -161,7 +161,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      */
     public List<M> shuffledMUs() {
         ArrayList shuffled = new ArrayList(musByID.values());
-        
+
         switch (getScenario().stringProperty(Space.MU__SHUFFLE, false)) {
             //<editor-fold defaultstate="collapsed" desc="shuffle iff property imposed">
             case Values.NEVER:
@@ -731,8 +731,9 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
             default:
                 throw new UnsupportedOperationException(
-                        "Value " + theNeighborhoodType
-                        + " is not supported. Check for wrong parameter value set for property \""
+                        "Value " + theNeighborhoodType + " "
+                        + "is not supported. "
+                        + "Check for wrong parameter value set for property \""
                         + app.properties.Space.SC__NEIGHBORHOOD
                         + "\""
                 );
@@ -967,7 +968,6 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     protected int updtLoadWorkloadRequests(MobileUser mu, int loadPerUser)
             throws NormalSimulationEndException {
         int howManyToAdd = loadPerUser - mu.getRequests().size(); // just add what has finished
-
 
         int count = 0;
         do {

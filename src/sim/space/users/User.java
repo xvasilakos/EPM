@@ -20,7 +20,6 @@ import sim.content.Chunk;
 import sim.space.cell.CellRegistry;
 import sim.space.cell.MacroCell;
 import sim.space.cell.smallcell.SmallCell;
-import utils.DebugTool;
 
 /**
  *

@@ -16,7 +16,6 @@ import sim.content.Chunk;
 import sim.content.request.DocumentRequest;
 import sim.space.cell.MacroCell;
 import sim.space.cell.smallcell.SmallCell;
-import utils.DebugTool;
 
 /**
  *
@@ -119,10 +118,6 @@ public abstract class CachingUser extends User {
     @Override
     public void consumeDataTry(int timeWindow) throws Throwable {
 
-        DebugTool.appendln("Calling consumeDataTry("
-                + timeWindow + ") for mu=" + getID()
-        );
-
         // because one stationary emulates multiple stationary users with one request
         double slices = this instanceof StationaryUser ? 1
                 : getRequests().size();
@@ -133,10 +128,6 @@ public abstract class CachingUser extends User {
         double scRateSlice = Math.round((double) timeWindow * getSimulation().getRateSCWlessInBytes() / slices);
         double bhRateSlice = Math.round((double) timeWindow * getSimulation().getRateBHInBytes() / slices);
         bhRateSlice = Math.min(bhRateSlice, scRateSlice); // you download with minimum flow from the BH+SC network.
-
-        DebugTool.appendln("mcRateSlice=" + mcRateSlice);
-        DebugTool.appendln("scRateSlice=" + scRateSlice);
-        DebugTool.appendln("bhRateSlice=" + bhRateSlice);
 
         // clear from previous move
         for (List<Chunk> recentChunks : _mostRecentlyConsumedMC.values()) {

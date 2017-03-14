@@ -33,7 +33,6 @@ import sim.content.ContentDocument;
 import sim.space.cell.CellRegistry;
 import sim.time.NormalSimulationEndException;
 import utilities.CommonFunctions;
-import static utils.DebugTool.append;
 
 /**
  * Class for loading from a trace file.

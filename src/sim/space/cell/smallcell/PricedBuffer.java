@@ -208,18 +208,6 @@ public class PricedBuffer extends BufferBase {
         pricePolled = getPrice() + getGamma() * (polledUtil - getTrgtUtililzation());
         pricePolled = pricePolled < 0 ? 0 : pricePolled; // do not allow negative values
 
-//        DebugTool.appendLn(
-//                "\nPolling"
-//                + "\tpolledUtil=" + polledUtil
-//                + "\tgetTrgtUtililzation()=" + getTrgtUtililzation()
-//                + "\tpricePolled=" + pricePolled
-//        );
-//        DebugTool.appendLn(
-        //                "\ntheChnk.sizeInMBs=" + theChnk.sizeInMBs()
-//                polledUtil
-//                + "," + getTrgtUtililzation()
-//                + "," + pricePolled
-//        );
         return pricePolled;
     }
 

@@ -37,7 +37,6 @@ import statistics.StatisticException;
 import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
 import traces.area.Cells;
 import utilities.Couple;
-import utils.DebugTool;
 
 /**
  *
@@ -69,7 +68,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
      * has implications such as keeping statistics and results per 3600 sec and
      * so forth..
      */
-    private int roundDuration = 6; // 180;
+    private int roundDuration = 180; // 180;
 
     /**
      * To be defined by parsed metadata for cells' trace.
@@ -222,7 +221,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
             batchOfMUsOfCurrRound.add(newMU);
 
-            DebugTool.appendln(" batchOfMUsOfCurrRound.add(" + newMU.getID() + ")");
 
             if (!_muTraceIn.hasNextLine()) {
                 _muTraceIn.close();
@@ -276,7 +274,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     private TraceMU createMU(
             int muID, int x, int y, double speed, int traceTime) {
 
-        DebugTool.appendln("createMU for " + muID);
 
         TraceMUBuilder nxtMUBuilder = new TraceMUBuilder(
                 this, mobileGroup, new Point(x, y),
@@ -297,7 +294,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
         musByID.put(id, mu);
 
-        DebugTool.appendln("musByID.size=" + musByID.size());
 
         mu.setDX(0);//dx is zero when created
         mu.setDY(0);//dy is zero when created

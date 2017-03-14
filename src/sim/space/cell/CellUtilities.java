@@ -17,7 +17,6 @@ import sim.space.Point;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.mobile.MobileUser;
 import utils.CommonFunctions;
-import utils.DebugTool;
 
 /**
  *
@@ -107,14 +106,11 @@ public final class CellUtilities {
             CellRegistry registry, MobileUser mu, List<String> connPolicySC
     ) throws WrongOrImproperArgumentException, InvalidOrUnsupportedException, CriticalFailureException {
 
-        DebugTool.appendln("findHandoffcandidates for " + mu.getID());
-        
-        
         Point currPosition = mu.getCoordinates();
         if (currPosition == null) {
             throw new InconsistencyException(
                     "Cannot find handoff candidate SCs for a MU "
-                            + "that is currently of area."
+                    + "that is currently of area."
             );
         }
 
