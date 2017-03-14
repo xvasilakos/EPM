@@ -1,4 +1,4 @@
-package caching.rplc.mingain;
+package caching.rplc.mingain.priced;
 
 import caching.Utils;
 import caching.base.AbstractCachingPolicy;
@@ -26,15 +26,15 @@ import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public class EMPC_R_Full_Priced extends AbstractCachingPolicy implements IGainRplc, IEMPC {
+public class EMPC_R extends AbstractCachingPolicy implements IGainRplc, IEMPC {
 
-    private static final AbstractCachingPolicy singelton = new EMPC_R_Full_Priced();
+    private static final AbstractCachingPolicy singelton = new EMPC_R();
 
     public static AbstractCachingPolicy instance() {
         return singelton;
     }
 
-    public EMPC_R_Full_Priced() {
+    public EMPC_R() {
     }
 
     @Override

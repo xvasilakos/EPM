@@ -13,7 +13,7 @@ import sim.space.cell.smallcell.SmallCell;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public abstract class AbstractEMPC_LC_Tunned extends caching.rplc.mingain.EMPC_R_Full_Priced {
+public abstract class AbstractEMPC_LC_Tunned extends caching.rplc.mingain.priced.EMPC_R {
 
     AbstractEMPC_LC_Tunned() {
     }

@@ -21,7 +21,7 @@ import sim.space.util.DistanceComparator;
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
 @Deprecated
-public class EMPC_LC_NoRplTime01 extends caching.rplc.mingain.EMPC_R_Full_Priced {
+public class EMPC_LC_NoRplTime01 extends caching.rplc.mingain.priced.EMPC_R {
 
     private static AbstractCachingPolicy singelton = new EMPC_LC_NoRplTime01();
 

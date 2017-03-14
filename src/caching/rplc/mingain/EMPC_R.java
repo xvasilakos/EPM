@@ -1,4 +1,4 @@
-package caching.rplc.mingain.no_price;
+package caching.rplc.mingain;
 
 import caching.Utils;
 import caching.base.IEMPC;
@@ -13,15 +13,15 @@ import sim.space.cell.smallcell.SmallCell;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public class EMPC_LC_Full extends caching.base.no_price.AbstractGainRplc implements IEMPC {
+public class EMPC_R extends caching.base.no_price.AbstractGainRplc implements IEMPC {
 
-    private static final EMPC_LC_Full SINGLETON = new EMPC_LC_Full();
+    private static final EMPC_R SINGLETON = new EMPC_R();
 
-    public static EMPC_LC_Full instance() {
+    public static EMPC_R instance() {
         return SINGLETON;
     }
 
-    public EMPC_LC_Full() {
+    public EMPC_R() {
     }
 
     @Override

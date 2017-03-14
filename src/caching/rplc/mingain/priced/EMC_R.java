@@ -1,4 +1,4 @@
-package caching.rplc.mingain;
+package caching.rplc.mingain.priced;
 
 import caching.Utils;
 import caching.base.AbstractCachingPolicy;
@@ -25,15 +25,15 @@ import sim.space.users.CachingUser;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public class EMC_R_Full_Priced extends AbstractEPC implements IGainRplc, IEMC {
+public class EMC_R extends AbstractEPC implements IGainRplc, IEMC {
 
-    private static final AbstractCachingPolicy singelton = new EMC_R_Full_Priced();
+    private static final AbstractCachingPolicy singelton = new EMC_R();
 
     public static AbstractCachingPolicy instance() {
         return singelton;
     }
 
-    public EMC_R_Full_Priced() {
+    public EMC_R() {
     }
 
     @Override

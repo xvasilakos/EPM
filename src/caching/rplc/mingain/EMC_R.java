@@ -1,4 +1,4 @@
-package caching.rplc.mingain.no_price;
+package caching.rplc.mingain;
 
 import caching.Utils;
 import caching.base.IEMC;
@@ -13,15 +13,15 @@ import sim.content.Chunk;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public class EMC_LC_Full extends caching.base.no_price.AbstractGainRplc implements IEMC {
+public class EMC_R extends caching.base.no_price.AbstractGainRplc implements IEMC {
 
-    private static final EMC_LC_Full SINGLETON = new EMC_LC_Full();
+    private static final EMC_R SINGLETON = new EMC_R();
 
-    public static EMC_LC_Full instance() {
+    public static EMC_R instance() {
         return SINGLETON;
     }
 
-    public EMC_LC_Full() {
+    public EMC_R() {
     }
 
     @Override
