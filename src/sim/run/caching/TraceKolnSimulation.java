@@ -295,7 +295,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
         musByID.put(id, mu);
 
-
         mu.setDX(0);//dx is zero when created
         mu.setDY(0);//dy is zero when created
 
