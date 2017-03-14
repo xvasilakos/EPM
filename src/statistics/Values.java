@@ -63,21 +63,7 @@ public class Values {
         updt(values);
     }
 
-    /**
-     * A (deep) copy constructor
-     *
-     * @param original the original aggregates instance to be copied
-     */
-    public Values(Values original) {
-        this.values = new ArrayList();
-        for (double nxt_val : original.values) {
-            this.values.add(nxt_val);
-        }
 
-        this.sum = original.sum;
-        this.roundDecimal = original.roundDecimal;
-        this.finalizedBean = new FinalizationBean(original.finalizedBean);
-    }
 
     private double round(double val) {
         if (roundDecimal < 0) {
@@ -99,7 +85,7 @@ public class Values {
 
     public void updt(double... updValues) {
         if (isStatusFinalized()) {
-            throw new InconsistencyException("Illegal action: trying to update fionalized aggregated statistics.");
+            throw new InconsistencyException("Illegal action: trying to update finalized aggregated statistics.");
         }
         for (double nxt : updValues) {
             if (Double.isNaN(nxt)) {
@@ -259,16 +245,7 @@ public class Values {
         private double sum;
         private int valuesNum;
 
-        private FinalizationBean(FinalizationBean finalizedBean) {
-            this.finalized = finalizedBean.finalized;
-            this.absConfInterval = finalizedBean.absConfInterval;
-            this.mean = finalizedBean.mean;
-            this.stddev = finalizedBean.stddev;
-            this.variance = finalizedBean.variance;
-            this.sum = finalizedBean.sum;
-            this.valuesNum = finalizedBean.valuesNum;
-        }
-
+       
         private FinalizationBean() {
             this.variance = -1000;
             this.stddev = -1000;

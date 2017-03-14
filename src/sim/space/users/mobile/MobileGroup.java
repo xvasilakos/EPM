@@ -1,13 +1,12 @@
 package sim.space.users.mobile;
 
-import sim.space.users.*;
 import sim.run.SimulationBaseRunner;
 
 /**
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public class MobileGroup extends UserGroup {
+public class MobileGroup extends sim.space.users.UserGroup {
 
     private final String _howToResetPos;
     private final int _residenceDelayInSC;

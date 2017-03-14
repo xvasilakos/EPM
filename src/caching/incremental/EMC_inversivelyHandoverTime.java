@@ -13,17 +13,20 @@ import sim.space.util.DistanceComparator;
 
 /**
  *
- * Check if functionality is correct.
+ * @todo Check if functionality is correct.
  *
- * Extends sum.EPC1 by considering time to handoff as an inversive factor for
- * assessing cache decisions.
+ * Cache decisions are inversivly proportional to the expected time until 
+ * handover completion.
  *
- * @author xvas
+ * @author Xenofon Vasilakos - xvas@aueb.gr, mm.aueb.gr/~xvas, Mobile Multimedia
+ * Laboratory <mm.aueb.gr>, Dept. of Informatics, School of Information Sciences
+ * & Technology, Athens University of Economics and Business, Greece
+ * @deprecated
  */
 @Deprecated
-public final class EMC_with_HandOffTime extends caching.incremental.EMC {
+public final class EMC_inversivelyHandoverTime extends caching.incremental.EMC {
 
-    private static EMC_with_HandOffTime singleton = new EMC_with_HandOffTime();
+    private static EMC_inversivelyHandoverTime singleton = new EMC_inversivelyHandoverTime();
 
     /**
      * @return the singleton instance of this class according to its placement
@@ -33,10 +36,8 @@ public final class EMC_with_HandOffTime extends caching.incremental.EMC {
         return singleton;
     }
 
-    protected EMC_with_HandOffTime() {
+    protected EMC_inversivelyHandoverTime() {
     }
-
-  
 
     @Override
     public int cacheDecision(SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell sc2Cache)

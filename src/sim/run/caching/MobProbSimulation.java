@@ -3,12 +3,10 @@ package sim.run.caching;
 import sim.run.SimulationBaseRunner;
 import sim.Scenario;
 import app.properties.Space;
-import app.properties.valid.Values;
 import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -120,7 +118,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                     LOG.log(Level.INFO, "\tMobiles prepared:{0}%", Math.round(100.0 * count / musNum) / 100);
                 }
                 //</editor-fold> 
-            }//for every MU__CLASS in group
+            }//for every RUN__CLASS in group
         }
 
         return musLst;

@@ -3,6 +3,7 @@ package sim.run.caching;
 import sim.run.SimulationBaseRunner;
 import sim.Scenario;
 import app.properties.Space;
+import app.properties.StatsProperty;
 import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
@@ -45,7 +46,8 @@ import utilities.Couple;
  */
 public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
-    private Scanner _muTraceIn;
+    private String muTracePath;
+    private Scanner muTraceScan;
     private String mobTrcLine;
     private String mobTrcCSVSep = " ";// default set to " "
 
@@ -62,14 +64,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     private int timeForNextBatch;
     private Collection<TraceMU> batchOfMUsOfCurrRound;
 
-    /**
-     * Each simulation round maps to a real time according to the trace of
-     * mobility. Example: If the trace uses seconds as its time unit, then
-     * setting this variable to 3600 will map simulation rounds to hours. This
-     * has implications such as keeping statistics and results per 3600 sec and
-     * so forth..
-     */
-    private int roundDuration = 180; // 180;
+    private final int roundDuration;
 
     /**
      * To be defined by parsed metadata for cells' trace.
@@ -79,31 +74,39 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
      * Indicates the simulation round, based on the current simulation time
      * loaded from the mobile trace and the the round duration.
      */
-    private int simRound = 0;
+    private int simRound;
+    private int linesReadFromMob;
 
     public TraceKolnSimulation(Scenario s) {
         super(s);
+        this.roundDuration = getScenario().intProperty(StatsProperty.STATS__AGGREGATES__RECORDING_PERIOD);
     }
 
     @Override
     protected void constructorInit(Scenario scenario) {
-        String mutracePath = scenario.stringProperty(Space.MU__TRACE, true);
+        muTracePath = scenario.stringProperty(Space.MU__TRACE, true);
         try {
-            _muTraceIn = new Scanner(new FileReader(mutracePath));
-            mobTrcLine = _muTraceIn.nextLine();// init line
-            while (mobTrcLine.startsWith("#")) {
-                if (mobTrcLine.toUpperCase().startsWith("#SEP=")) {
-                    mobTrcCSVSep = mobTrcLine.substring(5);
-                    LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
-                }
+            muTraceScan = new Scanner(new FileReader(muTracePath));
 
-                mobTraceEarlyEndingCheck();
-                mobTrcLine = _muTraceIn.nextLine();// init line
+            while (muTraceScan.hasNextLine()) {
+                mobTrcLine = muTraceScan.nextLine();
+                linesReadFromMob++;
+
+                if (mobTrcLine.startsWith("#")) {
+                    if (mobTrcLine.toUpperCase().startsWith("#SEP=")) {
+                        mobTrcCSVSep = mobTrcLine.substring(5);
+                        LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
+                    }
+
+                    mobTraceEarlyEndingCheck();
+                } else {
+                    break;
+                }
             }
         } catch (IOException | TraceEndedException | NoSuchElementException e) {
             throw new CriticalFailureException("On attempt to load from file: "
                     + "\""
-                    + mutracePath
+                    + muTracePath
                     + "\"", e);
         }
     }
@@ -150,21 +153,26 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     /**
      * Read next lines from mobility trace until exceeding
      *
+     * @return true if the mobility trace has ended.
+     *
      * @throws IOException
      * @throws NumberFormatException
      * @throws InconsistencyException
      * @throws StatisticException
      * @throws TraceEndedException
      */
-    private void readFromMobilityTrace() throws
+    private boolean readFromMobilityTrace() throws
             IOException, NumberFormatException,
             InconsistencyException, StatisticException,
             TraceEndedException, NormalSimulationEndException {
 
-        String trcEndStr = "The mobility trace has ended.";
         batchOfMUsOfCurrRound = new ArrayList<>();
 
-        while (mobTrcLine != null) {
+        //System.err.println("** last read: " + mobTrcLine);
+        while (muTraceScan.hasNextLine()) {
+            mobTrcLine = muTraceScan.nextLine();
+            linesReadFromMob++;
+
             String[] csv = mobTrcLine.split(mobTrcCSVSep);
 
             //[0]: time
@@ -173,7 +181,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
             if (time > this.timeForNextBatch) {
                 this.timeForNextBatch = time + roundDuration;
                 clock.tick(time);
-                break; // in this case let it be read in the next round's batch of trace lines
+                return false; // in this case let it be read in the next round's batch of trace lines
             }
             //else...
 
@@ -222,13 +230,9 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
             batchOfMUsOfCurrRound.add(newMU);
 
-
-            if (!_muTraceIn.hasNextLine()) {
-                _muTraceIn.close();
-                throw new TraceEndedException(trcEndStr);
-            }
-            mobTrcLine = _muTraceIn.nextLine();
         }
+
+        return true; // if reached here, then the mobility trace is over
 
     }
 
@@ -274,7 +278,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
     private TraceMU createMU(
             int muID, int x, int y, double speed, int traceTime) {
-
 
         TraceMUBuilder nxtMUBuilder = new TraceMUBuilder(
                 this, mobileGroup, new Point(x, y),
@@ -345,6 +348,15 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
             }
 //</editor-fold>
 
+            if (!muTraceScan.hasNextLine()) {
+                muTraceScan.close();
+                String trcEndStr = "The mobility trace has ended too early:"
+                        + "\""
+                        + muTracePath
+                        + "\"";
+                throw new TraceEndedException(trcEndStr);
+            }
+
             //<editor-fold defaultstate="collapsed" desc="init stationaries' demand">
             try {
                 if (stationaryRequestsUsed()) {
@@ -367,18 +379,25 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
              * which will be used as a threshold for loading the next batch 
              * of trace lines.
              */
-            mobTrcLine = _muTraceIn.nextLine();
+            mobTrcLine = muTraceScan.nextLine();
             csv = mobTrcLine.split(mobTrcCSVSep);
             timeForNextBatch = Integer.parseInt(csv[0]) + roundDuration;
 
             simRound = 0; // used for logging. See also var roundDuration.
+            linesReadFromMob = 0;
+
+            boolean mobTraceFinished = false;
 
             WHILE_THREAD_NOT_INTERUPTED:
             while (!Thread.currentThread().isInterrupted()) {
 
+                if (mobTraceFinished) {
+                    throw new NormalSimulationEndException("Mobility trace has been fully read. #Lines read: " + linesReadFromMob);
+                }
+
                 logSimulationRound();
 
-                readFromMobilityTrace();
+                mobTraceFinished = readFromMobilityTrace();
                 int roundTimeSpan = simTime() - trackClockTime; // in time units specified by the trace
                 trackClockTime = simTime();
 
@@ -466,11 +485,19 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 );
 
                 ////////////////////////////////////////////////////
-                boolean roundCommited = runUpdtStats4SimRound();
-                if (roundCommited) {
-                    getStatsHandle().appendTransient(false);
-                    getStatsHandle().checkFlushTransient(false);
-                }
+                /*
+                 * Update the statistics for this round. Unlike its base class 
+                 * implementation, it tries to commit the statistics without checking the 
+                 * simulation time.
+                 */
+                getStatsHandle().updtIterativeSCCmpt4();
+                getStatsHandle().updtIterativeSCCmpt4NoCachePolicy();
+                getStatsHandle().updtFixedSC();
+                getStatsHandle().commitForce4Round(this.roundDuration);
+
+                getStatsHandle().appendTransient(false);
+                getStatsHandle().checkFlushTransient(false);
+
             }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
@@ -515,44 +542,17 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     }
 
     private void mobTraceEarlyEndingCheck() throws TraceEndedException {
-        if (!_muTraceIn.hasNextLine()) {
-            _muTraceIn.close();
+        if (!muTraceScan.hasNextLine()) {
+            muTraceScan.close();
             throw new TraceEndedException("The mobility trace has ended too early.");
         }
-    }
-
-    @Override
-    protected boolean runUpdtStats4SimRound() throws StatisticException {
-        if (!getStatsHandle().isStatsMinTimeExceeded()) {
-            return false;
-        }
-//yyy        getStatsHandle().updtSCCmpt6(
-//                _muAvgVelocity,
-//                new UnonymousCompute6(
-//                        new UnonymousCompute6.WellKnownTitle("AVGSpeed")
-//                )
-//        );
-//        getStatsHandle().updtSCCmpt6(
-//                _muAvgVelocity * _muByID.size() / _muMovingByID.size(),
-//                new UnonymousCompute6(
-//                        new UnonymousCompute6.WellKnownTitle("AVGSpeed[no immobile]")
-//                )
-//        );
-//        getStatsHandle().updtSCCmpt6(
-//                _muImmobileByID.size(),
-//                new UnonymousCompute6(
-//                        new UnonymousCompute6.WellKnownTitle("n_Immobile")
-//                )
-//        );
-
-        return super.runUpdtStats4SimRound();
     }
 
     @Override
     public void runFinish() {
         super.runFinish();
         _trcLoader.close();
-        _muTraceIn.close();
+        muTraceScan.close();
     }
 
 }

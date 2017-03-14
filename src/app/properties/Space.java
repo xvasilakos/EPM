@@ -42,7 +42,6 @@ public enum Space implements IProperty {
     SC__HANDOFF_PROBABILITY__STDEV("space.sc.handoff_probability.stdev", "tooltip TBD"),
     /////////////////////////// MOBILE USERS ///////////////////////
     MOBILITY_MODEL("space.sc.mobility_model", "tooltip TBD"),
-    MU__CLASS("space.mu.class", "tooltip TBD"),
     MU__TRACE("space.mu.trace", "tooltip TBD"),
     MU__TRACE__META("space.mu.trace.meta", "tooltip TBD"),
     MU__TRANSITION_PROBABILITIES__MATRIX("space.mu.transition_probabilities.matrix", "tooltip TBD"),

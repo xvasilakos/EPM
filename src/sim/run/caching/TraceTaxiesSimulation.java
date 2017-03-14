@@ -16,7 +16,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -344,7 +343,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                             });
                 }
 //</editor-fold>
-            } while ((lineCSV = metaIn.readLine()) != null);//for every MU__CLASS in group
+            } while ((lineCSV = metaIn.readLine()) != null);//for every RUN__CLASS in group
         } catch (IOException ex) {
             throw new CriticalFailureException(ex);
         }
@@ -622,32 +621,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         }
     }
 
-    @Override
-    protected boolean runUpdtStats4SimRound() throws StatisticException {
-        if (!getStatsHandle().isStatsMinTimeExceeded()) {
-            return false;
-        }
-//yyy        getStatsHandle().updtSCCmpt6(
-//                _muAvgVelocity,
-//                new UnonymousCompute6(
-//                        new UnonymousCompute6.WellKnownTitle("AVGSpeed")
-//                )
-//        );
-//        getStatsHandle().updtSCCmpt6(
-//                _muAvgVelocity * _muByID.size() / _muMovingByID.size(),
-//                new UnonymousCompute6(
-//                        new UnonymousCompute6.WellKnownTitle("AVGSpeed[no immobile]")
-//                )
-//        );
-//        getStatsHandle().updtSCCmpt6(
-//                _muImmobileByID.size(),
-//                new UnonymousCompute6(
-//                        new UnonymousCompute6.WellKnownTitle("n_Immobile")
-//                )
-//        );
-
-        return super.runUpdtStats4SimRound();
-    }
+  
 
     @Override
     public void runFinish() {

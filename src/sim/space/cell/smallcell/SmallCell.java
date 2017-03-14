@@ -568,8 +568,8 @@ if(!cacheRequestor.isAllowedToCache()) return ;
     /**
      * A neighbor SC is _used as the key to map the number of handoffs to the
      * neighbor. The former implies that a SC "Dest" is neighbor of this SC
-     * "Src" iff there is at least one outgoing MU__CLASS handoff recorded from
-     * Src to Dest.
+ "Src" iff there is at least one outgoing RUN__CLASS handoff recorded from
+ Src to Dest.
      *
      * @param sc
      * @return

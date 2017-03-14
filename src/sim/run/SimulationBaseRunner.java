@@ -6,6 +6,7 @@ import sim.run.stats.StatsHandling;
 import app.SimulatorApp;
 import static app.properties.Caching.CACHING__POLICIES__MAXPOP_CUTTER;
 import app.properties.Networking;
+import app.properties.Simulation;
 import app.properties.Space;
 import app.properties.StatsProperty;
 import app.properties.valid.Values;
@@ -26,7 +27,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -547,7 +547,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
         waitMaxThreadsThreshold();
 
-        String classSimName = setup.stringProperty(Space.MU__CLASS, false);
+        String classSimName = setup.stringProperty(Simulation.RUN__CLASS, false);
 
         Class simClass;
         try {
@@ -769,7 +769,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         getStatsHandle().updtIterativeSCCmpt4();
         getStatsHandle().updtIterativeSCCmpt4NoCachePolicy();
         getStatsHandle().updtFixedSC();
-        return getStatsHandle().tryCommitRound();
+        return getStatsHandle().commitTry4Round();
     }
 
     /**

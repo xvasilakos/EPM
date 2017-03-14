@@ -78,10 +78,10 @@ public final class StatsHandling implements ISimulationMember {
             _printAggregates = _scenarioSetup.isTrue(StatsProperty.STATS__PRINT__AGGREGATES);
             _printTransient = _scenarioSetup.isTrue(StatsProperty.STATS__PRINT__TRANSIENT);
             _printTransientFlushPeriod = _scenarioSetup.intProperty(StatsProperty.STATS__PRINT__TRANSIENT__FLUSH_PERIOD);
-            _aggregatesAvgPeriod = _scenarioSetup.intProperty(StatsProperty.STATS__AGGREGATES__AVG_PERIOD);
+            _aggregatesAvgPeriod = _scenarioSetup.intProperty(StatsProperty.STATS__AGGREGATES__RECORDING_PERIOD);
             if (_aggregatesAvgPeriod <= 0) {
                 //
-                throw new RuntimeException(StatsProperty.STATS__AGGREGATES__AVG_PERIOD.name() + " property must be a positive integer value." + " It currently set to " + _aggregatesAvgPeriod);
+                throw new RuntimeException(StatsProperty.STATS__AGGREGATES__RECORDING_PERIOD.name() + " property must be a positive integer value." + " It currently set to " + _aggregatesAvgPeriod);
             }
             _clockMaxTime = _scenarioSetup.intProperty(app.properties.Simulation.Clock.MAX_TIME);
             if (_clockMaxTime <= 0) {
@@ -153,8 +153,8 @@ public final class StatsHandling implements ISimulationMember {
                 _simStatististics.addValuesForTime(recordingTime, handler.title(), val);
             }
         } //</editor-fold>
-        if (!_handlersUsed._handlers4Fixed_sc__cmpt0__no_policy.isEmpty()) {
-            for (ICompute0 handler : _handlersUsed._handlers4Fixed_sc__cmpt0__no_policy) {
+        if (!_handlersUsed._handlers4Fixed_sc__cmpt0__no_model.isEmpty()) {
+            for (ICompute0 handler : _handlersUsed._handlers4Fixed_sc__cmpt0__no_model) {
                 double val = handler.compute0();
                 if (val == -1) {
                     continue;
@@ -333,13 +333,15 @@ public final class StatsHandling implements ISimulationMember {
     }
 
     /**
-     * Averaging statistics period that the current simulation time belongs to.
-     * Averaging periods (e.g per 20 time units) are used for
-     * compressing/aggregating result outputs per, e.g. 20 time units. As a side
-     * effect, the bigger the averaging period, the more smooth the resulting
-     * curves in the corresponding plots are.
+     * Statistics recording period that the current simulation time falls
+     * within.
      *
-     * @return
+     * Recording periods (e.g per 20 time units) are used for
+     * compressing/aggregating/averaging result outputs per, e.g. 20 time units.
+     * As a side effect, the bigger the averaging period, the more smooth the
+     * resulting curves in the corresponding plots are.
+     *
+     * @return the stats recording period based on the current simulation time.
      */
     public int statRecordingAvgPeriodTime() {
         // e.g. 20 * ((int) 18 / 20) =20 * ((int) 0.9) = 0
@@ -348,20 +350,27 @@ public final class StatsHandling implements ISimulationMember {
     }
 
     /**
-     * Committing implies finalizing and thus compressing state in each record.
+     * Tries to commit and finalise statistics after a simulation round.
+     * Successful committing implies finalizing and thus
+     * compressing/aggregating/averaging state in each stats record for the
+     * current stats period, where the stats period of the record is defined as
+     * specified by #statRecordingAvgPeriodTime().
      *
-     * This method must be called after recording all statistics for a give theSim
- simTime, to commit all statistics recorded for this theSim simTime.
+     * This method must be called after recording all statistics for a
+     * simulation round.
      *
-     * @return true iff stats are committed
-     * @throws statistics.StatisticException
+     *
      *
      * note: Commit takes actually place if and only if (i) the current time
      * denotes that previously recorded statistics were the last ones in a
      * series of statistics of the averaging/smoothing period, and (ii) the
      * minimum actual simulation time for keeping statistics is exceeded.
+     *
+     * @return true iff stats are committed
+     * @throws statistics.StatisticException
+     *
      */
-    public boolean tryCommitRound() throws StatisticException {
+    public boolean commitTry4Round() throws StatisticException {
         int statRecordingAvgPeriodTime = statRecordingAvgPeriodTime();
         /*Caution must use this averaging period simTime instead of actual theSim clock simTime;
              * otherwise it tries to finalize times that may have not been recorded*/
@@ -371,6 +380,30 @@ public final class StatsHandling implements ISimulationMember {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Commits and finalises statistics after a simulation round. Committing
+     * implies finalizing and thus compressing/aggregating/averaging state in
+     * each stats record, where the stats period of the record is defined by the
+     * parameter statsPeriod.
+     *
+     * This method must be called after recording all statistics for a
+     * simulation round.
+     *
+     *
+     * @param statsPeriod
+     * @return true iff stats are committed
+     * @throws statistics.StatisticException
+     *
+     */
+    public void commitForce4Round(int statsPeriod) throws StatisticException {
+        int statRecordingAvgPeriodTime = statRecordingAvgPeriodTime();
+        /*Caution must use this averaging period simTime instead of actual theSim clock simTime;
+             * otherwise it tries to finalize times that may have not been recorded*/
+
+        _simStatististics.finalizeState(statsPeriod);
+
     }
 
     /**

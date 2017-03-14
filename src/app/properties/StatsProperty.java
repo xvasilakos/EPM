@@ -19,7 +19,7 @@ public enum StatsProperty implements IProperty {
    /**
     * Averaging period.
     */
-   STATS__AGGREGATES__AVG_PERIOD("stats.aggregates.avg_period"),
+   STATS__AGGREGATES__RECORDING_PERIOD("stats.aggregates.recording_period"),
    STATS__OUTPUTDIR("stats.outputdir"),
    //////////////
    HANDLERS__ITERATIVE__MU__CMPT1("statistics.handlers.iterative.mu.cmpt1"),
@@ -28,14 +28,14 @@ public enum StatsProperty implements IProperty {
    PERFORMANCE__OTHER("statistics.performance.other"),
    //////////////
    HANLDERS__ITERATIVE__SC__CMPT3("statistics.handlers.iterative.sc.cmpt3"),
-   HANLDERS__ITERATIVE__SC__CMPT4__NO_POLICY("statistics.handlers.iterative.sc.cmpt4.no_policy"),
+   HANLDERS__ITERATIVE__SC__CMPT4__NO_MODEL("statistics.handlers.iterative.sc.cmpt4.no_model"),
    HANLDERS__ITERATIVE__SC__CMPT4("statistics.handlers.iterative.sc.cmpt4"),
    HANLDERS__ITERATIVE__SC__CMPT5("statistics.handlers.iterative.sc.cmpt5"),
    HANDLERS__ITERATIVE__SC__CMPT6("statistics.handlers.iterative.sc.cmpt6"),
    //////////////
    HANDLERS__FIXED_SC__MONITOR_SCS("statistics.handlers.fixed_sc.monitor_scs"),
    HANDLERS__FIXED_SC__CMPT0("statistics.handlers.fixed_sc.cmpt0"),
-   HANDLERS__FIXED_SC__CMPT0__NO_POLICIES("statistics.handlers.fixed_sc.cmpt0.no_policy"),
+   HANDLERS__FIXED_SC__CMPT0__NO_MODEL("statistics.handlers.fixed_sc.cmpt0.no_model"),
    //////////////
 
    STATS__ROUNDING_DECIMAL("stats.rounding_decimal"),;

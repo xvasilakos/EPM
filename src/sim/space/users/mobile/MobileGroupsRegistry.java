@@ -338,9 +338,9 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
     }
 
     /**
-     * Generates a unique universal ID for a MU__CLASS such that the 1st MU__CLASS member of
- the 1st group gets ID 1, the 1st MU__CLASS of the 2nd group gets ID 2, the 1st
- MU__CLASS of the 3rd group gets id 3 and so forth.
+     * Generates a unique universal ID for a RUN__CLASS such that the 1st RUN__CLASS member of
+ the 1st group gets ID 1, the 1st RUN__CLASS of the 2nd group gets ID 2, the 1st
+ RUN__CLASS of the 3rd group gets id 3 and so forth.
      *
      * Mathematically, the former is described by formula: (k-1) *
      * #registeredGroups + grpID.
@@ -348,8 +348,8 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
      * CAUTION k must be greater than 0 and grpID must be a non negative value.
      *
      * @param grpID the ID of the group
-     * @param k the sequence number of the MU__CLASS with respect to its group, e.g. 5
- for the 5th MU__CLASS of the given group.
+     * @param k the sequence number of the RUN__CLASS with respect to its group, e.g. 5
+ for the 5th RUN__CLASS of the given group.
      * @return
      */
     public int generateMobileID(int grpID, int k) {

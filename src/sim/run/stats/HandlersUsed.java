@@ -58,7 +58,7 @@ final class HandlersUsed {
      * choose randomly one SC and study its behavior in each theSim round
      */
     final Set<ICompute0> _handlers4Fixed_sc__cmpt0;
-    final Set<ICompute0> _handlers4Fixed_sc__cmpt0__no_policy;
+    final Set<ICompute0> _handlers4Fixed_sc__cmpt0__no_model;
     List<SmallCell> _monitorSC; // the cell IDs to monitor specialy
     private final StatsHandling _statsHandlingOuter;
     private final Logger _logger;
@@ -69,9 +69,9 @@ final class HandlersUsed {
 
         _monitorSC = monitorSCs(outer);
         _handlers4Fixed_sc__cmpt0 = initFixedSCCmpt0(StatsProperty.HANDLERS__FIXED_SC__CMPT0, _monitorSC);
-        _handlers4Fixed_sc__cmpt0__no_policy = initFixedSCCmpt0NoPolicies(StatsProperty.HANDLERS__FIXED_SC__CMPT0__NO_POLICIES, _monitorSC);
+        _handlers4Fixed_sc__cmpt0__no_model = initFixedSCCmpt0NoPolicies(StatsProperty.HANDLERS__FIXED_SC__CMPT0__NO_MODEL, _monitorSC);
         try {
-            _handlers4Iterative__sc__cmpt4_no_policies = initCmpt4Nopolicies(StatsProperty.HANLDERS__ITERATIVE__SC__CMPT4__NO_POLICY);
+            _handlers4Iterative__sc__cmpt4_no_policies = initCmpt4Nopolicies(StatsProperty.HANLDERS__ITERATIVE__SC__CMPT4__NO_MODEL);
             _handlers4Iterative__sc__cmpt4 = initCmpt4(StatsProperty.HANLDERS__ITERATIVE__SC__CMPT4);
             _handlers4Iterative__sc__cmpt5 = initCmpt5(StatsProperty.HANLDERS__ITERATIVE__SC__CMPT5);
             _handlers4Iterative__sc__cmpt6 = initCmpt6(StatsProperty.HANDLERS__ITERATIVE__SC__CMPT6);
