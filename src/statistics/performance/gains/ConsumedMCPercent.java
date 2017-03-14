@@ -1,6 +1,6 @@
 package statistics.performance.gains;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import static java.lang.Double.NaN;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ import statistics.handlers.AbstractPerformanceStat;
  */
 public class ConsumedMCPercent extends AbstractPerformanceStat<CachingUser, SmallCell, DocumentRequest> {
 
-    public ConsumedMCPercent(AbstractCachingPolicy cachingMethod) {
+    public ConsumedMCPercent(AbstractCachingModel cachingMethod) {
         super(cachingMethod);
     }
 
@@ -27,18 +27,18 @@ public class ConsumedMCPercent extends AbstractPerformanceStat<CachingUser, Smal
             return NaN;// ignore stationaries
         }
 
-        AbstractCachingPolicy policy = getCachingPolicy();
+        AbstractCachingModel model = getCachingModel();
 
-        List<Chunk> consumedChunksFromSC = r.getChunksCacheHitsHistory(policy);
-        List<Chunk> consumedChunksFromBH = r.getChunksConsumedHistoryFromBH(policy);
+        List<Chunk> consumedChunksFromSC = r.getChunksCacheHitsHistory(model);
+        List<Chunk> consumedChunksFromBH = r.getChunksConsumedHistoryFromBH(model);
 
         List<Chunk> consumedChunksFromMC = new ArrayList();
 
-        consumedChunksFromMC.addAll(r.getChunksConsumedHistoryFromMCAfterExitingSC(policy));
-        consumedChunksFromMC.addAll(r.getChunksConsumedHistoryFromMCBeforeEnteringSC(policy));
-        consumedChunksFromMC.addAll(r.getChunksConsumedHistoryFromMCwSCConn(policy));
+        consumedChunksFromMC.addAll(r.getChunksConsumedHistoryFromMCAfterExitingSC(model));
+        consumedChunksFromMC.addAll(r.getChunksConsumedHistoryFromMCBeforeEnteringSC(model));
+        consumedChunksFromMC.addAll(r.getChunksConsumedHistoryFromMCwSCConn(model));
 
-        double sum = r.getChunksConsumedOverall(policy).size();
+        double sum = r.getChunksConsumedOverall(model).size();
 //                consumedChunksFromSC.size()
 //                + consumedChunksFromBH.size()
 //                + consumedChunksFromMC.size();
@@ -57,12 +57,12 @@ public class ConsumedMCPercent extends AbstractPerformanceStat<CachingUser, Smal
 
     @Override
     public String title() {
-        return "%ConsmMC" + "-" + getCachingPolicy().nickName();
+        return "%ConsmMC" + "-" + getCachingModel().nickName();
     }
 
     @Override
     public String title(String str) {
-        return "%ConsmMC" + "_" + str + "_" + getCachingPolicy().nickName();
+        return "%ConsmMC" + "_" + str + "_" + getCachingModel().nickName();
     }
 
 }

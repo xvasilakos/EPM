@@ -1,7 +1,7 @@
 package caching.incremental;
 
 import caching.Utils;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.Collection;
 import sim.run.SimulationBaseRunner;
 import sim.content.Chunk;
@@ -29,7 +29,7 @@ public final class EMC_with_HandOffTime extends caching.incremental.EMC {
      * @return the singleton instance of this class according to its placement
      * in the hierarchy of AbstractMethod class descendants.
      */
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singleton;
     }
 

@@ -1,6 +1,6 @@
 package sim.space.users.mobile;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.Collection;
 import java.util.List;
 import sim.run.SimulationBaseRunner;
@@ -17,13 +17,13 @@ public class MUBuilder extends Builder{
     protected final int __maxProbDirection;
 
 
-    protected Collection<AbstractCachingPolicy> _cachingPolicies;
+    protected Collection<AbstractCachingModel> _cachingPolicies;
 
     public MUBuilder(
             SimulationBaseRunner simulation, MobileGroup group,
             Point startPoint, double[] probsTransition,
             List<String> connectionPolicySC,
-            Collection<AbstractCachingPolicy> cachingPolicies) {
+            Collection<AbstractCachingModel> cachingPolicies) {
         super(simulation, group, startPoint, connectionPolicySC, cachingPolicies);
 
         // find the maximum probability to define __maxProbDirection

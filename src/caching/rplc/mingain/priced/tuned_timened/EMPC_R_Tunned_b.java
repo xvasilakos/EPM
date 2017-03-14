@@ -1,6 +1,6 @@
-package caching.rplc.mingain.tuned;
+package caching.rplc.mingain.priced.tuned_timened;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.Set;
 import sim.space.cell.demand_registry.PCDemand;
 import sim.space.cell.smallcell.SmallCell;
@@ -10,21 +10,25 @@ import sim.space.users.mobile.MobileUser;
 import sim.space.util.DistanceComparator;
 
 /**
- * Same as EPCPop, only items do not get replaced when at least one of the
- * requesting mobiles gets close enough to the small cell, based on time
- * interval "d" of the small cell.
+ * Used in the tuning process of the time threshold applied by
+ * #AbstractEMPC_R_Tunned.
+ * 
+ * Note: used in the golden ratio algorithm as parameter b.
  *
- * @author Xenofon Vasilakos xvas@aueb.gr
+ * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>,
+ * Mobile Multimedia Laboratory <mm.aueb.gr>,
+ * Dept. of Informatics, School of Information Sciences & Technology,
+ * Athens University of Economics and Business, Greece
  */
-public final class EMPC_LC_Tunned_b extends AbstractEMPC_LC_Tunned {
+public final class EMPC_R_Tunned_b extends AbstractEMPC_R_Tunned {
 
-    private static final AbstractCachingPolicy singelton = new EMPC_LC_Tunned_b();
+    private static final AbstractCachingModel singelton = new EMPC_R_Tunned_b();
 
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singelton;
     }
 
-    EMPC_LC_Tunned_b() {
+    EMPC_R_Tunned_b() {
     }
 
     /**

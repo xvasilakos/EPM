@@ -5,7 +5,7 @@
  */
 package sim.space.users;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,16 +23,16 @@ import sim.space.cell.smallcell.SmallCell;
  */
 public abstract class CachingUser extends User {
 
-    private final Collection<AbstractCachingPolicy> _cachingPolicies;
+    private final Collection<AbstractCachingModel> _cachingPolicies;
     private SmallCell _lastSCForCacheDecisions;
-    private final Map<AbstractCachingPolicy, List<Chunk>> _mostRecentlyConsumedMC;
-    private final Map<AbstractCachingPolicy, List<Chunk>> _mostRecentlyConsumedFromCacheHits;
-    private final Map<AbstractCachingPolicy, List<Chunk>> _mostRecentlyConsumedBH;
-    private final Map<AbstractCachingPolicy, List<Chunk>> _mostRecentlyCacheMissesPerPolicy;
+    private final Map<AbstractCachingModel, List<Chunk>> _mostRecentlyConsumedMC;
+    private final Map<AbstractCachingModel, List<Chunk>> _mostRecentlyConsumedFromCacheHits;
+    private final Map<AbstractCachingModel, List<Chunk>> _mostRecentlyConsumedBH;
+    private final Map<AbstractCachingModel, List<Chunk>> _mostRecentlyCacheMissesPerPolicy;
     protected boolean _allowedToCache;
 
     protected CachingUser(int id, SimulationBaseRunner<?> sim,
-            Collection<AbstractCachingPolicy> cachingPolicies) {
+            Collection<AbstractCachingModel> cachingPolicies) {
 
         super(id, sim);
         this._allowedToCache = true; // by default, true. Let subtypes redefine this filed
@@ -46,7 +46,7 @@ public abstract class CachingUser extends User {
         _mostRecentlyCacheMissesPerPolicy = new HashMap<>(5);
 
         if (sim != null) {// dummy user
-            for (AbstractCachingPolicy policy : sim.getCachingStrategies()) {
+            for (AbstractCachingModel policy : sim.getCachingStrategies()) {
                 _mostRecentlyConsumedMC.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedFromCacheHits.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedBH.put(policy, new ArrayList<Chunk>());
@@ -57,7 +57,7 @@ public abstract class CachingUser extends User {
 
     protected CachingUser(int id, SimulationBaseRunner<?> sim, int connectedSinceSC, SmallCell connectionSC,
             MacroCell connectionMC,
-            Collection<AbstractCachingPolicy> cachingPolicies) {
+            Collection<AbstractCachingModel> cachingPolicies) {
 
         super(id, sim, connectedSinceSC, connectionSC, connectionMC);
         this._allowedToCache = true; // by default, true. Let subtypes redefine this filed
@@ -71,7 +71,7 @@ public abstract class CachingUser extends User {
         _mostRecentlyCacheMissesPerPolicy = new HashMap<>(5);
 
         if (sim != null) {// dummy user
-            for (AbstractCachingPolicy policy : sim.getCachingStrategies()) {
+            for (AbstractCachingModel policy : sim.getCachingStrategies()) {
                 _mostRecentlyConsumedMC.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedFromCacheHits.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedBH.put(policy, new ArrayList<Chunk>());
@@ -97,7 +97,7 @@ public abstract class CachingUser extends User {
     /**
      * @return the _cachingPolicies
      */
-    public Collection<AbstractCachingPolicy> getCachingPolicies() {
+    public Collection<AbstractCachingModel> getCachingPolicies() {
         return _cachingPolicies;
     }
 
@@ -108,7 +108,7 @@ public abstract class CachingUser extends User {
         double mcRateSlice = Math.round((double) getSimulation().getRateMCWlessInBytes() / slices);
 
         for (DocumentRequest nxtRequest : getRequests()) {
-            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel policy : getSimulation().getCachingStrategies()) {
                 nxtRequest.consumeChunksRemainderFromMC(policy, mcRateSlice, _mostRecentlyConsumedMC);
             }
         }
@@ -185,28 +185,28 @@ public abstract class CachingUser extends User {
     /**
      * @return the _mostRecentlyConsumedMC
      */
-    public Map<AbstractCachingPolicy, List<Chunk>> getMostRecentlyConsumedMC() {
+    public Map<AbstractCachingModel, List<Chunk>> getMostRecentlyConsumedMC() {
         return _mostRecentlyConsumedMC;
     }
 
     /**
      * @return the _mostRecentlyConsumedFromCacheHits
      */
-    public Map<AbstractCachingPolicy, List<Chunk>> getMostRecentlyConsumedFromCacheHits() {
+    public Map<AbstractCachingModel, List<Chunk>> getMostRecentlyConsumedFromCacheHits() {
         return _mostRecentlyConsumedFromCacheHits;
     }
 
     /**
      * @return the _mostRecentlyConsumedBH
      */
-    public Map<AbstractCachingPolicy, List<Chunk>> getMostRecentlyConsumedBH() {
+    public Map<AbstractCachingModel, List<Chunk>> getMostRecentlyConsumedBH() {
         return _mostRecentlyConsumedBH;
     }
 
     /**
      * @return the _mostRecentlyCacheMissesPerPolicy
      */
-    public Map<AbstractCachingPolicy, List<Chunk>> getMostRecentlyCacheMissesPerPolicy() {
+    public Map<AbstractCachingModel, List<Chunk>> getMostRecentlyCacheMissesPerPolicy() {
         return _mostRecentlyCacheMissesPerPolicy;
     }
 

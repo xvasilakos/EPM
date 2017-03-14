@@ -1,7 +1,7 @@
 package caching.incremental;
 
-import caching.base.AbstractEPCPop;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractEMPC;
+import caching.base.AbstractCachingModel;
 import caching.interfaces.incremental.IIncremental;
 import caching.Utils;
 import java.util.Collection;
@@ -11,28 +11,23 @@ import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
 
 /**
- * Efficient Proactive Caching and LeGaCy POPularity implementation with Cache
- * decisions cancelation (CNC) supported and no support for any cache
- * replacement policies.
- *
- * Note that unlike CncAvgProb, caching decisions use a weighted gain assessment
- * based only on the transition probability of the requesting mobile user.
+ * EPC with content popularity extentions.
  *
  * @author xvas
  */
-public final class EPC_with_Pop extends AbstractEPCPop implements IIncremental {
+public final class EPCP extends AbstractEMPC implements IIncremental {
 
-    private static final EPC_with_Pop singleton = new EPC_with_Pop();
+    private static final EPCP singleton = new EPCP();
 
     /**
      * @return the singleton instance of this class according to its placement
      * in the hierarchy of AbstractMethod class descendants.
      */
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singleton;
     }
 
-    EPC_with_Pop() {
+    EPCP() {
     }
 
     @Override
@@ -40,13 +35,12 @@ public final class EPC_with_Pop extends AbstractEPCPop implements IIncremental {
         return "EPC+Pop";
     }
 
-
     @Override
     public int cacheDecision(
             SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell sc) throws Throwable {
         return EPC.cacheDecision(this, sim, cu, requestChunks, hostSC, hostSC);
     }
-    
+
 //    @Override
 //    public int cacheDecision(
 //            SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell sc) throws Throwable {
@@ -77,10 +71,9 @@ public final class EPC_with_Pop extends AbstractEPCPop implements IIncremental {
 //        }
 //        return totalSizeCached;
 //    }
-
     @Override
     public double assess(CachingUser mu, Chunk item, SmallCell sc) throws Throwable {
-        return Utils.assessEPC_with_Pop(mu, item, sc, this);
+        return Utils.assessEPCWithPop(mu, item, sc, this);
     }
 
 }

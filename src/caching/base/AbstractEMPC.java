@@ -5,6 +5,6 @@ import caching.interfaces.rplc.IGainNoRplc;
 /**
  * @author xvas
  */
-public abstract class AbstractEPCPop extends AbstractPricing implements IGainNoRplc, IPop {
+public abstract class AbstractEMPC extends AbstractPricing implements IGainNoRplc, IPop {
 
 }

@@ -1,8 +1,8 @@
 package caching.incremental;
 
 import caching.Utils;
-import caching.base.AbstractCachingPolicy;
-import caching.base.AbstractEPCPop;
+import caching.base.AbstractCachingModel;
+import caching.base.AbstractEMPC;
 import caching.base.IEMPC;
 import caching.interfaces.incremental.IIncrementalAggregate;
 import java.util.Collection;
@@ -12,17 +12,10 @@ import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
 
 /**
- * Efficient Proactive Caching and LeGaCy POPularity implementation with Cache
- * decisions cancelation (CNC) supported and no support for any cache
- * replacement policies.
- *
- * Note that caching decisions use the weighted gain assessment defined in
- * AbstractAvgProb, i.e. they use the average transition probability of mobiles
- * requesting for each item requested.
- *
+ * 
  * @author xvas
  */
-public final class EMPC extends AbstractEPCPop implements IIncrementalAggregate, IEMPC {
+public final class EMPC extends AbstractEMPC implements IIncrementalAggregate, IEMPC {
 
     private static EMPC singleton = new EMPC();
 
@@ -30,7 +23,7 @@ public final class EMPC extends AbstractEPCPop implements IIncrementalAggregate,
      * @return the singleton instance of this class according to its placement
      * in the hierarchy of AbstractMethod class descendants.
      */
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singleton;
     }
 

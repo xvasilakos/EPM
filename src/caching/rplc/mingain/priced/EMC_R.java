@@ -1,7 +1,7 @@
 package caching.rplc.mingain.priced;
 
 import caching.Utils;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.base.AbstractEPC;
 import caching.base.IEMC;
 import caching.interfaces.rplc.IGainRplc;
@@ -18,18 +18,22 @@ import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
 
 /**
- * Efficient proactive caching with legacy popularity, using a least gain cache
- * replacement policy defined in class AbstractGainRplc. Unlike MinGainAvgProb,
- * this class implementation uses the sum of transition probabilities for
- * assessing the weighted delay gain of a cache decision.
+ * Efficient Mobility-based Proactive Caching model along with using a minimum
+ * gain cache replacement extensions
  *
- * @author Xenofon Vasilakos xvas@aueb.gr
+ * This mobility-based model uses the summation of the mobile transition
+ * probabilities for weighting the delay gain of a cache decision.
+ *
+ * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>, Mobile
+ * Multimedia Laboratory <mm.aueb.gr>, Dept. of Informatics, School of
+ * Information Sciences & Technology, Athens University of Economics and
+ * Business, Greece
  */
 public class EMC_R extends AbstractEPC implements IGainRplc, IEMC {
 
-    private static final AbstractCachingPolicy singelton = new EMC_R();
+    private static final AbstractCachingModel singelton = new EMC_R();
 
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singelton;
     }
 
@@ -37,10 +41,10 @@ public class EMC_R extends AbstractEPC implements IGainRplc, IEMC {
     }
 
     @Override
-    public String nickName(){
+    public String nickName() {
         return "EMC-R-priced";
     }
-    
+
     @Override
     public double assess(Chunk item, SmallCell sc) throws Throwable {
         return Utils.assessEMC(item, sc, this);

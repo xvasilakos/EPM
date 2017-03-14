@@ -9,7 +9,7 @@ import statistics.handlers.ICompute0;
  *
  */
 public class W extends
-        statistics.handlers.iterative.sc.cmpt4.no_policy.W 
+        statistics.handlers.iterative.sc.cmpt4.no_model.W 
         implements ICompute0 {
 
     private final SmallCell _monitorSC;

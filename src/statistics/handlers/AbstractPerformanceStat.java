@@ -1,6 +1,6 @@
 package statistics.handlers;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 
 /**
  * @author xvas
@@ -8,9 +8,9 @@ import caching.base.AbstractCachingPolicy;
  */
 public abstract class AbstractPerformanceStat<USER_TYPE, CELL_TYPE, REQUEST_TYPE> extends BaseHandler implements statistics.handlers.ICompute {
 
-    private final AbstractCachingPolicy _cachingPolicy;
+    private final AbstractCachingModel _cachingPolicy;
 
-    public AbstractPerformanceStat(AbstractCachingPolicy cachingMethod) {
+    public AbstractPerformanceStat(AbstractCachingModel cachingMethod) {
         super();
         _cachingPolicy = cachingMethod;
     }
@@ -23,13 +23,13 @@ public abstract class AbstractPerformanceStat<USER_TYPE, CELL_TYPE, REQUEST_TYPE
     }
 
     public String title(String str) {
-        return getClass().getSimpleName() + "<" + str + ">" + "(" + getCachingPolicy().nickName() + ")";
+        return getClass().getSimpleName() + "<" + str + ">" + "(" + getCachingModel().nickName() + ")";
     }
 
     /**
      * @return the _cachingPolicy
      */
-    public AbstractCachingPolicy getCachingPolicy() {
+    public AbstractCachingModel getCachingModel() {
         return _cachingPolicy;
     }
 }

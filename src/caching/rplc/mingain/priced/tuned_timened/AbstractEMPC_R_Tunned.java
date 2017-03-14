@@ -1,4 +1,4 @@
-package caching.rplc.mingain.tuned;
+package caching.rplc.mingain.priced.tuned_timened;
 
 import java.util.HashSet;
 import java.util.PriorityQueue;
@@ -8,14 +8,20 @@ import sim.space.cell.demand_registry.PCDemand;
 import sim.space.cell.smallcell.SmallCell;
 
 /**
- * Same as EPCPop, only items do not get replaced when at least one of the
- * requesting mobiles gets close enough to the small cell.
+ * Same as #caching.rplc.mingain.priced.EMPC_R, only items do not get replaced
+ * when at least one of the requesting mobiles gets close enough to the small
+ * cell, where "closeness" is defined by a tuned time-distance threshold value.
  *
- * @author Xenofon Vasilakos xvas@aueb.gr
+ * Note: uses the golden ratio algorithm. 
+ *
+ * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>, Mobile
+ * Multimedia Laboratory <mm.aueb.gr>, Dept. of Informatics, School of
+ * Information Sciences & Technology, Athens University of Economics and
+ * Business, Greece
  */
-public abstract class AbstractEMPC_LC_Tunned extends caching.rplc.mingain.priced.EMPC_R {
+public abstract class AbstractEMPC_R_Tunned extends caching.rplc.mingain.priced.EMPC_R {
 
-    AbstractEMPC_LC_Tunned() {
+    AbstractEMPC_R_Tunned() {
     }
 
     /**
@@ -29,7 +35,7 @@ public abstract class AbstractEMPC_LC_Tunned extends caching.rplc.mingain.priced
      * @throws Throwable
      */
     @Override
-    public Set<Chunk> optForEviction(SmallCell sc, Chunk item, 
+    public Set<Chunk> optForEviction(SmallCell sc, Chunk item,
             PriorityQueue<Chunk> cachedOrderByGain) throws Throwable {
 
 //        //appendLog("Selecting items to evict.. ", sc, this);

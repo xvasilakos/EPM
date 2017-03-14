@@ -9,7 +9,7 @@ import statistics.handlers.ICompute0;
  *
  */
 public class MUsCurrConnected extends
-        statistics.handlers.iterative.sc.cmpt4.no_policy.MUsCurrConnected 
+        statistics.handlers.iterative.sc.cmpt4.no_model.MUsCurrConnected 
         implements ICompute0 {
 
     private final SmallCell _monitorSC;

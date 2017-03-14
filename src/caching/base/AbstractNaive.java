@@ -7,7 +7,7 @@ import sim.space.cell.smallcell.PricedBuffer;
  *
  * @author xvas
  */
-public abstract class AbstractNaive extends AbstractCachingPolicy {
+public abstract class AbstractNaive extends AbstractCachingModel {
 
       
     public static Class bufferType() {

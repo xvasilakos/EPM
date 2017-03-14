@@ -1,4 +1,4 @@
-package statistics.handlers.iterative.sc.cmpt4.no_policy;
+package statistics.handlers.iterative.sc.cmpt4.no_model;
 
 import java.util.Set;
 import sim.space.cell.smallcell.SmallCell;

@@ -1,6 +1,6 @@
 package statistics.performance.gains;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.Iterator;
 import java.util.List;
 import sim.content.request.DocumentRequest;
@@ -16,14 +16,14 @@ import statistics.handlers.AbstractPerformanceStat;
  */
 public class GAIN_BH extends AbstractPerformanceStat<CachingUser, SmallCell, DocumentRequest> {
 
-    public GAIN_BH(AbstractCachingPolicy cachingMethod) {
+    public GAIN_BH(AbstractCachingModel cachingMethod) {
         super(cachingMethod);
     }
 
     @Override
     public final double computeGain(CachingUser user, DocumentRequest r) throws StatisticException {
 
-        List<Chunk> consumedChunksFromBH = r.getChunksConsumedHistoryFromBH(getCachingPolicy());
+        List<Chunk> consumedChunksFromBH = r.getChunksConsumedHistoryFromBH(getCachingModel());
         double gainSum = consumedChunksFromBH.size() * r.gainOfTransferSCThroughBH();
 
         return gainSum;
@@ -31,11 +31,11 @@ public class GAIN_BH extends AbstractPerformanceStat<CachingUser, SmallCell, Doc
 
     @Override
     public String title() {
-        return "G_BH" + "-" + getCachingPolicy().nickName();
+        return "G_BH" + "-" + getCachingModel().nickName();
     }
 
     @Override
     public String title(String str) {
-        return "G_BH" + "_" + str + "_" + getCachingPolicy().nickName();
+        return "G_BH" + "_" + str + "_" + getCachingModel().nickName();
     }
 }

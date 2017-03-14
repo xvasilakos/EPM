@@ -2,7 +2,7 @@ package sim.space.users;
 
 import static app.properties.Space.SC__DMD__TRACE__STATIONARY_REQUESTS__REQ2CACHE;
 import caching.MaxPop;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import exceptions.InvalidOrUnsupportedException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +22,7 @@ import sim.space.cell.smallcell.SmallCell;
 public class StationaryUser extends CachingUser {
 
     public StationaryUser(int id, SimulationBaseRunner sim,
-            Collection<AbstractCachingPolicy> cachingPolicies) throws InvalidOrUnsupportedException {
+            Collection<AbstractCachingModel> cachingPolicies) throws InvalidOrUnsupportedException {
 
         super(id, sim, cachingPolicies);
         _allowedToCache = sim.getScenario().isTrue(SC__DMD__TRACE__STATIONARY_REQUESTS__REQ2CACHE);
@@ -30,7 +30,7 @@ public class StationaryUser extends CachingUser {
 
     public StationaryUser(int id, SimulationBaseRunner sim, int connectedSinceSC,
             SmallCell connectionSC, MacroCell connectionMC,
-            Collection<AbstractCachingPolicy> cachingPolicies) throws InvalidOrUnsupportedException {
+            Collection<AbstractCachingModel> cachingPolicies) throws InvalidOrUnsupportedException {
 
         super(id, sim, connectedSinceSC, connectionSC, connectionMC,
                 cachingPolicies);
@@ -64,11 +64,11 @@ public class StationaryUser extends CachingUser {
 
         // we care to request to tryCacheRecentFromBH only the ones not hit in the tryCacheRecentFromBH, i.e:
         // 1) the ones from the BH
-        Map<AbstractCachingPolicy, List<Chunk>> mostRecentlyConsumedBH
+        Map<AbstractCachingModel, List<Chunk>> mostRecentlyConsumedBH
                 = getMostRecentlyConsumedBH();
 
 //commented out the following
-        for (AbstractCachingPolicy policy : getCachingPolicies()) {
+        for (AbstractCachingModel policy : getCachingPolicies()) {
             if (policy instanceof MaxPop //                    || policy instanceof Oracle
                     ) {
                 // cached object stay permanently in tryCacheRecentFromBH.

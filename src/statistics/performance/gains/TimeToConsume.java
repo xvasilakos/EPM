@@ -1,6 +1,6 @@
 package statistics.performance.gains;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import sim.content.request.DocumentRequest;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
@@ -13,7 +13,7 @@ import statistics.handlers.AbstractPerformanceStat;
  */
 public class TimeToConsume extends AbstractPerformanceStat<CachingUser, SmallCell, DocumentRequest> {
 
-    public TimeToConsume(AbstractCachingPolicy cachingMethod) {
+    public TimeToConsume(AbstractCachingModel cachingMethod) {
         super(cachingMethod);
     }
 
@@ -21,18 +21,18 @@ public class TimeToConsume extends AbstractPerformanceStat<CachingUser, SmallCel
     public final double computeGain(CachingUser user, DocumentRequest r) throws StatisticException {
 
         int issuedAtSimTime = r.getIssuedAtSimTime();
-        int competionSimTime = r.getCompetionSimTime(getCachingPolicy());
+        int competionSimTime = r.getCompetionSimTime(getCachingModel());
 
         return competionSimTime - issuedAtSimTime;
     }
 
     @Override
     public String title() {
-        return "TTC" + "-" + getCachingPolicy().nickName();
+        return "TTC" + "-" + getCachingModel().nickName();
     }
     @Override
     public String title(String str) {
-        return "TTC"+ "_" + str + "_" + getCachingPolicy().nickName();
+        return "TTC"+ "_" + str + "_" + getCachingModel().nickName();
     }
 
 }

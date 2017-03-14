@@ -13,7 +13,7 @@ import static app.properties.valid.Values.MAX_CACHED_EPC_STD;
 import static app.properties.valid.Values.OUT_OF_RANGE;
 import static app.properties.valid.Values.RANDOM_IN_RANGE;
 import caching.CachingPoliciesFactory;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
 import exceptions.InvalidOrUnsupportedException;
@@ -864,8 +864,8 @@ public class Scenario implements Comparable<Scenario> {
         return conn2SCPolicy;
     }
 
-    public List<AbstractCachingPolicy> loadCachingPolicies() throws CriticalFailureException {
-        List<AbstractCachingPolicy> loaded = new ArrayList();
+    public List<AbstractCachingModel> loadCachingPolicies() throws CriticalFailureException {
+        List<AbstractCachingModel> loaded = new ArrayList();
 
         Collection<String> cachingPolicies = listOfStringsProperty(app.properties.Caching.CACHING__POLICIES, false
         );

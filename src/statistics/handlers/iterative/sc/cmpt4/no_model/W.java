@@ -1,4 +1,4 @@
-package statistics.handlers.iterative.sc.cmpt4.no_policy;
+package statistics.handlers.iterative.sc.cmpt4.no_model;
 
 import sim.space.cell.smallcell.SmallCell;
 import statistics.handlers.BaseHandler;

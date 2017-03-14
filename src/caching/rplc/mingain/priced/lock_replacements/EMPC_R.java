@@ -1,6 +1,5 @@
-package caching.rplc.mingain.time_restriction;
+package caching.rplc.mingain.priced.lock_replacements;
 
-import caching.base.AbstractCachingPolicy;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -13,23 +12,63 @@ import sim.space.users.mobile.MobileUser;
 import sim.space.util.DistanceComparator;
 
 /**
- * Must check functionality after severe changes in code
+ * @todo Must check functionality after severe changes in code
+ * @todo also consider if it should remain with congestion pricing. Perhaps
+ * simply changing the "extends" statement to another parent class could work.
  *
- * Same as EPCPop, only items do not get replaced when at least one of the
- * requesting mobiles gets close enough to the small cell.
+ * Items do not get replaced when at least one of the requesting mobiles gets
+ * close enough to the small cell.
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
 @Deprecated
-public class EMPC_LC_NoRplTime01 extends caching.rplc.mingain.priced.EMPC_R {
+public final class EMPC_R extends caching.rplc.mingain.priced.EMPC_R {
 
-    private static AbstractCachingPolicy singelton = new EMPC_LC_NoRplTime01();
+    public enum LockReplacements {
 
-    public static AbstractCachingPolicy instance() {
-        return singelton;
+        LOCK0_1(0.1),
+        LOCK0_5(0.5),
+        LOCK0_75(0.75),
+        LOCK01(1),
+        LOCK02(2),
+        LOCK03(3),
+        LOCK05(5),
+        LOCK07(7),
+        LOCK09(9),
+        LOCK11(11),
+        LOCK13(13),
+        LOCK15(15),
+        LOCK17(17),
+        LOCK19(19),
+        LOCK21(21);
+
+        private EMPC_R lock;
+
+        private LockReplacements(double timeLock) {
+            this.lock = new EMPC_R(timeLock);
+        }
+
     }
 
-    protected boolean checkAbortRplc(PCDemand.RegistrationInfo dmdRegInfo, 
+    /**
+     * The expected time distance threshold after which the mobile is considered
+     * to be close enough to the small cell in order to cancel any replacements
+     * for its cached content.
+     */
+    private final double timeThreshold;
+
+    /**
+     * The value for the expected time threshold. No replacements take place 
+     * below this threshold, as the requesting mobile(s) is (are) considered
+     * to be close enough to the small cell.
+     *
+     * @param _timeThrs
+     */
+    private EMPC_R(double _timeThrs) {
+        timeThreshold = _timeThrs;
+    }
+
+    protected boolean checkAbortRplc(PCDemand.RegistrationInfo dmdRegInfo,
             SmallCell sc, double minTimeRplcAllowed) {
 
         if (dmdRegInfo.cachingUsers().isEmpty()) {// redudant but easy to understand
@@ -59,9 +98,6 @@ public class EMPC_LC_NoRplTime01 extends caching.rplc.mingain.priced.EMPC_R {
     protected boolean checkAbortRplc(PCDemand.RegistrationInfo dmdRegInfo, SmallCell sc) {
         return checkAbortRplc(dmdRegInfo, sc, 1/* minimum time to handoff 
        that replacement is allowed*/);
-    }
-
-    EMPC_LC_NoRplTime01() {
     }
 
     /**

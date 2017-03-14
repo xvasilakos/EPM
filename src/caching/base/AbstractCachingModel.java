@@ -8,7 +8,7 @@ import sim.space.cell.smallcell.BufferBase;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public abstract class AbstractCachingPolicy {
+public abstract class AbstractCachingModel {
 
     
     
@@ -27,12 +27,12 @@ public abstract class AbstractCachingPolicy {
 
     /**
      *
-     * @param otherPolicy
+     * @param otherModel
      * @return
      */
     @Override
-    public boolean equals(Object otherPolicy) {
-        return toString().equals(otherPolicy.toString()) && otherPolicy instanceof AbstractCachingPolicy;
+    public boolean equals(Object otherModel) {
+        return toString().equals(otherModel.toString()) && otherModel instanceof AbstractCachingModel;
     }
 
     @Override

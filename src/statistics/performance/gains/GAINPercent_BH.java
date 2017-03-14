@@ -1,6 +1,6 @@
 package statistics.performance.gains;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.List;
 import sim.content.request.DocumentRequest;
 import sim.content.Chunk;
@@ -14,14 +14,14 @@ import statistics.handlers.AbstractPerformanceStat;
  */
 public class GAINPercent_BH extends AbstractPerformanceStat<CachingUser, SmallCell, DocumentRequest> {
 
-    public GAINPercent_BH(AbstractCachingPolicy cachingMethod) {
+    public GAINPercent_BH(AbstractCachingModel cachingMethod) {
         super(cachingMethod);
     }
 
     @Override
     public final double computeGain(CachingUser user, DocumentRequest r) throws StatisticException {
 
-        List<Chunk> consumedChunksFromBH = r.getChunksConsumedHistoryFromBH(getCachingPolicy());
+        List<Chunk> consumedChunksFromBH = r.getChunksConsumedHistoryFromBH(getCachingModel());
         double backhaul = r.gainOfTransferSCThroughBH() * consumedChunksFromBH.size();
 
         double ifAllFromMC = r.costOfTransferMC_BH() * r.referredContentDocument().chunks().size();
@@ -38,12 +38,12 @@ public class GAINPercent_BH extends AbstractPerformanceStat<CachingUser, SmallCe
 
     @Override
     public String title() {
-        return "%G_BH" + "-" + getCachingPolicy().nickName();
+        return "%G_BH" + "-" + getCachingModel().nickName();
     }
 
     @Override
     public String title(String str) {
-        return "%G_BH" + "_" + str + "_" + getCachingPolicy().nickName();
+        return "%G_BH" + "_" + str + "_" + getCachingModel().nickName();
     }
 
 }

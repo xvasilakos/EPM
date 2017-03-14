@@ -1,7 +1,7 @@
 package caching.rplc.mingain.priced;
 
 import caching.Utils;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.base.IEMPC;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
@@ -26,11 +26,11 @@ import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public class EMPC_R extends AbstractCachingPolicy implements IGainRplc, IEMPC {
+public class EMPC_R extends AbstractCachingModel implements IGainRplc, IEMPC {
 
-    private static final AbstractCachingPolicy singelton = new EMPC_R();
+    private static final AbstractCachingModel singelton = new EMPC_R();
 
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singelton;
     }
 
@@ -92,13 +92,8 @@ public class EMPC_R extends AbstractCachingPolicy implements IGainRplc, IEMPC {
 
             double cachePrice = targetSC.cachePrice4Rplc(this);
 
-//            yyyStat(sc, nxtItem, EPCPopFull.class);//yyy
-//            yyyStat(sc, nxtItem, EPCPopNoRplc_c1.class);//yyy
-//            yyyStat2(sc, nxtItem, EPCPopNoRplc_c1.class);//yyy
             if (assessment >= cachePrice) {
 
-//                yyyStat(sc, nxtItem, EPCPopNoRplc_c1.class);//yyy
-//                yyyStat(sc, nxtItem, EPCPopNoRplTime1000.class);//yyy
                 if (!Utils.isSpaceAvail(this, targetSC, nxtItem.sizeInBytes())) {
                     //<editor-fold defaultstate="collapsed" desc="if not available space, evict!">
                     /*

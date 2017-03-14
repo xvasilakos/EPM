@@ -1,6 +1,6 @@
 package sim.content.request;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.List;
 import java.util.Map;
 import sim.content.Chunk;
@@ -27,7 +27,7 @@ public interface IRequest {
      * @return
      */
     public List<Chunk> predictChunks2Request(
-            AbstractCachingPolicy policy, double handoverProb, boolean isSoft, double expectedHandoffDuration, double conf95HandoffDur, double expectedResidenceDuration, double conf95ResidenceDur, int mcRateSliceBytes, int bhRateSliceBytes, int scRateSliceBytes);
+            AbstractCachingModel policy, double handoverProb, boolean isSoft, double expectedHandoffDuration, double conf95HandoffDur, double expectedResidenceDuration, double conf95ResidenceDur, int mcRateSliceBytes, int bhRateSliceBytes, int scRateSliceBytes);
 
     /**
      * Consumes for each caching policy the remainder chunks.
@@ -37,37 +37,37 @@ public interface IRequest {
      * @param fillInWithDownloadedFromMC
      *
      */
-    void consumeChunksRemainderFromMC(AbstractCachingPolicy policy, double mcRateSlice,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromMC);
+    void consumeChunksRemainderFromMC(AbstractCachingModel policy, double mcRateSlice,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromMC);
 
     
      public void consumeTryAllAtOnceFromSC(
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithCacheHits,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromBH,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithMissedPerPolicy);
+            Map<AbstractCachingModel, List<Chunk>> fillInWithCacheHits,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromBH,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithMissedPerPolicy);
     
     
-    void consumeTry(double mcRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromMC,
-            double scRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithCacheHits,
-            double minSCorBHRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromBH,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithMissedPerPolicy);
+    void consumeTry(double mcRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromMC,
+            double scRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithCacheHits,
+            double minSCorBHRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromBH,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithMissedPerPolicy);
 
     @Override
     boolean equals(Object obj);
 
-    List<Chunk> getChunksCacheHitsHistory(AbstractCachingPolicy policy);
+    List<Chunk> getChunksCacheHitsHistory(AbstractCachingModel policy);
 
-    Map<AbstractCachingPolicy, List<Chunk>> getChunksConsumedHistoryFromBH();
+    Map<AbstractCachingModel, List<Chunk>> getChunksConsumedHistoryFromBH();
 
-    List<Chunk> getChunksConsumedHistoryFromBH(AbstractCachingPolicy policy);
+    List<Chunk> getChunksConsumedHistoryFromBH(AbstractCachingModel policy);
 
-    Map<AbstractCachingPolicy, List<Chunk>> getChunksConsumedHistoryFromMCWhileConnectedToSC();
+    Map<AbstractCachingModel, List<Chunk>> getChunksConsumedHistoryFromMCWhileConnectedToSC();
 
-    List<Chunk> getChunksConsumedHistoryFromMCwSCConn(AbstractCachingPolicy policy);
+    List<Chunk> getChunksConsumedHistoryFromMCwSCConn(AbstractCachingModel policy);
 
-    List<Chunk> getChunksConsumedHistoryFromMCBeforeEnteringSC(AbstractCachingPolicy policy);
+    List<Chunk> getChunksConsumedHistoryFromMCBeforeEnteringSC(AbstractCachingModel policy);
 
-    List<Chunk> getChunksConsumedHistoryFromMCAfterExitingSC(AbstractCachingPolicy policy);
+    List<Chunk> getChunksConsumedHistoryFromMCAfterExitingSC(AbstractCachingModel policy);
 
     int getIssuedAtSimTime();
 

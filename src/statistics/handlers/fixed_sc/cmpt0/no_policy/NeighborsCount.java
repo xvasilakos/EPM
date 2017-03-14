@@ -9,7 +9,7 @@ import statistics.handlers.ICompute0;
  *
  */
 public class NeighborsCount extends
-        statistics.handlers.iterative.sc.cmpt4.no_policy.NeighborsCount 
+        statistics.handlers.iterative.sc.cmpt4.no_model.NeighborsCount 
         implements ICompute0 {
 
     private final SmallCell _monitorSC;

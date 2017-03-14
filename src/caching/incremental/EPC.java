@@ -2,7 +2,7 @@ package caching.incremental;
 
 import caching.Utils;
 import caching.base.AbstractEPC;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.base.AbstractPricing;
 import caching.interfaces.incremental.IIncremental;
 import caching.interfaces.rplc.IGainNoRplc;
@@ -29,7 +29,7 @@ public class EPC extends AbstractEPC implements IIncremental, IGainNoRplc {
      * @return the singleton instance of this class according to its placement
      * in the hierarchy of AbstractMethod class descendants.
      */
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singleton;
     }
 
@@ -55,7 +55,7 @@ public class EPC extends AbstractEPC implements IIncremental, IGainNoRplc {
 ////                continue;
 ////            }
 //            if (targetSC.isCached(this, nxtChunk) || !Utils.isSpaceAvail(this, targetSC, nxtChunk.sizeInBytes())) {
-//                continue; //since no eviction policy supported
+//                continue; //since no eviction model supported
 //            }
 //
 //            if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
@@ -69,44 +69,44 @@ public class EPC extends AbstractEPC implements IIncremental, IGainNoRplc {
         return cacheDecision(this, sim, mu, requestChunks, hostSC, targetSC);
     }
 
-    static int cacheDecision(IGainNoRplc policy_, SimulationBaseRunner sim,
+    static int cacheDecision(IGainNoRplc _model, SimulationBaseRunner sim,
             CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell targetSC) throws Throwable {
 
-        AbstractPricing policy = (AbstractPricing) policy_;
+        AbstractPricing model = (AbstractPricing) _model;
 
         int totalSizeCached = 0;
         for (Chunk nxtChunk : requestChunks) {
 
-            double cachePrice = targetSC.cachePrice(policy);
+            double cachePrice = targetSC.cachePrice(model);
             double assessment = -1.0;
 
-            if (policy_ instanceof caching.incremental.EMC) {
-                assessment = ((caching.incremental.EMC) policy_).assess(cu, nxtChunk, hostSC);
+            if (_model instanceof caching.incremental.EMC) {
+                assessment = ((caching.incremental.EMC) _model).assess(cu, nxtChunk, hostSC);
             }
-            if (policy_ instanceof caching.incremental.EPC) {
-                assessment = ((caching.incremental.EPC) policy_).assess(cu, nxtChunk, hostSC);
+            if (_model instanceof caching.incremental.EPC) {
+                assessment = ((caching.incremental.EPC) _model).assess(cu, nxtChunk, hostSC);
             }
-            if (policy_ instanceof EPC_with_Pop) {
-                assessment = ((EPC_with_Pop) policy_).assess(cu, nxtChunk, hostSC);
+            if (_model instanceof EPCP) {
+                assessment = ((EPCP) _model).assess(cu, nxtChunk, hostSC);
             }
-            if (policy_ instanceof PopOnly) {
-                assessment = ((PopOnly) policy_).assess(nxtChunk, hostSC);
+            if (_model instanceof PopOnly) {
+                assessment = ((PopOnly) _model).assess(nxtChunk, hostSC);
             }
             if (assessment == -1.0) {
-                throw new UnsupportedOperationException("Not supported for: " + policy_.getClass().getCanonicalName());
+                throw new UnsupportedOperationException("Not supported for: " + _model.getClass().getCanonicalName());
             }
 
 //never do that:
-//            if (targetSC.isCached(policy, nxtChunk)) {
-//                targetSC.addCacher(cu, policy, nxtChunk);
+//            if (targetSC.isCached(model, nxtChunk)) {
+//                targetSC.addCacher(cu, model, nxtChunk);
 //                continue;
 //            }
 
             if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
-//                targetSC.cacheItem(cu, policy, nxtChunk);
-                if (targetSC.cacheItemAttempt(cu, policy, nxtChunk) == Success) {
+//                targetSC.cacheItem(cu, model, nxtChunk);
+                if (targetSC.cacheItemAttempt(cu, model, nxtChunk) == Success) {
                     totalSizeCached += nxtChunk.sizeInBytes();
-                    targetSC.cachePriceUpdt(policy);
+                    targetSC.cachePriceUpdt(model);
                 }
             } 
 //            else {

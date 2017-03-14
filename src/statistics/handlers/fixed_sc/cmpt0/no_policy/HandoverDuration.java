@@ -9,7 +9,7 @@ import statistics.handlers.ICompute0;
  *
  */
 public class HandoverDuration extends
-        statistics.handlers.iterative.sc.cmpt4.no_policy.HandoverDuration 
+        statistics.handlers.iterative.sc.cmpt4.no_model.HandoverDuration 
         implements ICompute0 {
 
     private final SmallCell _monitorSC;

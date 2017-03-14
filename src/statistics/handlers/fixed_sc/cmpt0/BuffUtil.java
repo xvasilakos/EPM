@@ -1,6 +1,6 @@
 package statistics.handlers.fixed_sc.cmpt0;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import sim.space.cell.smallcell.SmallCell;
 import statistics.StatisticException;
 import statistics.handlers.ICompute0;
@@ -12,7 +12,7 @@ public class BuffUtil extends statistics.handlers.iterative.sc.cmpt4.BuffUtil im
 
     private final SmallCell _monitorSC;
     
-    public BuffUtil(AbstractCachingPolicy cachingMethodUsed,  SmallCell monitorSC) {
+    public BuffUtil(AbstractCachingModel cachingMethodUsed,  SmallCell monitorSC) {
         super(cachingMethodUsed);
         _monitorSC = monitorSC;
     }

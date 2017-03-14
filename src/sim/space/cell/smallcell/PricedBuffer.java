@@ -2,7 +2,7 @@ package sim.space.cell.smallcell;
 
 import app.properties.Cost;
 import app.properties.valid.Values;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.InconsistencyException;
 import java.util.NoSuchElementException;
@@ -15,9 +15,13 @@ import sim.space.users.mobile.MobileUser;
 import utils.CommonFunctions;
 
 /**
- * Type of buffer _used for caching decisions using prices.
+ * Buffer type that applies a cache congestion pricing scheme.
  *
- * @author Xenofon Vasilakos xvas@aueb.gr
+ 
+ * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>,
+ * Mobile Multimedia Laboratory <mm.aueb.gr>,
+ * Dept. of Informatics, School of Information Sciences & Technology,
+ * Athens University of Economics and Business, Greece
  */
 public class PricedBuffer extends BufferBase {
 
@@ -68,7 +72,7 @@ public class PricedBuffer extends BufferBase {
      */
     @Override
     public Set<CachingUser> deallocateTry(Chunk chnk, MobileUser mu,
-            AbstractCachingPolicy policy, SmallCell sc)
+            AbstractCachingModel policy, SmallCell sc)
             throws NoSuchElementException {
 
         double pricePolled = PricedBuffer.this.priceDeallocatePoll(chnk);
@@ -83,7 +87,7 @@ public class PricedBuffer extends BufferBase {
 
     public Set<CachingUser> deallocate(Chunk theChnk, MobileUser mu,
             IGainRplc policy, SmallCell sc) throws NoSuchElementException, Throwable {
-        Set<CachingUser> result = super.deallocateTry(theChnk, mu, (AbstractCachingPolicy) policy, sc);
+        Set<CachingUser> result = super.deallocateTry(theChnk, mu, (AbstractCachingModel) policy, sc);
         //CAUTION, must reduce _used before re-assessing price
         priceUpdt4Rplc(policy);
         return result;
@@ -93,7 +97,7 @@ public class PricedBuffer extends BufferBase {
      * Computes price by considering buffer utilization computed only over the
      * cached items for which the expected (assessed) gain is lower than the
      * current price. This method of price computation is suitable for cache
-     * replacement decisions based on gain, which are used for AbstractEPCPop
+     * replacement decisions based on gain, which are used for #AbstractEPCP
      * descendants which use popularity and summary of transition probabilities
      * for all requestors .
      *
@@ -101,8 +105,8 @@ public class PricedBuffer extends BufferBase {
      * @throws Throwable
      */
     public double priceUpdt4Rplc(IGainRplc policy) throws Throwable {
-//        appendLog("Updating price.. ", _cell, (AbstractCachingPolicy) mthd);
-//        appendLog("Price before update= " + getPrice4Rplc(), _cell, (AbstractCachingPolicy) mthd);
+//        appendLog("Updating price.. ", _cell, (AbstractCachingModel) mthd);
+//        appendLog("Price before update= " + getPrice4Rplc(), _cell, (AbstractCachingModel) mthd);
 
         double consideredUtil = utilization4Rplc(policy);
 
@@ -113,7 +117,7 @@ public class PricedBuffer extends BufferBase {
             setPrice4Rplc(0);
         }
 
-//        appendLog("Price after update= " + getPrice4Rplc(), _cell, (AbstractCachingPolicy) mthd);
+//        appendLog("Price after update= " + getPrice4Rplc(), _cell, (AbstractCachingModel) mthd);
         return getPrice4Rplc();
     }
 

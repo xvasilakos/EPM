@@ -1,6 +1,6 @@
 package caching;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.base.AbstractPop;
 import caching.base.IEMC;
 import caching.base.IEMPC;
@@ -37,19 +37,19 @@ public abstract class Utils {
      * also cached on behalf of other mobiles.
      *
      * @param cu
-     * @param policy
+     * @param model
      * @param targetSC
      * @param nxtRequest
      * @return the canceled requests
      */
     public static Set<Chunk> cancelCachingOrders(MobileUser cu,
-            AbstractCachingPolicy policy, SmallCell targetSC, DocumentRequest nxtRequest) {
+            AbstractCachingModel model, SmallCell targetSC, DocumentRequest nxtRequest) {
 
         Set<Chunk> itemsTotallyRmvd = new HashSet<>();
 
         for (Chunk nxtReqChunk : nxtRequest.referredContentDocument().chunks()) {
-            if (targetSC.bufferContains(policy, cu, nxtReqChunk)) {
-                Set<CachingUser> stillRequesting = targetSC.bufferTryEvict(cu, policy, nxtReqChunk);
+            if (targetSC.bufferContains(model, cu, nxtReqChunk)) {
+                Set<CachingUser> stillRequesting = targetSC.bufferTryEvict(cu, model, nxtReqChunk);
                 /**
                  * There may be still requesting mus, but they may be requesting
                  * with zero probability, because the item was previously
@@ -102,28 +102,28 @@ public abstract class Utils {
     }
 
    
-    public static final boolean isSpaceAvail(AbstractCachingPolicy cachePolicy, SmallCell sc, long size) {
-        return sc.buffAvailable(cachePolicy) >= size;
+    public static final boolean isSpaceAvail(AbstractCachingModel cacheModel, SmallCell sc, long size) {
+        return sc.buffAvailable(cacheModel) >= size;
     }
 
-//    public static double assessAvgEMPC(Chunk item, SmallCell sc, AbstractPop cachePolicy) throws Throwable {
+//    public static double assessAvgEMPC(Chunk item, SmallCell sc, AbstractPop cacheModel) throws Throwable {
 //        PCDemand.RegistrationInfo nfo = sc.dmdRegInfoPC(item);
 //        double avgProb = nfo != null ? nfo.sumTransProbs() / nfo.cachingUsers().size() : 0.0;
 //
 //        double q = avgProb;
-//        double f = sc.dmdPopularity(item.referredContentDocument(), cachePolicy);
+//        double f = sc.dmdPopularity(item.referredContentDocument(), cacheModel);
 //        double w = Utils.computeAvgW(sc);
 //        //<editor-fold defaultstate="collapsed" desc="tmp commented">
 ////      sc.getSim().getStatsHandle().updtSCCmpt5(
 ////            f,
 ////            new UnonymousCompute5(
-////                  cachePolicy, UnonymousCompute5.WellKnownTitle.F_POP
+////                  cacheModel, UnonymousCompute5.WellKnownTitle.F_POP
 ////            )
 ////      );
 ////      sc.getSim().getStatsHandle().updtSCCmpt5(
 ////            q,
 ////            new UnonymousCompute5(
-////                  cachePolicy, UnonymousCompute5.WellKnownTitle.Q_POP
+////                  cacheModel, UnonymousCompute5.WellKnownTitle.Q_POP
 ////            )
 ////      );
 ////</editor-fold>
@@ -131,13 +131,13 @@ public abstract class Utils {
 //    }
 //
 //   
-//    public static double assessAvgEMC(Chunk item, SmallCell sc, AbstractEPC cachePolicy) throws Throwable {
+//    public static double assessAvgEMC(Chunk item, SmallCell sc, AbstractEPC cacheModel) throws Throwable {
 //        PCDemand.RegistrationInfo nfo = sc.getDmdPC().getRegisteredInfo(item);
 //        double prob = nfo != null ? nfo.sumTransProbs() / nfo.cachingUsers().size() : 0;
 //        return prob * gainOfTransferSC(item, sc);
 //    }
     public static double assessEMC(Chunk theChunk, SmallCell sc, IEMC emc) {
-        PCDemand.RegistrationInfo nfo = sc.dmdRegInfoPC(theChunk, (AbstractCachingPolicy) emc);
+        PCDemand.RegistrationInfo nfo = sc.dmdRegInfoPC(theChunk, (AbstractCachingModel) emc);
         double Q = nfo != null ? nfo.sumTransProbs() : 0.0;
 
         double assessment = Q * theChunk.gainOfTransferSCCacheHit();
@@ -146,7 +146,7 @@ public abstract class Utils {
 
     public static double assessEMPC(Chunk theChunk, SmallCell sc, IEMPC iemc) {
 
-        PCDemand.RegistrationInfo nfo = sc.dmdRegInfoPC(theChunk, (AbstractCachingPolicy) iemc);
+        PCDemand.RegistrationInfo nfo = sc.dmdRegInfoPC(theChunk, (AbstractCachingModel) iemc);
         double Q = nfo != null ? nfo.sumTransProbs() : 0.0;
         double f = sc.dmdPopularity(theChunk.referredContentDocument(), iemc);
         double w = sc.getDmdLclForW().computeAvgW();
@@ -174,8 +174,8 @@ public abstract class Utils {
         return assessment;
     }
 
-    public static double assessEPC_with_Pop(CachingUser cu, Chunk item, SmallCell sc,
-            IPop cachePolicy) {
+    public static double assessEPCWithPop(CachingUser cu, Chunk item, SmallCell sc,
+            IPop cacheModel) {
 
         double q = 0.0;
         if (cu == null) {
@@ -193,15 +193,15 @@ public abstract class Utils {
 
         }
 
-        double f = sc.dmdPopularity(item.referredContentDocument(), cachePolicy);
+        double f = sc.dmdPopularity(item.referredContentDocument(), cacheModel);
         double w = sc.getDmdLclForW().computeAvgW();
 
         return (q + w * f) * item.gainOfTransferSCCacheHit();
     }
 
-    public static double assessOnlyPop(AbstractPop cachePolicy, Chunk item,
+    public static double assessOnlyPop(AbstractPop cacheModel, Chunk item,
             SmallCell sc) {
-        double f = sc.dmdPopularity(item.referredContentDocument(), cachePolicy);
+        double f = sc.dmdPopularity(item.referredContentDocument(), cacheModel);
         return f * item.gainOfTransferSCCacheHit();
     }
 

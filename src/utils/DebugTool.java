@@ -2,7 +2,7 @@ package utils;
 
 import app.SimulatorApp;
 import app.arguments.MainArguments;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.incremental.EMC;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,7 +43,7 @@ public class DebugTool {
 
     private static final int monitorCellID = -1;//  21;
     private static final int monitorUID = -1;//  21;
-    private static final AbstractCachingPolicy _policy = EMC.instance();//EPCPopNoRplc_c1.instance();
+    private static final AbstractCachingModel MODEL = EMC.instance();
 
     public static void init() {
         try {
@@ -74,8 +74,8 @@ public class DebugTool {
         }
     }
 
-    public static void appendLogNewRecord(String txt, SmallCell sc, caching.base.AbstractCachingPolicy policy) {
-        if ((sc.getID() == monitorCellID) && policy.getClass() == _policy.getClass()) {
+    public static void appendLogNewRecord(String txt, SmallCell sc, caching.base.AbstractCachingModel model) {
+        if ((sc.getID() == monitorCellID) && model.getClass() == MODEL.getClass()) {
             printer.append("\n\n");
             printer.append("{simID=");
             printer.append("" + sc.getSimulation().getID());

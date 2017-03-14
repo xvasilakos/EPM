@@ -21,7 +21,7 @@ import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
  *
  * @author xvas
  */
-public abstract class AbstractGainRplc extends AbstractCachingPolicy implements IGainRplc, IPop {
+public abstract class AbstractGainRplc extends AbstractCachingModel implements IGainRplc, IPop {
 
     protected double assessDiff(Chunk a, Chunk b, SmallCell sc) throws Throwable {
         return assess(a, sc) / a.sizeInMBs() - assess(b, sc) / b.sizeInMBs();

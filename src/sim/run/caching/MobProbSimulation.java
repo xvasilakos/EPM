@@ -4,7 +4,7 @@ import sim.run.SimulationBaseRunner;
 import sim.Scenario;
 import app.properties.Space;
 import app.properties.valid.Values;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
 import java.util.Collection;
@@ -56,7 +56,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
     protected Map<Integer, MobileUser> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
-            Collection<AbstractCachingPolicy> cachingPolicies) {
+            Collection<AbstractCachingModel> cachingPolicies) {
 
         Map<Integer, MobileUser> musLst = new HashMap<>();
 
@@ -174,7 +174,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                 getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-                for (AbstractCachingPolicy nxtPolicy : cachingStrategies) {/*
+                for (AbstractCachingModel nxtPolicy : cachingStrategies) {/*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */
@@ -225,7 +225,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                     getStatsHandle().appendTransient(false);
                     getStatsHandle().checkFlushTransient(false);
                 }
-            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues
+            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
             LOG.log(

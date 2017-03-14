@@ -1,7 +1,7 @@
 package caching.incremental;
 
 import caching.Utils;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.base.IEMC;
 import exceptions.CriticalFailureException;
 import java.util.Collection;
@@ -31,7 +31,7 @@ public class EMC extends caching.incremental.EPC implements IEMC {
      * @return the singleton instance of this class according to its placement
      * in the hierarchy of AbstractMethod class descendants.
      */
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singleton;
     }
 
@@ -65,22 +65,12 @@ public class EMC extends caching.incremental.EPC implements IEMC {
             double assessment = assess(cu, nxtChunk, hostSC);
 
             if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
-//                targetSC.cacheItem(cu, policy, nxtChunk);
+//                targetSC.cacheItem(cu, model, nxtChunk);
                 if (targetSC.cacheItemAttempt(cu, this, nxtChunk) == Success) {
                     totalSizeCached += nxtChunk.sizeInBytes();
                     targetSC.cachePriceUpdt(this);
                 }
             } 
-//            else {
-//                throw new RuntimeException(
-//                        "policy_ instanceof caching.incremental.EMC" + (policy_ instanceof caching.incremental.EMC) + "\n"
-//                        + "policy_ " + (policy_.getClass().getCanonicalName()) + "\n"
-//                        + "assessment=" + assessment + "\n"
-//                        + "nxtChunk.sizeInMBs()=" + nxtChunk.sizeInMBs() + "\n"
-//                        + "assessment / nxtChunk.sizeInMBs()=" + (assessment / nxtChunk.sizeInMBs()) + "\n"
-//                        + "cachePrice=" + cachePrice + "\n"
-//                );
-//            }
 
         }
         return totalSizeCached;

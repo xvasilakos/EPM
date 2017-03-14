@@ -5,7 +5,7 @@
  */
 package sim.space.cell.smallcell;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.Set;
 import java.util.SortedMap;
 import sim.content.Chunk;
@@ -37,7 +37,7 @@ public interface ITimeBuffer {
 
     public int cachedTime(Chunk request);
 
-    public Set<CachingUser> deallocate(Chunk request, CachingUser mu, AbstractCachingPolicy cachingMthd, SmallCell sc) throws UnsupportedOperationException, Throwable;
+    public Set<CachingUser> deallocate(Chunk request, CachingUser mu, AbstractCachingModel cachingMthd, SmallCell sc) throws UnsupportedOperationException, Throwable;
 
     /**
      * @return the time coupled with the requests that were least recently

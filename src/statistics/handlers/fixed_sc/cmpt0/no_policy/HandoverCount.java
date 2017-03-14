@@ -9,7 +9,7 @@ import statistics.handlers.ICompute0;
  *
  */
 public class HandoverCount extends
-        statistics.handlers.iterative.sc.cmpt4.no_policy.HandoverCount 
+        statistics.handlers.iterative.sc.cmpt4.no_model.HandoverCount 
         implements ICompute0 {
 
     private final SmallCell _monitorSC;

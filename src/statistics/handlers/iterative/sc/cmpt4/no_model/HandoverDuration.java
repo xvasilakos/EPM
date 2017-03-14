@@ -1,4 +1,4 @@
-package statistics.handlers.iterative.sc.cmpt4.no_policy;
+package statistics.handlers.iterative.sc.cmpt4.no_model;
 
 import sim.space.cell.smallcell.SmallCell;
 import statistics.handlers.BaseHandler;
@@ -7,7 +7,7 @@ import statistics.handlers.ICompute4;
 /**
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public class HandoverCount extends BaseHandler implements ICompute4<SmallCell> {
+public class HandoverDuration extends BaseHandler implements ICompute4<SmallCell> {
 
 
     /**
@@ -16,12 +16,12 @@ public class HandoverCount extends BaseHandler implements ICompute4<SmallCell> {
      */
     @Override
     public final double compute4(SmallCell cell) {
-        double count = cell.getSmoothedHandoversCount();
-        return count;
+        double avgHandoverTime = cell.getSmoothedHandoverDuration();
+        return avgHandoverTime;
     }
 
     @Override
     public String title() {
-        return "#Handovers[Smoothed]/SC";
+        return "SmotthedDurHandover/SC";
     }
 }

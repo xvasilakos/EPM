@@ -1,6 +1,6 @@
 package sim.content.request;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,10 +22,10 @@ public class StreamingRequest extends DocumentRequest {
 
     @Override
     public void consumeTry(
-            double mcRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromMC,
-            double scRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithCacheHits,
-            double minSCorBHRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromBH,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithMissedPerPolicy) {
+            double mcRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromMC,
+            double scRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithCacheHits,
+            double minSCorBHRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromBH,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithMissedPerPolicy) {
 
         long chunkSizeInBytes = getSimulation().chunkSizeInBytes();
 
@@ -35,11 +35,11 @@ public class StreamingRequest extends DocumentRequest {
 
         if (!userConnected) {
             maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel policy : getSimulation().getCachingStrategies()) {
                 mergeToFirstMap(fillInWithDownloadedFromMC, super.consumeFromMCwSCDiscon(policy, maxBudget));
             }
         } else {// in this case, downloads from all reasources, with this *priority*: 
-            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel policy : getSimulation().getCachingStrategies()) {
 // CAUTION! do not change  the priority of the following invokations!    
 
                 if (policy != caching.incremental.Oracle.instance()) {
@@ -49,7 +49,7 @@ public class StreamingRequest extends DocumentRequest {
                     
 // First, consumeTry from the cache
                     maxBudget = Math.round(scRateSlice / chunkSizeInBytes);
-                    Map<AbstractCachingPolicy, List<Chunk>> hitsInCachePerPolicy
+                    Map<AbstractCachingModel, List<Chunk>> hitsInCachePerPolicy
                             = tryStreamingFromCachePerPolicy(policy, maxBudget);
                     mergeToFirstMap(fillInWithCacheHits, hitsInCachePerPolicy);
 
@@ -80,10 +80,10 @@ public class StreamingRequest extends DocumentRequest {
      * missed. These chunks must be considered for download by the BH or the MC
      * @return the consumed chunks from the cache
      */
-    private Map<AbstractCachingPolicy, List<Chunk>> tryStreamingFromCachePerPolicy(
-            AbstractCachingPolicy policy,
+    private Map<AbstractCachingModel, List<Chunk>> tryStreamingFromCachePerPolicy(
+            AbstractCachingModel policy,
             long maxBudget) {
-        Map<AbstractCachingPolicy, List<Chunk>> currentHitsInCachePerPolicy = new HashMap<>(5);
+        Map<AbstractCachingModel, List<Chunk>> currentHitsInCachePerPolicy = new HashMap<>(5);
 
         List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
         if (unconsumed.isEmpty()) {
@@ -129,12 +129,12 @@ public class StreamingRequest extends DocumentRequest {
         return currentHitsInCachePerPolicy;
     }
 
-    private Map<AbstractCachingPolicy, List<Chunk>> streamCacheMissedFromBH(
-            AbstractCachingPolicy policy,
-            long maxbudget, Map<AbstractCachingPolicy, List<Chunk>> cacheHitsPerPolicy
+    private Map<AbstractCachingModel, List<Chunk>> streamCacheMissedFromBH(
+            AbstractCachingModel policy,
+            long maxbudget, Map<AbstractCachingModel, List<Chunk>> cacheHitsPerPolicy
     ) {
 
-        Map<AbstractCachingPolicy, List<Chunk>> bhCurrentConsumptionPerPolicy = new HashMap<>(5);
+        Map<AbstractCachingModel, List<Chunk>> bhCurrentConsumptionPerPolicy = new HashMap<>(5);
 
         List<Chunk> bhCurrentConsumption;
         bhCurrentConsumptionPerPolicy.put(policy, bhCurrentConsumption = new ArrayList<>());

@@ -4,7 +4,7 @@ import app.properties.Space;
 import app.properties.valid.Values;
 import caching.MaxPop;
 import caching.Utils;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.incremental.Oracle;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
@@ -361,7 +361,7 @@ public class MobileUser extends CachingUser {
 
     public final void cancelAndDeregisterPCOrders(SmallCell sc) {
         for (DocumentRequest nxtRequest : getRequests()) {
-            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel policy : getSimulation().getCachingStrategies()) {
                 if (policy instanceof MaxPop) {
                     // cached object stay permanently in cache.
                     continue;
@@ -1151,7 +1151,7 @@ public class MobileUser extends CachingUser {
 
 ///////////////////////select chunks and 
 ///////////////////////update popularity info for requests
-        for (AbstractCachingPolicy policy : getCachingPolicies()) {
+        for (AbstractCachingModel policy : getCachingPolicies()) {
             if (policy instanceof MaxPop
                     || policy instanceof Oracle) {
                 // cached object stay permanently in cache.

@@ -4,7 +4,7 @@
  */
 package sim.space.cell.smallcell;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IRplcBase;
 import exceptions.InconsistencyException;
 import java.lang.invoke.WrongMethodTypeException;
@@ -125,7 +125,7 @@ public class BufferBase {
      * @throws InconsistencyException
      */
     public Set<CachingUser> deallocateTry(
-            Chunk theChunk, MobileUser cu, AbstractCachingPolicy policy, SmallCell sc
+            Chunk theChunk, MobileUser cu, AbstractCachingModel policy, SmallCell sc
     ) throws NoSuchElementException, InconsistencyException {
 
         if (cu == null) {

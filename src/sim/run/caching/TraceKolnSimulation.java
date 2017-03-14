@@ -3,7 +3,7 @@ package sim.run.caching;
 import sim.run.SimulationBaseRunner;
 import sim.Scenario;
 import app.properties.Space;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
@@ -246,7 +246,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     protected Map<Integer, TraceMU> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
-            Collection<AbstractCachingPolicy> cachingPolicies
+            Collection<AbstractCachingModel> cachingPolicies
     ) {
 
         /*
@@ -417,7 +417,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-                for (AbstractCachingPolicy nxtPolicy : cachingStrategies) {/*
+                for (AbstractCachingModel nxtPolicy : cachingStrategies) {/*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */
@@ -471,7 +471,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                     getStatsHandle().appendTransient(false);
                     getStatsHandle().checkFlushTransient(false);
                 }
-            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
+            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
             LOG.log(Level.INFO, "Simulation {0} ended: {1}",

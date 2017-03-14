@@ -1,6 +1,6 @@
 package statistics.performance.other;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.List;
 import sim.content.request.DocumentRequest;
 import sim.content.Chunk;
@@ -16,13 +16,13 @@ import statistics.handlers.AbstractPerformanceStat;
  */
 public class MCNumAfterDiconnFromSC extends AbstractPerformanceStat<CachingUser, SmallCell, DocumentRequest> {
 
-    public MCNumAfterDiconnFromSC(AbstractCachingPolicy cachingMethod) {
+    public MCNumAfterDiconnFromSC(AbstractCachingModel cachingMethod) {
         super(cachingMethod);
     }
 
     @Override
     public final double computeGain(CachingUser user, DocumentRequest r) throws StatisticException {
-        List<Chunk> consumedChunksFromMCWhenDisconnected = r.getChunksConsumedHistoryFromMCAfterExitingSC(getCachingPolicy());
+        List<Chunk> consumedChunksFromMCWhenDisconnected = r.getChunksConsumedHistoryFromMCAfterExitingSC(getCachingModel());
         return consumedChunksFromMCWhenDisconnected.size();
     }
 }

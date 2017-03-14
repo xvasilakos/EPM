@@ -1,7 +1,7 @@
 package sim.content.request;
 
 import app.properties.Space;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.incremental.Oracle;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +21,11 @@ import sim.space.users.StationaryUser;
 import traces.dmdtrace.TraceWorkloadRecord;
 
 /**
- * @author xvas
+ * 
+ * @author Xenofon Vasilakos - xvas@aueb.gr, mm.aueb.gr/~xvas,
+ * Mobile Multimedia Laboratory <mm.aueb.gr>,
+ * Dept. of Informatics, School of Information Sciences & Technology,
+ * Athens University of Economics and Business, Greece
  */
 public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisString, IRequest {
 
@@ -32,13 +36,13 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
     protected final int _issuedAtSimTime; // either a stationary small cell user or a mobile user
     protected int _uncompletedPolicies;
     protected final CachingUser _requesterUser; // either a stationary small cell user or a mobile user
-    protected final Map<AbstractCachingPolicy, List<Chunk>> _unconsumedChunksInSequence;
-    protected final Map<AbstractCachingPolicy, Integer> _completitionTimes;
-    protected final Map<AbstractCachingPolicy, List<Chunk>> _chunksConsumedHistoryFromMCWhileConnectedToSC;
-    private final Map<AbstractCachingPolicy, List<Chunk>> _consumedHistoryFromMCwSCDiscon;
-    private final Map<AbstractCachingPolicy, List<Chunk>> _chunksConsumedHistoryFromMCAfterExitingSC;
-    protected final Map<AbstractCachingPolicy, List<Chunk>> _chunksConsumedHistoryFromBH;
-    protected final Map<AbstractCachingPolicy, List<Chunk>> _chunksHitsHistoryFromSC;
+    protected final Map<AbstractCachingModel, List<Chunk>> _unconsumedChunksInSequence;
+    protected final Map<AbstractCachingModel, Integer> _completitionTimes;
+    protected final Map<AbstractCachingModel, List<Chunk>> _chunksConsumedHistoryFromMCWhileConnectedToSC;
+    private final Map<AbstractCachingModel, List<Chunk>> _consumedHistoryFromMCwSCDiscon;
+    private final Map<AbstractCachingModel, List<Chunk>> _chunksConsumedHistoryFromMCAfterExitingSC;
+    protected final Map<AbstractCachingModel, List<Chunk>> _chunksConsumedHistoryFromBH;
+    protected final Map<AbstractCachingModel, List<Chunk>> _chunksHitsHistoryFromSC;
 
     private boolean _consumeReady;
 
@@ -63,14 +67,14 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         Collection<Chunk> chunksInSequence = referredContentDocument().getChunksInSequence().values();
 
         _uncompletedPolicies = getSimulation().getCachingStrategies().size();
-        for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
-            _unconsumedChunksInSequence.put(policy, new ArrayList<>(chunksInSequence));
-            _completitionTimes.put(policy, -1);
-            _chunksConsumedHistoryFromMCWhileConnectedToSC.put(policy, new ArrayList<Chunk>());
-            _consumedHistoryFromMCwSCDiscon.put(policy, new ArrayList<Chunk>());
-            _chunksConsumedHistoryFromMCAfterExitingSC.put(policy, new ArrayList<Chunk>());
-            _chunksHitsHistoryFromSC.put(policy, new ArrayList<Chunk>());
-            _chunksConsumedHistoryFromBH.put(policy, new ArrayList<Chunk>());
+        for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
+            _unconsumedChunksInSequence.put(model, new ArrayList<>(chunksInSequence));
+            _completitionTimes.put(model, -1);
+            _chunksConsumedHistoryFromMCWhileConnectedToSC.put(model, new ArrayList<Chunk>());
+            _consumedHistoryFromMCwSCDiscon.put(model, new ArrayList<Chunk>());
+            _chunksConsumedHistoryFromMCAfterExitingSC.put(model, new ArrayList<Chunk>());
+            _chunksHitsHistoryFromSC.put(model, new ArrayList<Chunk>());
+            _chunksConsumedHistoryFromBH.put(model, new ArrayList<Chunk>());
         }
     }
 
@@ -151,7 +155,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 
     @Override
     public List<Chunk> predictChunks2Request(
-            AbstractCachingPolicy policy, double handoverProb,
+            AbstractCachingModel model, double handoverProb,
             boolean isSoftMU, double expectedHandoffDuration,
             double conf95HandoffDur, double expectedResidenceDuration,
             double conf95ResidenceDur, int mcRateSliceBytes,
@@ -168,7 +172,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 //            return chunks;//skip fast
 //        }
 //////////////////////   
-        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
+        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(model);
 
         if (unconsumed.isEmpty()) {//early skip if possible
             return new ArrayList<>();//return empty in this case
@@ -259,7 +263,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
     }
 
     public List<Chunk> predictChunks2Request(boolean deb,
-            AbstractCachingPolicy policy, double handoverProb,
+            AbstractCachingModel model, double handoverProb,
             double expectedHandoffDuration,
             double conf95HandoffDur, double expectedResidenceDuration,
             double conf95ResidenceDur, int mcRateSliceBytes,
@@ -273,7 +277,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 //            return chunks;//skip fast
 //        }
 //////////////////////   
-        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
+        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(model);
 
         if (unconsumed.isEmpty()) {//early skip if possible
             return new ArrayList<>();//return empty in this case
@@ -418,17 +422,17 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
     }
 
     @Override
-    public void consumeChunksRemainderFromMC(AbstractCachingPolicy policy, double mcRateSlice,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromMC) {
-        Map<AbstractCachingPolicy, List<Chunk>> consumeRemainderFromMC = consumeRemainderFromMC(policy);
+    public void consumeChunksRemainderFromMC(AbstractCachingModel model, double mcRateSlice,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromMC) {
+        Map<AbstractCachingModel, List<Chunk>> consumeRemainderFromMC = consumeRemainderFromMC(model);
         mergeAndSeparatePerpolicy(fillInWithDownloadedFromMC, consumeRemainderFromMC);
     }
 
     @Override
     public void consumeTryAllAtOnceFromSC(
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithCacheHits,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromBH,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithMissedPerPolicy) {
+            Map<AbstractCachingModel, List<Chunk>> fillInWithCacheHits,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromBH,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithMissedPerModel) {
 
         if (!_consumeReady) {
             return;
@@ -439,18 +443,18 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         if (!userConnected) {
             return;
 //                maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-//                for (AbstractCachingPolicy policy : getSim().getCachingPolicies()) {
-//                    Map<AbstractCachingPolicy, List<Chunk>> consumedMCwSCDiscon
-//                            = consumeFromMCwSCDiscon(policy, maxBudget);
+//                for (AbstractCachingModel model : getSim().getCachingPolicies()) {
+//                    Map<AbstractCachingModel, List<Chunk>> consumedMCwSCDiscon
+//                            = consumeFromMCwSCDiscon(model, maxBudget);
 //                    mergeToFirstMap(fillInWithDownloadedFromMC, consumedMCwSCDiscon);
 //                }
 
         } else {// in this case, downloads from all reasources, with this *priority*: 
 
-            Map<AbstractCachingPolicy, Set<Chunk>> hitsNowInCachePerPolicy
+            Map<AbstractCachingModel, Set<Chunk>> hitsNowInCachePerModel
                     = new HashMap<>(5);
 
-            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
 
                 long maxBudget = (long) Math.ceil(sizeInChunks());
 
@@ -459,18 +463,18 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                  * First, consumeTry from the cache
                  *
                  */
-                Map<AbstractCachingPolicy, Set<Chunk>> hits
-                        = tryHitsFromCachePerPolicy(policy, maxBudget);
-                hitsNowInCachePerPolicy.putAll(hits);
-                merge2(fillInWithCacheHits, hitsNowInCachePerPolicy);
+                Map<AbstractCachingModel, Set<Chunk>> hits
+                        = tryHitsFromCachePerModel(model, maxBudget);
+                hitsNowInCachePerModel.putAll(hits);
+                merge2(fillInWithCacheHits, hitsNowInCachePerModel);
 
                 /**
                  * ***************************
                  * Second, from backhaul whatever not hit
                  *
                  */
-                Map<AbstractCachingPolicy, Set<Chunk>> consumedNowFromBH
-                        = consumeCacheMissedFromBH(policy, maxBudget, hitsNowInCachePerPolicy);
+                Map<AbstractCachingModel, Set<Chunk>> consumedNowFromBH
+                        = consumeCacheMissedFromBH(model, maxBudget, hitsNowInCachePerModel);
                 merge2(fillInWithDownloadedFromBH, consumedNowFromBH);
 
             }
@@ -496,10 +500,10 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
      */
     @Override
     public void consumeTry(
-            double mcRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromMC,
-            double scRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithCacheHits,
-            double minSCorBHRateSlice, Map<AbstractCachingPolicy, List<Chunk>> fillInWithDownloadedFromBH,
-            Map<AbstractCachingPolicy, List<Chunk>> fillInWithMissedPerPolicy) {
+            double mcRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromMC,
+            double scRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithCacheHits,
+            double minSCorBHRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromBH,
+            Map<AbstractCachingModel, List<Chunk>> fillInWithMissedPerPolicy) {
 
         Boolean isSoft = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT, false));
         // if soft, then the macro IS never used
@@ -517,19 +521,19 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         if (!userConnected) {
             if (!isSoft) {
                 maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-                for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
-                    Map<AbstractCachingPolicy, List<Chunk>> consumedMCwSCDiscon
-                            = consumeFromMCwSCDiscon(policy, maxBudget);
+                for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
+                    Map<AbstractCachingModel, List<Chunk>> consumedMCwSCDiscon
+                            = consumeFromMCwSCDiscon(model, maxBudget);
                     mergeToFirstMap(fillInWithDownloadedFromMC, consumedMCwSCDiscon);
                 }
             }
         } else {// in this case, downloads from all reasources, with this *priority*: 
 
-            Map<AbstractCachingPolicy, Set<Chunk>> hitsNowInCachePerPolicy
+            Map<AbstractCachingModel, Set<Chunk>> hitsNowInCachePerPolicy
                     = new HashMap<>(5);
 
             maxBudget = Math.round(scRateSlice / chunkSizeInBytes);
-            for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
 
 //
 //
@@ -541,8 +545,8 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                  * First, consumeTry from the cache
                  *
                  */
-                Map<AbstractCachingPolicy, Set<Chunk>> hits
-                        = tryHitsFromCachePerPolicy(policy, maxBudget);
+                Map<AbstractCachingModel, Set<Chunk>> hits
+                        = tryHitsFromCachePerModel(model, maxBudget);
                 hitsNowInCachePerPolicy.putAll(hits);
                 merge2(fillInWithCacheHits, hitsNowInCachePerPolicy);
 
@@ -552,8 +556,8 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                  *
                  */
                 maxBudget = Math.round(minSCorBHRateSlice / chunkSizeInBytes);
-                Map<AbstractCachingPolicy, Set<Chunk>> consumedNowFromBH
-                        = consumeCacheMissedFromBH(policy, maxBudget, hitsNowInCachePerPolicy);
+                Map<AbstractCachingModel, Set<Chunk>> consumedNowFromBH
+                        = consumeCacheMissedFromBH(model, maxBudget, hitsNowInCachePerPolicy);
                 merge2(fillInWithDownloadedFromBH, consumedNowFromBH);
 
                 /**
@@ -564,7 +568,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                 if (!(_requesterUser instanceof StationaryUser) && !isSoft) {
                     // stationaries do not consume from the macrocell
                     maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-                    mergeToFirstMap(fillInWithDownloadedFromMC, consumeFromMCwSCCon(policy, maxBudget));
+                    mergeToFirstMap(fillInWithDownloadedFromMC, consumeFromMCwSCCon(model, maxBudget));
                 }
             }
         }
@@ -581,38 +585,38 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
     /**
      *
      * maxBudget the max number of chunks that can be downloaded from the cache
-     * fillWithMissedByPolicy for some polices, some chunks may be missed. These
+     * fillWithMissedByModel for some polices, some chunks may be missed. These
      * chunks must be considered for download by the BH or the MC
      *
      * @return the consumed chunks from the cache
      */
-    private Map<AbstractCachingPolicy, Set<Chunk>> tryHitsFromCachePerPolicy(
-            AbstractCachingPolicy policy, long maxBudget) {
-        Map<AbstractCachingPolicy, Set<Chunk>> currentHitsInCachePerPolicy = new HashMap<>(5);
+    private Map<AbstractCachingModel, Set<Chunk>> tryHitsFromCachePerModel(
+            AbstractCachingModel model, long maxBudget) {
+        Map<AbstractCachingModel, Set<Chunk>> currentHitsInCachePerModel = new HashMap<>(5);
 
-        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
+        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(model);
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
-            return currentHitsInCachePerPolicy;
+            return currentHitsInCachePerModel;
         }
 
-        long budgetForPolicy = maxBudget;
+        long budgetForModel = maxBudget;
 
         Set<Chunk> currentChunkHits;
-        currentHitsInCachePerPolicy.put(policy, currentChunkHits = new HashSet<>());
-        List<Chunk> historyChunkHits = _chunksHitsHistoryFromSC.get(policy);
+        currentHitsInCachePerModel.put(model, currentChunkHits = new HashSet<>());
+        List<Chunk> historyChunkHits = _chunksHitsHistoryFromSC.get(model);
 
         Iterator<Chunk> unconsumedIt = unconsumed.iterator(); // in ascending order of keys
 
         SmallCell hostSC = _requesterUser.getCurrentlyConnectedSC();
-        Set<Chunk> cachedChunks = hostSC.cachedChunksUnmodifiable(policy);
-        while (unconsumedIt.hasNext() && budgetForPolicy > 0) {
+        Set<Chunk> cachedChunks = hostSC.cachedChunksUnmodifiable(model);
+        while (unconsumedIt.hasNext() && budgetForModel > 0) {
             Chunk chunkConsumed = unconsumedIt.next();
 
-            if (policy instanceof Oracle) {
+            if (model instanceof Oracle) {
                 // if so, try to cache before consuming
                 if (cacheForOracle(
                         hostSC,// in this case the target sc is the hosting
@@ -620,7 +624,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                     unconsumedIt.remove();
                     /* While being connected, only in this case the chunk is not 
                      * already consumed either from the BH nor from MC */
-                    budgetForPolicy--;
+                    budgetForModel--;
                     historyChunkHits.add(chunkConsumed);
                     currentChunkHits.add(chunkConsumed);
                 }
@@ -631,53 +635,53 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                 unconsumedIt.remove();
                 /* While being connected, only in this case the chunk is not 
                      * already consumed either from the BH nor from MC */
-                budgetForPolicy--;
+                budgetForModel--;
                 historyChunkHits.add(chunkConsumed);
                 currentChunkHits.add(chunkConsumed);
             }
         }
 
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
         }
 
-        return currentHitsInCachePerPolicy;
+        return currentHitsInCachePerModel;
     }
 
-    private Map<AbstractCachingPolicy, Set<Chunk>> consumeCacheMissedFromBH(
-            AbstractCachingPolicy policy,
+    private Map<AbstractCachingModel, Set<Chunk>> consumeCacheMissedFromBH(
+            AbstractCachingModel model,
             long maxbudget,
-            Map<AbstractCachingPolicy, Set<Chunk>> hitsNumMap) {
+            Map<AbstractCachingModel, Set<Chunk>> hitsNumMap) {
 
-        Map<AbstractCachingPolicy, Set<Chunk>> bhCurrentConsumptionPerPolicy = new HashMap<>(5);
+        Map<AbstractCachingModel, Set<Chunk>> bhCurrentConsumptionPerModel = new HashMap<>(5);
 
         Set<Chunk> bhCurrentConsumption;
-        bhCurrentConsumptionPerPolicy.put(policy, bhCurrentConsumption = new HashSet<>());
-        List<Chunk> bhHistoryConsumption = _chunksConsumedHistoryFromBH.get(policy);
+        bhCurrentConsumptionPerModel.put(model, bhCurrentConsumption = new HashSet<>());
+        List<Chunk> bhHistoryConsumption = _chunksConsumedHistoryFromBH.get(model);
 
-        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
+        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(model);
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
-            return bhCurrentConsumptionPerPolicy;
+            return bhCurrentConsumptionPerModel;
         }
 
-        // each policy has its own budget, i.e. if you have 10 slots in the
+        // each model has its own budget, i.e. if you have 10 slots in the
         // sc wireless and you have 4 hits in the cache, then you have
         // consumed 4 slots in the wireless. Thus, now you can use only 
-        // six slots for this policy.
-        int hitsNum = hitsNumMap.get(policy).size();
-        long budgetForPolicy = maxbudget - hitsNum;
+        // six slots for this model.
+        int hitsNum = hitsNumMap.get(model).size();
+        long budgetForModel = maxbudget - hitsNum;
 
         Iterator<Chunk> unconsumedIt = unconsumed.iterator(); // in ascending order of keys
 
-        Set<Chunk> cachedChunks = _requesterUser.getCurrentlyConnectedSC().cachedChunksUnmodifiable(policy);
-        while (unconsumedIt.hasNext() && budgetForPolicy > 0) {
+        Set<Chunk> cachedChunks = _requesterUser.getCurrentlyConnectedSC().cachedChunksUnmodifiable(model);
+        while (unconsumedIt.hasNext() && budgetForModel > 0) {
             Chunk chunkConsumed = unconsumedIt.next();
             if (cachedChunks.contains(chunkConsumed)) {
                 // if already in the cache, let be consumed in the future from there
@@ -685,36 +689,36 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             }
 
             unconsumedIt.remove();
-            budgetForPolicy--;
+            budgetForModel--;
             bhHistoryConsumption.add(chunkConsumed);
             bhCurrentConsumption.add(chunkConsumed);
         }
 
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
         }
 
-        return bhCurrentConsumptionPerPolicy;
+        return bhCurrentConsumptionPerModel;
     }
 
-    protected Map<AbstractCachingPolicy, List<Chunk>> consumeFromMCwSCCon(
-            AbstractCachingPolicy policy, long policyBudget) {
+    protected Map<AbstractCachingModel, List<Chunk>> consumeFromMCwSCCon(
+            AbstractCachingModel model, long policyBudget) {
 
-        Map<AbstractCachingPolicy, List<Chunk>> mcCurrentConsumptionPerPolicy = new HashMap<>(5);
+        Map<AbstractCachingModel, List<Chunk>> mcCurrentConsumptionPerPolicy = new HashMap<>(5);
 
         long budgetForPolicy = policyBudget;
 
         List<Chunk> mcCurrentConsumption;
-        mcCurrentConsumptionPerPolicy.put(policy, mcCurrentConsumption = new ArrayList<>());
-        List<Chunk> mcHistoryConsumption = _chunksConsumedHistoryFromMCWhileConnectedToSC.get(policy);
+        mcCurrentConsumptionPerPolicy.put(model, mcCurrentConsumption = new ArrayList<>());
+        List<Chunk> mcHistoryConsumption = _chunksConsumedHistoryFromMCWhileConnectedToSC.get(model);
 
-        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
+        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(model);
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
             return mcCurrentConsumptionPerPolicy;
@@ -722,7 +726,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         }
         Iterator<Chunk> unconsumedIt = unconsumed.iterator(); // in ascending order of keys
 
-        Set<Chunk> cachedChunks = _requesterUser.getCurrentlyConnectedSC().cachedChunksUnmodifiable(policy);
+        Set<Chunk> cachedChunks = _requesterUser.getCurrentlyConnectedSC().cachedChunksUnmodifiable(model);
         while (unconsumedIt.hasNext() && budgetForPolicy > 0) {
             Chunk chunkConsumed = unconsumedIt.next();
             if (cachedChunks.contains(chunkConsumed)) {
@@ -737,8 +741,8 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         }
 
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
         }
@@ -746,21 +750,21 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         return mcCurrentConsumptionPerPolicy;
     }
 
-    protected Map<AbstractCachingPolicy, List<Chunk>> consumeFromMCwSCDiscon(
-            AbstractCachingPolicy policy, long budget) {
+    protected Map<AbstractCachingModel, List<Chunk>> consumeFromMCwSCDiscon(
+            AbstractCachingModel model, long budget) {
 
-        Map<AbstractCachingPolicy, List<Chunk>> toReturn = new HashMap<>(5);
+        Map<AbstractCachingModel, List<Chunk>> toReturn = new HashMap<>(5);
 
         long policyBudget = budget;
 
         List<Chunk> nowDownloadedChunks;
-        toReturn.put(policy, nowDownloadedChunks = new ArrayList<>());
-        List<Chunk> consumedHistoryByPolicy = _consumedHistoryFromMCwSCDiscon.get(policy);
+        toReturn.put(model, nowDownloadedChunks = new ArrayList<>());
+        List<Chunk> consumedHistoryByPolicy = _consumedHistoryFromMCwSCDiscon.get(model);
 
-        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
+        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(model);
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
             return toReturn;
@@ -776,8 +780,8 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         }
 
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
         }
@@ -785,20 +789,20 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         return toReturn;
     }
 
-    protected Map<AbstractCachingPolicy, List<Chunk>>
-            consumeRemainderFromMC(AbstractCachingPolicy policy) {
+    protected Map<AbstractCachingModel, List<Chunk>>
+            consumeRemainderFromMC(AbstractCachingModel model) {
 
-        Map<AbstractCachingPolicy, List<Chunk>> toReturn = new HashMap<>(5);
+        Map<AbstractCachingModel, List<Chunk>> toReturn = new HashMap<>(5);
 
         long policyBudget = Long.MAX_VALUE;
 
         List<Chunk> nowDownloadedChunks = new ArrayList<>();
-        List<Chunk> consumedHistoryByPolicy = _chunksConsumedHistoryFromMCAfterExitingSC.get(policy);
+        List<Chunk> consumedHistoryByPolicy = _chunksConsumedHistoryFromMCAfterExitingSC.get(model);
 
-        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(policy);
+        List<Chunk> unconsumed = _unconsumedChunksInSequence.get(model);
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
             return toReturn;
@@ -814,11 +818,11 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             nowDownloadedChunks.add(chunkConsumed);
         }
 
-        toReturn.put(policy, nowDownloadedChunks);
+        toReturn.put(model, nowDownloadedChunks);
 
         if (unconsumed.isEmpty()) {
-            if (_completitionTimes.get(policy) == -1) {
-                _completitionTimes.put(policy, simTime());
+            if (_completitionTimes.get(model) == -1) {
+                _completitionTimes.put(model, simTime());
                 _uncompletedPolicies--;
             }
         }
@@ -830,54 +834,54 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
      * @return the _chunksConsumedHistoryFromMCWhileConnectedToSC
      */
     @Override
-    public Map<AbstractCachingPolicy, List<Chunk>> getChunksConsumedHistoryFromMCWhileConnectedToSC() {
+    public Map<AbstractCachingModel, List<Chunk>> getChunksConsumedHistoryFromMCWhileConnectedToSC() {
         return Collections.unmodifiableMap(_chunksConsumedHistoryFromMCWhileConnectedToSC);
     }
 
-    public Map<AbstractCachingPolicy, List<Chunk>> getConsumedHistoryFromMCwSCDiscon() {
+    public Map<AbstractCachingModel, List<Chunk>> getConsumedHistoryFromMCwSCDiscon() {
         return Collections.unmodifiableMap(_consumedHistoryFromMCwSCDiscon);
     }
 
-    public Map<AbstractCachingPolicy, List<Chunk>> getChunksConsumedHistoryFromMCAfterExitingSC() {
+    public Map<AbstractCachingModel, List<Chunk>> getChunksConsumedHistoryFromMCAfterExitingSC() {
         return Collections.unmodifiableMap(_chunksConsumedHistoryFromMCAfterExitingSC);
     }
 
     @Override
-    public List<Chunk> getChunksConsumedHistoryFromMCwSCConn(AbstractCachingPolicy policy) {
-        return Collections.unmodifiableList(_chunksConsumedHistoryFromMCWhileConnectedToSC.get(policy));
+    public List<Chunk> getChunksConsumedHistoryFromMCwSCConn(AbstractCachingModel model) {
+        return Collections.unmodifiableList(_chunksConsumedHistoryFromMCWhileConnectedToSC.get(model));
     }
 
     @Override
-    public List<Chunk> getChunksConsumedHistoryFromMCBeforeEnteringSC(AbstractCachingPolicy policy) {
-        return Collections.unmodifiableList(_consumedHistoryFromMCwSCDiscon.get(policy));
+    public List<Chunk> getChunksConsumedHistoryFromMCBeforeEnteringSC(AbstractCachingModel model) {
+        return Collections.unmodifiableList(_consumedHistoryFromMCwSCDiscon.get(model));
     }
 
     @Override
-    public List<Chunk> getChunksConsumedHistoryFromMCAfterExitingSC(AbstractCachingPolicy policy) {
-        return Collections.unmodifiableList(_chunksConsumedHistoryFromMCAfterExitingSC.get(policy));
+    public List<Chunk> getChunksConsumedHistoryFromMCAfterExitingSC(AbstractCachingModel model) {
+        return Collections.unmodifiableList(_chunksConsumedHistoryFromMCAfterExitingSC.get(model));
     }
 
     /**
-     * policy
+     * model
      *
      * @return the _consumedChunksFromSC
      */
     @Override
-    public List<Chunk> getChunksCacheHitsHistory(AbstractCachingPolicy policy) {
-        return Collections.unmodifiableList(_chunksHitsHistoryFromSC.get(policy));
+    public List<Chunk> getChunksCacheHitsHistory(AbstractCachingModel model) {
+        return Collections.unmodifiableList(_chunksHitsHistoryFromSC.get(model));
     }
 
     /**
      * @return the _chunksConsumedHistoryFromBH
      */
     @Override
-    public Map<AbstractCachingPolicy, List<Chunk>> getChunksConsumedHistoryFromBH() {
+    public Map<AbstractCachingModel, List<Chunk>> getChunksConsumedHistoryFromBH() {
         return Collections.unmodifiableMap(_chunksConsumedHistoryFromBH);
     }
 
     @Override
-    public List<Chunk> getChunksConsumedHistoryFromBH(AbstractCachingPolicy policy) {
-        return Collections.unmodifiableList(_chunksConsumedHistoryFromBH.get(policy));
+    public List<Chunk> getChunksConsumedHistoryFromBH(AbstractCachingModel model) {
+        return Collections.unmodifiableList(_chunksConsumedHistoryFromBH.get(model));
     }
 
     /**
@@ -886,45 +890,45 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
      * firstMap secondMap
      */
     protected final void mergeToFirstMap(
-            Map<AbstractCachingPolicy, List<Chunk>> firstMap,
-            Map<AbstractCachingPolicy, List<Chunk>> secondMap) {
-        for (Map.Entry<AbstractCachingPolicy, List<Chunk>> entry : secondMap.entrySet()) {
-            AbstractCachingPolicy policy = entry.getKey();
+            Map<AbstractCachingModel, List<Chunk>> firstMap,
+            Map<AbstractCachingModel, List<Chunk>> secondMap) {
+        for (Map.Entry<AbstractCachingModel, List<Chunk>> entry : secondMap.entrySet()) {
+            AbstractCachingModel model = entry.getKey();
             Collection<Chunk> chunksInSecond = entry.getValue();
 
-            List<Chunk> chunksInFirst = firstMap.get(policy);
+            List<Chunk> chunksInFirst = firstMap.get(model);
             if (chunksInFirst == null) {
-                firstMap.put(policy, (chunksInFirst = new ArrayList<>()));
+                firstMap.put(model, (chunksInFirst = new ArrayList<>()));
             }
             chunksInFirst.addAll(chunksInSecond);
         }
     }
 
     protected final void mergeAndSeparatePerpolicy(
-            Map<AbstractCachingPolicy, List<Chunk>> firstMap,
-            Map<AbstractCachingPolicy, List<Chunk>> secondMap) {
-        for (Map.Entry<AbstractCachingPolicy, List<Chunk>> entry : secondMap.entrySet()) {
-            AbstractCachingPolicy policy = entry.getKey();
+            Map<AbstractCachingModel, List<Chunk>> firstMap,
+            Map<AbstractCachingModel, List<Chunk>> secondMap) {
+        for (Map.Entry<AbstractCachingModel, List<Chunk>> entry : secondMap.entrySet()) {
+            AbstractCachingModel model = entry.getKey();
             Collection<Chunk> chunksInSecond = entry.getValue();
 
-            List<Chunk> chunksInFirst = firstMap.get(policy);
+            List<Chunk> chunksInFirst = firstMap.get(model);
             if (chunksInFirst == null) {
-                firstMap.put(policy, (chunksInFirst = new ArrayList<>()));
+                firstMap.put(model, (chunksInFirst = new ArrayList<>()));
             }
             chunksInFirst.addAll(chunksInSecond);
 
         }
     }
 
-    protected final void merge2(Map<AbstractCachingPolicy, List<Chunk>> firstMap,
-            Map<AbstractCachingPolicy, Set<Chunk>> secondMap) {
-        for (Map.Entry<AbstractCachingPolicy, Set<Chunk>> entry : secondMap.entrySet()) {
-            AbstractCachingPolicy policy = entry.getKey();
+    protected final void merge2(Map<AbstractCachingModel, List<Chunk>> firstMap,
+            Map<AbstractCachingModel, Set<Chunk>> secondMap) {
+        for (Map.Entry<AbstractCachingModel, Set<Chunk>> entry : secondMap.entrySet()) {
+            AbstractCachingModel model = entry.getKey();
             Collection<Chunk> chunksInSecond = entry.getValue();
 
-            List<Chunk> chunksInFirst = firstMap.get(policy);
+            List<Chunk> chunksInFirst = firstMap.get(model);
             if (chunksInFirst == null) {
-                firstMap.put(policy, (chunksInFirst = new ArrayList<>()));
+                firstMap.put(model, (chunksInFirst = new ArrayList<>()));
             }
             chunksInFirst.addAll(chunksInSecond);
         }
@@ -934,24 +938,24 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         return _uncompletedPolicies == 0;
     }
 
-    public int getCompetionSimTime(AbstractCachingPolicy policy) {
-        return _completitionTimes.get(policy);
+    public int getCompetionSimTime(AbstractCachingModel model) {
+        return _completitionTimes.get(model);
     }
 
     public void forceComplete(int time) {
         _uncompletedPolicies = 0;
-        for (AbstractCachingPolicy policy : getSimulation().getCachingStrategies()) {
-            _completitionTimes.put(policy, time);
+        for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
+            _completitionTimes.put(model, time);
         }
     }
 
     /**
-     * policy
+     * model
      *
      * @return
      */
-    public List<Chunk> getUnconsumedChunksInSequence(AbstractCachingPolicy policy) {
-        return _unconsumedChunksInSequence.get(policy);
+    public List<Chunk> getUnconsumedChunksInSequence(AbstractCachingModel model) {
+        return _unconsumedChunksInSequence.get(model);
     }
 
     /**
@@ -968,9 +972,9 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         this._consumeReady = cnsmr;
     }
 
-    public List<Chunk> getChunksConsumedOverall(AbstractCachingPolicy policy) {
+    public List<Chunk> getChunksConsumedOverall(AbstractCachingModel model) {
         List<Chunk> tmp = new ArrayList(referredContentDocument().chunks());
-        tmp.removeAll(getUnconsumedChunksInSequence(policy));
+        tmp.removeAll(getUnconsumedChunksInSequence(model));
 
         return tmp;
     }

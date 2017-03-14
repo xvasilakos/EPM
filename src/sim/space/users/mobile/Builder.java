@@ -1,6 +1,6 @@
 package sim.space.users.mobile;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import exceptions.InconsistencyException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,13 +29,13 @@ public abstract class Builder {
     protected Area __area;
     protected String __transitionDecisions;
 
-    protected Collection<AbstractCachingPolicy> _cachingPolicies;
+    protected Collection<AbstractCachingModel> _cachingPolicies;
 
     public Builder(
             SimulationBaseRunner simulation, MobileGroup group,
             Point startPoint,
             List<String> connectionPolicySC,
-            Collection<AbstractCachingPolicy> cachingPolicies) {
+            Collection<AbstractCachingModel> cachingPolicies) {
         __simulation = simulation;
 
         __group = group;

@@ -4,7 +4,7 @@ import sim.run.SimulationBaseRunner;
 import sim.Scenario;
 import app.properties.Space;
 import app.properties.valid.Values;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
@@ -171,7 +171,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
     protected Map<Integer, TraceMU> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
-            Collection<AbstractCachingPolicy> cachingPolicies
+            Collection<AbstractCachingModel> cachingPolicies
     ) {
 
         /*
@@ -221,7 +221,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         return musByTheirID;
     }
 
-    private void muCloning(List<TraceMU> musLst, Area area, MobileGroup nxtGroup, List<String> conn2SCPolicy, Collection<AbstractCachingPolicy> cachingPolicies, String mobTransDecisions) throws CriticalFailureException {
+    private void muCloning(List<TraceMU> musLst, Area area, MobileGroup nxtGroup, List<String> conn2SCPolicy, Collection<AbstractCachingModel> cachingPolicies, String mobTransDecisions) throws CriticalFailureException {
         try {
             _cloneMobsFactor = scenarioSetup.intProperty(Space.MU__CLONEFACTOR);
 
@@ -251,7 +251,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
     private void cloneMUs(List<TraceMU> musLst, Area area, MobileGroup nxtGroup,
             List<String> conn2SCPolicy,
-            Collection<AbstractCachingPolicy> cachingPolicies,
+            Collection<AbstractCachingModel> cachingPolicies,
             String mobTransDecisions, int cloneMobsFactor, int totalMUsNum) {
 
         List<TraceMU> originalMUs = new ArrayList(musLst);
@@ -289,7 +289,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
     private void initAndConnectMUs_1(String metaDataPath,
             double percentage, Area area, MobileGroup nxtGroup,
-            List<String> conn2SCPolicy, Collection<AbstractCachingPolicy> cachingPolicies,
+            List<String> conn2SCPolicy, Collection<AbstractCachingModel> cachingPolicies,
             String mobTransDecisions, List<TraceMU> musLst)
             throws CriticalFailureException, InconsistencyException, NumberFormatException {
 
@@ -378,7 +378,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
      */
     private void initAndConnectMUs_2(
             double percentage, Area area, MobileGroup nxtGroup,
-            List<String> conn2SCPolicy, Collection<AbstractCachingPolicy> cachingPolicies,
+            List<String> conn2SCPolicy, Collection<AbstractCachingModel> cachingPolicies,
             String mobTransDecisions, List<TraceMU> musLst, Scenario scenario)
             throws CriticalFailureException, InconsistencyException, NumberFormatException {
 
@@ -448,7 +448,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
     }
 
     private void createTraceMU(MobileGroup nxtGroup, List<String> conn2SCPolicy,
-            Collection<AbstractCachingPolicy> cachingPolicies, int nxtMuID,
+            Collection<AbstractCachingModel> cachingPolicies, int nxtMuID,
             Area area, String mobTransDecisions, List<TraceMU> musLst) {
         TraceMUBuilder nxtMUBuilder = new TraceMUBuilder(
                 this, nxtGroup, area.getRandPoint(),
@@ -547,7 +547,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-                for (AbstractCachingPolicy nxtPolicy : cachingStrategies) {/*
+                for (AbstractCachingModel nxtPolicy : cachingStrategies) {/*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */
@@ -601,7 +601,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                     getStatsHandle().appendTransient(false);
                     getStatsHandle().checkFlushTransient(false);
                 }
-            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
+            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
             LOG.log(Level.INFO, "Simulation {0} ended: {1}",

@@ -57,7 +57,7 @@ public enum Caching implements IProperty {
         public static final String CACHING__PRELOAD__CACHES__ALL__POLICIES
                 = "Should the caches be preloaded with the most popular content"
                 + " from the trace of requests? If this is set to false, preloading"
-                + " is used only for the MaxPop caching policy, otherwise it is used"
+                + " is used only for the MaxPop caching model, otherwise it is used"
                 + " for all policies.";
         public static final String CACHING__RPLC__MINGAIN__SUM__HEURISTIC__TIME__DYNAMIC__READJUSTMENT_PERIOD
                 = "The simulation time that needs to elapse in order to run the "
@@ -69,7 +69,7 @@ public enum Caching implements IProperty {
                 + " than this theshold.";
 
         public static final String CACHE_REPLACEMENT
-                = "Cache replacement policy. This is used only in combination to"
+                = "Cache replacement model. This is used only in combination to"
                 + " specific caching methods.";
     }
 }

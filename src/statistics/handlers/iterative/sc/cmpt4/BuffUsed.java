@@ -1,6 +1,6 @@
 package statistics.handlers.iterative.sc.cmpt4;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import sim.space.cell.smallcell.SmallCell;
 
 /**
@@ -8,7 +8,7 @@ import sim.space.cell.smallcell.SmallCell;
  */
 public class BuffUsed extends ComputeAllPoliciesImpl {
 
-   public BuffUsed(AbstractCachingPolicy cachingMethodUsed) {
+   public BuffUsed(AbstractCachingModel cachingMethodUsed) {
       super(cachingMethodUsed);
    }
 

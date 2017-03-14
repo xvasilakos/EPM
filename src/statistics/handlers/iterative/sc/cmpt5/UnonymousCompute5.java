@@ -1,6 +1,6 @@
 package statistics.handlers.iterative.sc.cmpt5;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import statistics.handlers.BaseHandler;
 import statistics.handlers.ICompute5_6;
 
@@ -10,15 +10,15 @@ import statistics.handlers.ICompute5_6;
  */
 public class UnonymousCompute5 extends BaseHandler implements ICompute5_6 {
 
-    private final AbstractCachingPolicy _cachingMethod;
+    private final AbstractCachingModel _cachingMethod;
     private final WellKnownTitle _title;
 
-    public UnonymousCompute5(AbstractCachingPolicy cachingMethod, WellKnownTitle title) {
+    public UnonymousCompute5(AbstractCachingModel cachingMethod, WellKnownTitle title) {
         _cachingMethod = cachingMethod;
         _title = title;
     }
 
-    public UnonymousCompute5(AbstractCachingPolicy nxtMthd, String nxtHandlerTitl) {
+    public UnonymousCompute5(AbstractCachingModel nxtMthd, String nxtHandlerTitl) {
         this(nxtMthd, WellKnownTitle.valueOf(nxtHandlerTitl));
     }
 

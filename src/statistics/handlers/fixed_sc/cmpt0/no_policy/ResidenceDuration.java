@@ -9,7 +9,7 @@ import statistics.handlers.ICompute0;
  *
  */
 public class ResidenceDuration extends
-        statistics.handlers.iterative.sc.cmpt4.no_policy.ResidenceDuration 
+        statistics.handlers.iterative.sc.cmpt4.no_model.ResidenceDuration 
         implements ICompute0 {
 
     private final SmallCell _monitorSC;

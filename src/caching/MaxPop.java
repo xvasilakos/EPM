@@ -1,6 +1,6 @@
 package caching;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.Iterator;
 import java.util.SortedSet;
 import sim.space.cell.smallcell.SmallCell;
@@ -12,7 +12,7 @@ import traces.dmdtrace.TraceLoader;
 /**
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public final class MaxPop extends AbstractCachingPolicy {
+public final class MaxPop extends AbstractCachingModel {
 
     private static final MaxPop singleton = new MaxPop();
 
@@ -20,7 +20,7 @@ public final class MaxPop extends AbstractCachingPolicy {
      * @return the singleton instance of this class according to its placement
      * in the hierarchy of AbstractMethod class descendants.
      */
-    public static AbstractCachingPolicy instance() {
+    public static AbstractCachingModel instance() {
         return singleton;
     }
 

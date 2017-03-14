@@ -11,7 +11,7 @@ import app.properties.StatsProperty;
 import app.properties.valid.Values;
 import static app.properties.valid.Values.DISCOVER;
 import caching.MaxPop;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
@@ -105,7 +105,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     /**
      * Main caching method simulated.
      */
-    protected final List<AbstractCachingPolicy> cachingStrategies;
+    protected final List<AbstractCachingModel> cachingStrategies;
     private final double _maxPopCachingCutter;
     protected int warmupPeriod;
     /**
@@ -213,7 +213,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     /**
      * @return the list of caching methods used.
      */
-    public List<AbstractCachingPolicy> getCachingStrategies() {
+    public List<AbstractCachingModel> getCachingStrategies() {
         return Collections.unmodifiableList(cachingStrategies);
     }
 
@@ -428,7 +428,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                         + MaxPop.instance().toString()
                 );
             }
-            for (AbstractCachingPolicy nxtPolicy : cachingStrategies) {
+            for (AbstractCachingModel nxtPolicy : cachingStrategies) {
                 if (!(nxtPolicy instanceof IGainRplc)) {
                     continue;
                 }
@@ -442,7 +442,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         }
     }
 
-    protected void preLoad(Collection<SmallCell> scs, AbstractCachingPolicy nxtPolicy) throws CriticalFailureException {
+    protected void preLoad(Collection<SmallCell> scs, AbstractCachingModel nxtPolicy) throws CriticalFailureException {
         LOG.log(INFO, "Preloading top most popular items for policy {0}", nxtPolicy.toString());
         int count = 0;
         int num = scs.size();
@@ -700,7 +700,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     abstract protected Map<Integer, M> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
-            Collection<AbstractCachingPolicy> cachingPolicies);
+            Collection<AbstractCachingModel> cachingPolicies);
 
     protected void initCellNeighborhood(CellRegistry reg, Scenario setup) {
         theNeighborhoodType = setup.stringProperty(app.properties.Space.SC__NEIGHBORHOOD, false);
@@ -866,7 +866,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     protected void runGoldenRatioSearchEMPCLC() throws Exception {
 
         // checkSimEnded if needed
-        if (!cachingStrategies.contains(caching.rplc.mingain.tuned.EMPC_LC_Tunned_a.instance())
+        if (!cachingStrategies.contains(caching.rplc.mingain.priced.tuned_timened.EMPC_R_Tunned_a.instance())
                 || simTime() <= getSimulation().getScenario().intProperty(StatsProperty.STATS__MIN_TIME)) {
             return;
         }
@@ -1001,7 +1001,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     public void runFinish() {
 
-        for (AbstractCachingPolicy policy : getCachingStrategies()) {
+        for (AbstractCachingModel policy : getCachingStrategies()) {
             for (SmallCell sc : _cellRegistry.getSmallCells()) {
                 sc.clearDmdPC(policy);
                 sc.clearBuffer(policy);

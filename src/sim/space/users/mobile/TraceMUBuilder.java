@@ -1,6 +1,6 @@
 package sim.space.users.mobile;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.Collection;
 import java.util.List;
 import sim.run.SimulationBaseRunner;
@@ -18,7 +18,7 @@ public class TraceMUBuilder extends Builder {
     public TraceMUBuilder(SimulationBaseRunner simulation, MobileGroup group,
             Point startPoint, 
             List<String> connectionPolicySC,
-            Collection<AbstractCachingPolicy> cachingPolicies, double dx, double dy) {
+            Collection<AbstractCachingModel> cachingPolicies, double dx, double dy) {
         super(simulation, group, startPoint, connectionPolicySC, cachingPolicies);
         __dx = dx;
         __dy = dy;

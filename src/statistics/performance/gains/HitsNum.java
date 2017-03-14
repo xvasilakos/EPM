@@ -1,6 +1,6 @@
 package statistics.performance.gains;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import java.util.List;
 import sim.content.request.DocumentRequest;
 import sim.content.Chunk;
@@ -15,13 +15,13 @@ import statistics.handlers.AbstractPerformanceStat;
  */
 public class HitsNum extends AbstractPerformanceStat<CachingUser, SmallCell, DocumentRequest> {
 
-    public HitsNum(AbstractCachingPolicy cachingMethod) {
+    public HitsNum(AbstractCachingModel cachingMethod) {
         super(cachingMethod);
     }
 
     @Override
     public final double computeGain(CachingUser user, DocumentRequest r) throws StatisticException {
-        List<Chunk> consumedChunksHitsHistory = r.getChunksCacheHitsHistory(getCachingPolicy());
+        List<Chunk> consumedChunksHitsHistory = r.getChunksCacheHitsHistory(getCachingModel());
         return consumedChunksHitsHistory.size();
     }
 }

@@ -1,6 +1,6 @@
 package caching;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import exceptions.InvalidOrUnsupportedException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -15,7 +15,7 @@ public class CachingPoliciesFactory {
     /**
      * The registry of the supported caching methods.
      */
-    private static final HashMap<String, AbstractCachingPolicy> supportedPoliciesRegistry
+    private static final HashMap<String, AbstractCachingModel> supportedPoliciesRegistry
             = new HashMap<>(5);
     /**
      * The registry of the appropriate buffer type per caching method.
@@ -24,41 +24,41 @@ public class CachingPoliciesFactory {
             = new HashMap<>(2);
 
 
-    public static AbstractCachingPolicy getCachingPolicy(String cachingPolicy) throws InvalidOrUnsupportedException {
-        if (!supportedPoliciesRegistry.containsKey(cachingPolicy)) {
+    public static AbstractCachingModel getCachingModel(String cachingModel) throws InvalidOrUnsupportedException {
+        if (!supportedPoliciesRegistry.containsKey(cachingModel)) {
             throw new InvalidOrUnsupportedException("Invalid or "
-                    + "unsupported type of caching method: " + cachingPolicy);
+                    + "unsupported type of caching method: " + cachingModel);
         }
-        return supportedPoliciesRegistry.get(cachingPolicy);
+        return supportedPoliciesRegistry.get(cachingModel);
     }
 
-    public static Class getBufferType(String cachingPolicy) throws InvalidOrUnsupportedException {
-        if (!bufferTypesRegistry.containsKey(cachingPolicy)) {
+    public static Class getBufferType(String cachingModel) throws InvalidOrUnsupportedException {
+        if (!bufferTypesRegistry.containsKey(cachingModel)) {
             throw new InvalidOrUnsupportedException("Invalid or "
-                    + "unsupported type of caching method: " + cachingPolicy);
+                    + "unsupported type of caching method: " + cachingModel);
         }
-        return bufferTypesRegistry.get(cachingPolicy);
+        return bufferTypesRegistry.get(cachingModel);
     }
 
-    public static Class bufferTypeOf(AbstractCachingPolicy cachingPolicy) throws InvalidOrUnsupportedException {
-        return getBufferType(cachingPolicy.toString());
+    public static Class bufferTypeOf(AbstractCachingModel cachingModel) throws InvalidOrUnsupportedException {
+        return getBufferType(cachingModel.toString());
     }
 
-    public static AbstractCachingPolicy addCachingPolicy(String policy)
+    public static AbstractCachingModel addCachingPolicy(String model)
             throws ClassNotFoundException, InstantiationException,
             IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, NoSuchMethodException {
 //        AbstractMethod mthd = (AbstractMethod) Class.forName(mthdStr).newInstance();
 
-        Method instance = Class.forName(policy).getMethod("instance");
-        AbstractCachingPolicy abstrctMthd = (AbstractCachingPolicy) instance.invoke(null);
+        Method instance = Class.forName(model).getMethod("instance");
+        AbstractCachingModel abstrctMthd = (AbstractCachingModel) instance.invoke(null);
 
-        supportedPoliciesRegistry.put(policy, abstrctMthd);
+        supportedPoliciesRegistry.put(model, abstrctMthd);
 
-        Method bufferType = Class.forName(policy).getMethod("bufferType");
+        Method bufferType = Class.forName(model).getMethod("bufferType");
         Class buffClass = (Class) bufferType.invoke(null);
 
-        bufferTypesRegistry.put(policy, buffClass);
+        bufferTypesRegistry.put(model, buffClass);
 
         return abstrctMthd;
     }

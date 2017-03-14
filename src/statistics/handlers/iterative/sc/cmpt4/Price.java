@@ -1,6 +1,6 @@
 package statistics.handlers.iterative.sc.cmpt4;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import caching.base.AbstractPricing;
 import caching.interfaces.rplc.IGainRplc;
 import sim.space.cell.smallcell.PricedBuffer;
@@ -13,7 +13,7 @@ import statistics.StatisticException;
  */
 public class Price extends ComputeAllPoliciesImpl {
 
-   public Price(AbstractCachingPolicy cachingMethodUsed) {
+   public Price(AbstractCachingModel cachingMethodUsed) {
       super(cachingMethodUsed);
    }
 
@@ -24,7 +24,7 @@ public class Price extends ComputeAllPoliciesImpl {
     */
    @Override
    public final double compute4(SmallCell cell) throws StatisticException {
-      AbstractCachingPolicy cachingMethod = getCachingMethod();
+      AbstractCachingModel cachingMethod = getCachingMethod();
       if (!(cachingMethod instanceof AbstractPricing)) {
          return -1.0;
       }

@@ -1,6 +1,6 @@
 package statistics.performance.gains;
 
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import sim.content.request.DocumentRequest;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
@@ -15,7 +15,7 @@ public class GAINPercent extends AbstractPerformanceStat<CachingUser, SmallCell,
     private GAINPercent_Hit ghit;
     private GAINPercent_BH gbh;
 
-    public GAINPercent(AbstractCachingPolicy cachingMethod) {
+    public GAINPercent(AbstractCachingModel cachingMethod) {
         super(cachingMethod);
         ghit = new GAINPercent_Hit(cachingMethod);
         gbh = new GAINPercent_BH(cachingMethod);
@@ -28,12 +28,12 @@ public class GAINPercent extends AbstractPerformanceStat<CachingUser, SmallCell,
 
     @Override
     public String title() {
-        return "%G" + "-" + getCachingPolicy().nickName();
+        return "%G" + "-" + getCachingModel().nickName();
     }
 
     @Override
     public String title(String str) {
-        return "%G" + "_" + str + "_" + getCachingPolicy().nickName();
+        return "%G" + "_" + str + "_" + getCachingModel().nickName();
     }
 
 }

@@ -3,7 +3,7 @@ package sim.space.cell;
 import app.properties.Simulation;
 import app.properties.Space;
 import app.properties.valid.Values;
-import caching.base.AbstractCachingPolicy;
+import caching.base.AbstractCachingModel;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
 import exceptions.InvalidOrUnsupportedException;
@@ -259,7 +259,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported model " + mobModel
                         + " set for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
 
@@ -308,7 +308,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported model " + mobModel
                         + " set for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
 
@@ -360,7 +360,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported model " + mobModel
                         + " set for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
         Couple couple = new Couple(srcID, destID);
@@ -394,7 +394,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported model " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
         Double num = _handoffsBetween.get(new Couple(srcID, destID));
@@ -420,7 +420,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported model " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
 
@@ -465,7 +465,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported model " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
 
@@ -507,7 +507,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported model " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
         Double num = _handoffsOutgoing.get(srcID);
@@ -533,7 +533,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unknonwn or unsupported policy " + mobModel
+                throw new UnsupportedOperationException("Unknonwn or unsupported model " + mobModel
                         + " for parameter " + Space.MOBILITY_MODEL.propertyName());
         }//switch
         Double num = _handoffsIncoming.get(destID);
@@ -637,7 +637,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     private List<SmallCell> initSCsRndUniform(
-            Area area, Collection<AbstractCachingPolicy> cachingMethods)
+            Area area, Collection<AbstractCachingModel> cachingMethods)
             throws CriticalFailureException {
         Scenario s = getSimulation().getScenario();
 
@@ -684,7 +684,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     private List<SmallCell> initSCsRnd(
-            Area area, Collection<AbstractCachingPolicy> cachingMethods)
+            Area area, Collection<AbstractCachingModel> cachingMethods)
             throws CriticalFailureException {
 
         try {
@@ -719,7 +719,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     private List<SmallCell> initSCs(
-            Area area, Collection<AbstractCachingPolicy> cachingMethods,
+            Area area, Collection<AbstractCachingModel> cachingMethods,
             Point... center) throws CriticalFailureException {
 
         try {
@@ -773,7 +773,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      * @throws CriticalFailureException
      */
     private List<SmallCell> initSCsTrace(
-            Area area, Collection<AbstractCachingPolicy> cachingMethods
+            Area area, Collection<AbstractCachingModel> cachingMethods
     ) throws CriticalFailureException {
 
         Area.RealArea theRealDimensions = area.getREAL_AREA();
@@ -927,7 +927,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      * @throws CriticalFailureException
      */
     public List<SmallCell> createSCs(Area area,
-            Collection<AbstractCachingPolicy> cachingPolicies) throws CriticalFailureException {
+            Collection<AbstractCachingModel> cachingPolicies) throws CriticalFailureException {
         Scenario s = getSimulation().getScenario();
 
         List<SmallCell> theSCs = null;
