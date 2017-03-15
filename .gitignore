@@ -1,0 +1,19 @@
+/.gitignore~
+/src/test.java
+/MECOMM
+/MECOMM - Shortcut.lnk
+/files/debugInfo/
+/files/sim/core/default_properties/master.ini~
+/files/sim/core/default_properties/caching.ini~
+/files/sim/core/default_properties/mobilityModel.ini~
+/files/sim/core/default_properties/repeats.ini~
+/files/sim/core/default_properties/space.&&.ini~
+/files/sim/core/default_properties/space.mu.dmd.&&.ini~
+/files/sim/core/default_properties/stats.ini~
+/files/sim/core/default_properties/general.ini~
+/files/sim/traces/
+/files/tmp/
+/files/unsync/
+/files/results/
+/sample
+/xvas
