@@ -6,7 +6,7 @@
 #	- sim.run.caching.MobProbSimulation
 #	- sim.run.caching.TraceTaxiesSimulation
 #	- sim.run.caching.TraceKolnSimulation
-simulation.run.class=sim.run.caching.TraceKolnSimulation
+simulation.run.class=sim.run.TraceKolnSimulation
 
 
 # =============================== clock properties ==============================
