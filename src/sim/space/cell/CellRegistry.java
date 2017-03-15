@@ -14,11 +14,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -724,35 +722,38 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
         try {
             List<SmallCell> initSCs = new ArrayList<>();
-            int scs_num = scenario.intProperty(Space.SC__NUM);
-            if (scs_num != center.length) {
+            int scsNum = scenario.intProperty(Space.SC__NUM);
+            if (scsNum != center.length) {
                 throw new InconsistencyException(
-                        "Number of SCs in parameter " + Space.SC__NUM.name() + "= " + scs_num
+                        "Number of SCs in parameter " + Space.SC__NUM.name() + "= " + scsNum
                         + " does not match the number of SC centers=" + center.length
                 );
             }
-            //<editor-fold defaultstate="collapsed" desc="logging">
+//<editor-fold defaultstate="collapsed" desc="logging">
             int count = 0;
             double percentage = scenario.doubleProperty(Simulation.PROGRESS_UPDATE);
 
             int sum = 0;
-            int printPer = (int) (scs_num * percentage);
+            int printPer = (int) (scsNum * percentage);
             printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
             LOG
-                    .log(Level.INFO, "Initializing small cells on the area:\n\t{0}/{1}", new Object[]{0, scs_num});
-            //</editor-fold>
-            for (int i = 0; i < scs_num; i++) {
+                    .log(Level.INFO, "Initializing small cells on the area:\n\t{0}/{1}", new Object[]{0, scsNum});
+//</editor-fold>
+
+            for (int i = 0; i < scsNum; i++) {
                 Point nxtCenter = center[i];
                 SmallCell nxtSC = new SmallCell(sim, nxtCenter, area, cachingMethods);
-                //<editor-fold defaultstate="collapsed" desc="log user update">
+
+//<editor-fold defaultstate="collapsed" desc="log user update">
                 boolean logUsrUpdt = ++count % printPer == 0;
                 if (logUsrUpdt) {
-                    sum += (int) (10000.0 * printPer / scs_num) / 100;// roiunding, then percent
+                    sum += (int) (10000.0 * printPer / scsNum) / 100;// roiunding, then percent
                     LOG
                             .log(Level.INFO, "\t{0}%", sum);
                 }
                 initSCs.add(nxtSC);
-                //</editor-fold>
+//</editor-fold>
+
             }
             return initSCs;
         } catch (Exception ex) {
@@ -965,15 +966,26 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 theSCs = initSCs(area, cachingPolicies, centers);
             }
 
-            //<editor-fold defaultstate="collapsed" desc="discover neighbors sanity check">
+            //discover neighbors sanity check
             if (sim.getCachingStrategies().contains(Values.CACHING__NAIVE__TYPE03)
                     && s.intProperty(Space.SC__WARMUP_PERIOD) < 100) {
-                throw new CriticalFailureException(Values.CACHING__NAIVE__TYPE03 + " is enabled. Finding neighbors for each SC is mandatory."
+                throw new CriticalFailureException(Values.CACHING__NAIVE__TYPE03 + " is enabled."
+                        + " Finding neighbors for each SC is mandatory."
                         + " But the time interval for discovering neighbors is too small: "
                         + s.intProperty(Space.SC__WARMUP_PERIOD));
             }
-            //</editor-fold>
 
+            double areaSz = area.size();
+            double coveredSz = 0;
+            for (SmallCell nxtSC : theSCs) {
+                coveredSz += nxtSC.CoverageSize();
+            }
+            
+            double percentage = ((int)(10000.0 * coveredSz/areaSz))/100.0;
+            LOG.log(Level.INFO, "Created cells cover {0}% of the area.", percentage);
+            System.err.printf("Created cells cover %f of the area.\n", percentage);
+            System.exit(0);
+            
             return theSCs;
         } catch (UnsupportedOperationException ex) {
             throw new CriticalFailureException(ex);

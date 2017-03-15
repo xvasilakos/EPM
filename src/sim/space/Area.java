@@ -620,47 +620,80 @@ public class Area implements ISimulationMember, ISynopsisString {
         return neighboringPointsMatrix;
     }
 
+    /**
+     * @return the size of the area in square units.
+     */
     public int size() {
         return getLengthX() * getLengthY();
     }
 
-    public Point getPoint__center() {
+    /**
+     * @return the central point of the area
+     */
+    public Point getPointCentral() {
         return getPointAt(lengthX / 2, lengthY / 2);
     }
 
-    public Point getPoint__east() {
+    /**
+     * @return the central/east-edge point of the area
+     */
+    public Point getPointCentralEast() {
         return getPointAt(lengthX - 1, lengthY / 2);
     }
 
-    public Point getPoint__west() {
+    /**
+     * @return the central/west-edge point of the area
+     */
+    public Point getPointCentralWest() {
         return getPointAt(0, lengthY / 2);
     }
 
-    public Point getPoint__north_east() {
+    /**
+     * @return the north-east edge point of the area
+     */
+    public Point getPointCentralNE() {
         return getPointAt(lengthX - 1, 0);
     }
 
-    public Point getPoint__north_west() {
+    /**
+     * @return the north-west edge point of the area
+     */
+    public Point getPointNW() {
         return getPointAt(0, 0);
     }
 
-    public Point getPoint__south_east() {
+    /**
+     * @return the south-eastedge point of the area
+     */
+    public Point getPointSE() {
         return getPointAt(lengthX - 1, lengthY - 1);
     }
 
-    public Point getPoint__south_west() {
+    /**
+     * @return the south-west edge point of the area
+     */
+    public Point getPointSW() {
         return getPointAt(0, lengthY - 1);
     }
 
-    public Point getPoint__north() {
+    /**
+     * @return the central/north-edge point of the area
+     */
+    public Point getPointCentralNorth() {
         return getPointAt(lengthX / 2, 0);
     }
 
-    public Point getPoint__south() {
+    /**
+     * @return the central/south-edge point of the area
+     */
+    public Point getPointCentralSouth() {
         return getPointAt(lengthX / 2, lengthY - 1);
     }
 
-    public Point getPoint_rnd() {
+    /**
+     * @return a random point from the area
+     */
+    public Point getPointRandom() {
         int y = simulation.getScenario().getRandomGenerator().randIntInRange(0, lengthY - 1);
         int x = simulation.getScenario().getRandomGenerator().randIntInRange(0, lengthX - 1);
         return getPointAt(x, y);
@@ -734,27 +767,27 @@ public class Area implements ISimulationMember, ISynopsisString {
 
         switch (orientation) {
             case random:
-                return getPoint_rnd();
+                return getPointRandom();
             case center:
-                return getPoint__center();
+                return getPointCentral();
             case west:
-                return getPoint__west();
+                return getPointCentralWest();
             case east:
-                return getPoint__east();
+                return getPointCentralEast();
 
             case north:
-                return getPoint__north();
+                return getPointCentralNorth();
             case north_east:
-                return getPoint__north_east();
+                return getPointCentralNE();
             case north_west:
-                return getPoint__north_west();
+                return getPointNW();
 
             case south:
-                return getPoint__south();
+                return getPointCentralSouth();
             case south_east:
-                return getPoint__south_east();
+                return getPointSE();
             case south_west:
-                return getPoint__south_west();
+                return getPointSW();
             default:
                 throw new UnsupportedOperationException(errMsg);
         }

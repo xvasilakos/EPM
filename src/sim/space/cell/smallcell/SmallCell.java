@@ -164,8 +164,7 @@ public class SmallCell extends AbstractCell {
         _selfNeighborsAllowed
                 = sim.getScenario().isTrue(Space.SC__NEIGHBORHOOD__ALLOW_SELF)
                 || neighborhoodType.equalsIgnoreCase(Values.ALL_PLUS_SELF)
-                || neighborhoodType.equalsIgnoreCase(Values.TRACE)
-                ;
+                || neighborhoodType.equalsIgnoreCase(Values.TRACE);
 
         _smoothedHandoversCount = 0;
         _proactCachingDmd = new HashMap();
@@ -180,10 +179,6 @@ public class SmallCell extends AbstractCell {
         area.updtCoverageByRadius(this);
     }
 
-    
-    
-    
-    
     private void fillMaps(Collection<AbstractCachingModel> cachingPolicies, SimulationBaseRunner sim, long capacity)
             throws InvalidOrUnsupportedException {
         for (AbstractCachingModel thePolicy : cachingPolicies) {
@@ -206,8 +201,14 @@ public class SmallCell extends AbstractCell {
         }
     }
 
-    
-    
+    /**
+     * @return an approximation of the coverage size in square units based on
+     * {@literal *pi * radius^2}
+     */
+    public int CoverageSize() {
+        return (int) (Math.PI * Math.pow(getRadius(), 2));
+    }
+
     /**
      * @return a randomly chosen point or null if the area is empty of points.
      */
@@ -387,8 +388,9 @@ public class SmallCell extends AbstractCell {
             SmallCell targetSC, Collection<Chunk> predictedChunks,
             Collection<Chunk> predictedChunksNaive) throws Throwable {
 
-if(!cacheRequestor.isAllowedToCache()) return ;
-
+        if (!cacheRequestor.isAllowedToCache()) {
+            return;
+        }
 
 //TODO recheck the implementation of these policies            /**
 //            * Update access to items for LRU methods.
@@ -568,8 +570,8 @@ if(!cacheRequestor.isAllowedToCache()) return ;
     /**
      * A neighbor SC is _used as the key to map the number of handoffs to the
      * neighbor. The former implies that a SC "Dest" is neighbor of this SC
- "Src" iff there is at least one outgoing RUN__CLASS handoff recorded from
- Src to Dest.
+     * "Src" iff there is at least one outgoing RUN__CLASS handoff recorded from
+     * Src to Dest.
      *
      * @param sc
      * @return
@@ -605,14 +607,14 @@ if(!cacheRequestor.isAllowedToCache()) return ;
     /**
      * @param cachingPolicy the caching policy
      * @return the available tryCacheRecentFromBH space in the buffer
- corresponding to the caching policy.
+     * corresponding to the caching policy.
      */
     public long buffAvailable(AbstractCachingModel cachingPolicy) {
         return _buffersMap.get(cachingPolicy).availableSpaceInBytes();
     }
-    
+
     /**
-     * 
+     *
      * @param cachingPolicy
      * @return capacity of buffer capacity in bytes
      */
@@ -641,8 +643,8 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
     /**
      * Tries to evict. The item may not be totally evicted due to caching policy
- constraints or due to remaining tryCacheRecentFromBH orders by other
- mobiles.
+     * constraints or due to remaining tryCacheRecentFromBH orders by other
+     * mobiles.
      *
      * @param cu
      * @param policy
@@ -944,7 +946,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
     /**
      * Useful for a dynamic interval where no replacements take place during
- tryCacheRecentFromBH decisions with EPC-LC
+     * tryCacheRecentFromBH decisions with EPC-LC
      */
     private final EPCLCnoRplcState _empcLCnoRplcInterval;
     private int _dmdTrcStationaryReqsRateLoadedPerSC;
@@ -986,7 +988,7 @@ if(!cacheRequestor.isAllowedToCache()) return ;
 
     /**
      * Useful state for a dynamic interval where no replacements take place
- during tryCacheRecentFromBH decisions with EPC-LC
+     * during tryCacheRecentFromBH decisions with EPC-LC
      */
     public final class EPCLCnoRplcState {
 
