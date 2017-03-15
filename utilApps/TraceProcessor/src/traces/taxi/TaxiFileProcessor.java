@@ -146,7 +146,7 @@ public class TaxiFileProcessor {
     private SortedMap<Long, TupleRead> parseAndSortByTime(final BufferedReader in, File inputFile) throws NumberFormatException, IOException {
         String nxtLine = in.readLine();
 
-        SortedMap<Long, TupleRead> sortedByTime = Collections.synchronizedSortedMap(new TreeMap<>());
+        SortedMap<Long, TupleRead> sortedByTime = Collections.synchronizedSortedMap(new TreeMap<Long, TupleRead>());
         // sort by time first
         do {
             String[] csvLine = nxtLine.split(" ");
@@ -216,12 +216,12 @@ public class TaxiFileProcessor {
     }
 
     public static Runnable processInParallel(
-            final FileWriter meta, File inputFile, File outputFile,
-            SortedMap<Long, List<TupleProccessedAggr>> sortedByTimeAggregates,
-            int uID, String workerName)
+            final FileWriter meta, final File inputFile, final File outputFile,
+           final  SortedMap<Long, List<TupleProccessedAggr>> sortedByTimeAggregates,
+           final int uID, String workerName)
             throws FileNotFoundException, IOException {
 
-        TaxiFileProcessor lock = instance();
+        final TaxiFileProcessor lock = instance();
 
         synchronized (lock) {
             lock._coresAvailable--;

@@ -70,7 +70,10 @@ public class ProcessorApp {
         TaxiFileProcessor taxiFileProc = TaxiFileProcessor.instance();
         List<Thread> workers = new ArrayList<>();
 
-        SortedMap<Long, List<TaxiFileProcessor.TupleProccessedAggr>> sortedByTimeAggregates = Collections.synchronizedSortedMap(new TreeMap<>());
+        SortedMap<Long, List<TaxiFileProcessor.TupleProccessedAggr>> sortedByTimeAggregates
+                = Collections.synchronizedSortedMap(
+                        new TreeMap<Long, List<TaxiFileProcessor.TupleProccessedAggr>>()
+                );
 
         String basePath
                 = (System.getProperty("os.name").equals("Linux") ? "/home/" : "C:/Users/")
