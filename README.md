@@ -1,2 +1,2 @@
 # EPM
-Efficient Proactive Multicast (EPM) decentralised scheme for cellular networks 
+EPMS-Sim: Efficient Proactive Mobility Support models Simulator
