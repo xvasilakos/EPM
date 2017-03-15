@@ -25,11 +25,11 @@ public class CellsCSVProcessor {
 
         String csvRdFile = "D:\\xvas\\dev\\MECOMM\\bs.csv";
 
-        List<double[]> CSV = new ArrayList();
+        List<double[]> csvAsList = new ArrayList();
 
         CellsCSVProcessor csvLoader = new CellsCSVProcessor();
 
-        csvLoader.parseCSV(csvRdFile, CSV);
+        csvLoader.parseCSV(csvRdFile, csvAsList);
 
         // Set the max coverage area
         double d = 2500;// area will resemble a square d x d
@@ -38,9 +38,10 @@ public class CellsCSVProcessor {
         for (int seed = 0; seed < 129; seed++) {
             RandomGenerator rnd = new RandomGenerator(seed); // pick random point in list
 
-            int randStart = rnd.randIntInRange(0, CSV.size());
+            int randStart = rnd.randIntInRange(0, csvAsList.size());
 
-            List<double[]> rndStartCSVLines = CSV.subList(randStart, CSV.size());
+            // pick up first some random line from the trace to start the sampling.
+            List<double[]> rndStartCSVLines = csvAsList.subList(randStart, csvAsList.size());
 
             boolean areaExided = false;
 
@@ -136,8 +137,8 @@ public class CellsCSVProcessor {
                         the list of cells*/
 
                     rnd = new RandomGenerator(++seed);
-                    randStart = rnd.randIntInRange(0, CSV.size());
-                    rndStartCSVLines = CSV.subList(randStart, CSV.size());
+                    randStart = rnd.randIntInRange(0, csvAsList.size());
+                    rndStartCSVLines = csvAsList.subList(randStart, csvAsList.size());
 
                     prevMinX = minX = Double.MAX_VALUE;
                     prevMinY = minY = Double.MAX_VALUE;
@@ -193,8 +194,6 @@ public class CellsCSVProcessor {
 
             int i = selectedCSV.size();
             for (double[] nxt : selectedCSV) {
-
-               
 
                 String line
                         = Arrays.toString(nxt)
@@ -298,39 +297,25 @@ public class CellsCSVProcessor {
     }
 
     public void parseCSV(String csvFile, List<double[]> lines) {
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+            String line = "";
+            String splitted = ",";
 
-        BufferedReader br = null;
-        String line = "";
-        String cvsSplitBy = ",";
-
-        try {
-
-            br = new BufferedReader(new FileReader(csvFile));
             while ((line = br.readLine()) != null) {
                 // use comma as separator
-                String[] lineArr = line.split(cvsSplitBy);
-                double[] nums = new double[3];
+                String[] lineArr = line.split(splitted);
+                double[] lineNums = new double[3];
                 int i = 0;
                 for (String nxt : lineArr) {
                     double nxtDble = Double.parseDouble(nxt);
-                    nums[i++] = nxtDble;
+                    lineNums[i++] = nxtDble;
                 }
-                lines.add(nums);
+                lines.add(lineNums);
             }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            LOG.log(Level.SEVERE, "", e);
         }
     }
+    private static final Logger LOG = Logger.getLogger(CellsCSVProcessor.class.getName());
 
 }
