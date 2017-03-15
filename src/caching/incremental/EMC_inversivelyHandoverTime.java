@@ -12,17 +12,16 @@ import sim.space.users.mobile.MobileUser;
 import sim.space.util.DistanceComparator;
 
 /**
- *
- * @todo Check if functionality is correct.
- *
- * Cache decisions are inversivly proportional to the expected time until 
+ * Cache decisions are inversivly proportional to the expected time until
  * handover completion.
  *
- * @author Xenofon Vasilakos - xvas@aueb.gr, mm.aueb.gr/~xvas, Mobile Multimedia
- * Laboratory <mm.aueb.gr>, Dept. of Informatics, School of Information Sciences
- * & Technology, Athens University of Economics and Business, Greece
+ * @author Xenofon Vasilakos ({@literal xvas@aueb.gr} - mm.aueb.gr/~xvas),
+ * Mobile Multimedia Laboratory (mm.aueb.gr), Dept. of Informatics, School of
+ * Information {@literal Sciences & Technology}, Athens University of Economics
+ * and Business, Greece
  * @deprecated
  */
+//TODO Check if functionality is correct.
 @Deprecated
 public final class EMC_inversivelyHandoverTime extends caching.incremental.EMC {
 

@@ -24,9 +24,9 @@ import sim.space.users.CachingUser;
  * This mobility-based model uses the summation of the mobile transition
  * probabilities for weighting the delay gain of a cache decision.
  *
- * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>, Mobile
- * Multimedia Laboratory <mm.aueb.gr>, Dept. of Informatics, School of
- * Information Sciences & Technology, Athens University of Economics and
+ * @author Xenofon Vasilakos (xvas{@literal @}aueb.gr - mm.aueb.gr/~xvas), Mobile
+ * Multimedia Laboratory (mm.aueb.gr), Dept. of Informatics, School of
+ * Information {@literal Sciences & Technology}, Athens University of Economics and
  * Business, Greece
  */
 public class EMC_R extends AbstractEPC implements IGainRplc, IEMC {

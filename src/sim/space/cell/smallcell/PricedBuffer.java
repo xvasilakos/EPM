@@ -18,9 +18,9 @@ import utils.CommonFunctions;
  * Buffer type that applies a cache congestion pricing scheme.
  *
  
- * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>,
- * Mobile Multimedia Laboratory <mm.aueb.gr>,
- * Dept. of Informatics, School of Information Sciences & Technology,
+ * @author Xenofon Vasilakos (xvas{@literal @}aueb.gr - mm.aueb.gr/~xvas),
+ * Mobile Multimedia Laboratory (mm.aueb.gr),
+ * Dept. of Informatics, School of Information {@literal Sciences & Technology},
  * Athens University of Economics and Business, Greece
  */
 public class PricedBuffer extends BufferBase {

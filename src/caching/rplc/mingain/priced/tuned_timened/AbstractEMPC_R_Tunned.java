@@ -14,9 +14,9 @@ import sim.space.cell.smallcell.SmallCell;
  *
  * Note: uses the golden ratio algorithm. 
  *
- * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>, Mobile
- * Multimedia Laboratory <mm.aueb.gr>, Dept. of Informatics, School of
- * Information Sciences & Technology, Athens University of Economics and
+ * @author Xenofon Vasilakos (xvas{@literal @}aueb.gr - mm.aueb.gr/~xvas), Mobile
+ * Multimedia Laboratory (mm.aueb.gr), Dept. of Informatics, School of
+ * Information {@literal Sciences & Technology}, Athens University of Economics and
  * Business, Greece
  */
 public abstract class AbstractEMPC_R_Tunned extends caching.rplc.mingain.priced.EMPC_R {

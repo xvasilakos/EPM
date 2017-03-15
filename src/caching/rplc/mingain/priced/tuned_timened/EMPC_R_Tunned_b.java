@@ -15,9 +15,9 @@ import sim.space.util.DistanceComparator;
  * 
  * Note: used in the golden ratio algorithm as parameter b.
  *
- * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>,
- * Mobile Multimedia Laboratory <mm.aueb.gr>,
- * Dept. of Informatics, School of Information Sciences & Technology,
+ * @author Xenofon Vasilakos (xvas{@literal @}aueb.gr - mm.aueb.gr/~xvas),
+ * Mobile Multimedia Laboratory (mm.aueb.gr),
+ * Dept. of Informatics, School of Information {@literal Sciences & Technology},
  * Athens University of Economics and Business, Greece
  */
 public final class EMPC_R_Tunned_b extends AbstractEMPC_R_Tunned {

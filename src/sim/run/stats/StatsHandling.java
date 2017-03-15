@@ -383,7 +383,7 @@ public final class StatsHandling implements ISimulationMember {
     }
 
     /**
-     * Commits and finalises statistics after a simulation round. Committing
+     * Commits and finalizes statistics after a simulation round. Committing
      * implies finalizing and thus compressing/aggregating/averaging state in
      * each stats record, where the stats period of the record is defined by the
      * parameter statsPeriod.
@@ -393,17 +393,11 @@ public final class StatsHandling implements ISimulationMember {
      *
      *
      * @param statsPeriod
-     * @return true iff stats are committed
      * @throws statistics.StatisticException
      *
      */
     public void commitForce4Round(int statsPeriod) throws StatisticException {
-        int statRecordingAvgPeriodTime = statRecordingAvgPeriodTime();
-        /*Caution must use this averaging period simTime instead of actual theSim clock simTime;
-             * otherwise it tries to finalize times that may have not been recorded*/
-
         _simStatististics.finalizeState(statsPeriod);
-
     }
 
     /**

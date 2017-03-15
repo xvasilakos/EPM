@@ -83,7 +83,7 @@ public class ScenarioParamBean {
    }
 
    /**
-    * Obj must be also a ScenarioParamBean and toString() representations must return the same string.
+    * otherObj must be also a ScenarioParamBean and toString() representations must return the same string.
     * 
     * @param otherObj
     * @return

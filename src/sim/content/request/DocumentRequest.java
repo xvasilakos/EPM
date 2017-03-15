@@ -23,8 +23,8 @@ import traces.dmdtrace.TraceWorkloadRecord;
 /**
  * 
  * @author Xenofon Vasilakos - xvas@aueb.gr, mm.aueb.gr/~xvas,
- * Mobile Multimedia Laboratory <mm.aueb.gr>,
- * Dept. of Informatics, School of Information Sciences & Technology,
+ * Mobile Multimedia Laboratory (mm.aueb.gr),
+ * Dept. of Informatics, School of Information {@literal Sciences & Technology},
  * Athens University of Economics and Business, Greece
  */
 public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisString, IRequest {

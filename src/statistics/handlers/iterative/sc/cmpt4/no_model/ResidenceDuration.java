@@ -6,9 +6,9 @@ import statistics.handlers.ICompute4;
 
 /**
  * 
- * @author Xenofon Vasilakos <xvas@aueb.gr - mm.aueb.gr/~xvas>,
- * Mobile Multimedia Laboratory <mm.aueb.gr>,
- * Dept. of Informatics, School of Information Sciences & Technology,
+ * @author Xenofon Vasilakos (xvas{@literal @}aueb.gr - mm.aueb.gr/~xvas),
+ * Mobile Multimedia Laboratory (mm.aueb.gr),
+ * Dept. of Informatics, School of Information {@literal Sciences & Technology},
  * Athens University of Economics and Business, Greece
  */
 public class ResidenceDuration extends BaseHandler implements ICompute4<SmallCell> {

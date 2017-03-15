@@ -12,15 +12,21 @@ import sim.space.users.mobile.MobileUser;
 import sim.space.util.DistanceComparator;
 
 /**
- * @todo Must check functionality after severe changes in code
- * @todo also consider if it should remain with congestion pricing. Perhaps
- * simply changing the "extends" statement to another parent class could work.
+ *
+ * Simply changing the "extends" statement to another parent class could work.
  *
  * Items do not get replaced when at least one of the requesting mobiles gets
  * close enough to the small cell.
  *
- * @author Xenofon Vasilakos xvas@aueb.gr
+ *
+ * @author Xenofon Vasilakos ({@literal xvas@aueb.gr} - mm.aueb.gr/~xvas),
+ * Mobile Multimedia Laboratory (mm.aueb.gr), Dept. of Informatics, School of
+ * Information {@literal Sciences & Technology}, Athens University of Economics
+ * and Business, Greece
+ * @deprecated
  */
+//TODO Must check functionality after severe changes in code
+//TODO also consider if it should remain with congestion pricing. Perhaps
 @Deprecated
 public final class EMPC_R extends caching.rplc.mingain.priced.EMPC_R {
 
@@ -58,9 +64,9 @@ public final class EMPC_R extends caching.rplc.mingain.priced.EMPC_R {
     private final double timeThreshold;
 
     /**
-     * The value for the expected time threshold. No replacements take place 
-     * below this threshold, as the requesting mobile(s) is (are) considered
-     * to be close enough to the small cell.
+     * The value for the expected time threshold. No replacements take place
+     * below this threshold, as the requesting mobile(s) is (are) considered to
+     * be close enough to the small cell.
      *
      * @param _timeThrs
      */

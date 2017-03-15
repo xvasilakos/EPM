@@ -186,7 +186,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
             //else...
 
             //[1] mu id
-            int parsedID = Integer.parseInt(csv[1]);
+            int parsedID = csv[1].hashCode();
 
             //[2] x
             int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
