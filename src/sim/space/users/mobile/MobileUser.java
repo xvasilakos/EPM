@@ -367,7 +367,7 @@ public class MobileUser extends CachingUser {
 
     public final void cancelAndDeregisterPCOrders(SmallCell sc) {
         for (DocumentRequest nxtRequest : getRequests()) {
-            for (AbstractCachingModel policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel policy : getSimulation().getCachingModels()) {
                 if (policy instanceof MaxPop) {
                     // cached object stay permanently in cache.
                     continue;

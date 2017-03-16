@@ -66,8 +66,8 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 
         Collection<Chunk> chunksInSequence = referredContentDocument().getChunksInSequence().values();
 
-        _uncompletedPolicies = getSimulation().getCachingStrategies().size();
-        for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
+        _uncompletedPolicies = getSimulation().getCachingModels().size();
+        for (AbstractCachingModel model : getSimulation().getCachingModels()) {
             _unconsumedChunksInSequence.put(model, new ArrayList<>(chunksInSequence));
             _completitionTimes.put(model, -1);
             _chunksConsumedHistoryFromMCWhileConnectedToSC.put(model, new ArrayList<Chunk>());
@@ -451,7 +451,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             Map<AbstractCachingModel, Set<Chunk>> hitsNowInCachePerModel
                     = new HashMap<>(5);
 
-            for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel model : getSimulation().getCachingModels()) {
 
                 long maxBudget = (long) Math.ceil(sizeInChunks());
 
@@ -518,7 +518,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         if (!userConnected) {
             if (!isSoft) {
                 maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-                for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
+                for (AbstractCachingModel model : getSimulation().getCachingModels()) {
                     Map<AbstractCachingModel, List<Chunk>> consumedMCwSCDiscon
                             = consumeFromMCwSCDiscon(model, maxBudget);
                     mergeToFirstMap(fillInWithDownloadedFromMC, consumedMCwSCDiscon);
@@ -530,7 +530,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                     = new HashMap<>(5);
 
             maxBudget = Math.round(scRateSlice / chunkSizeInBytes);
-            for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel model : getSimulation().getCachingModels()) {
 
 //
 //
@@ -941,7 +941,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
 
     public void forceComplete(int time) {
         _uncompletedPolicies = 0;
-        for (AbstractCachingModel model : getSimulation().getCachingStrategies()) {
+        for (AbstractCachingModel model : getSimulation().getCachingModels()) {
             _completitionTimes.put(model, time);
         }
     }

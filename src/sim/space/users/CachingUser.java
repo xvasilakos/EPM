@@ -46,7 +46,7 @@ public abstract class CachingUser extends User {
         _mostRecentlyCacheMissesPerPolicy = new HashMap<>(5);
 
         if (sim != null) {// dummy user
-            for (AbstractCachingModel policy : sim.getCachingStrategies()) {
+            for (AbstractCachingModel policy : sim.getCachingModels()) {
                 _mostRecentlyConsumedMC.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedFromCacheHits.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedBH.put(policy, new ArrayList<Chunk>());
@@ -71,7 +71,7 @@ public abstract class CachingUser extends User {
         _mostRecentlyCacheMissesPerPolicy = new HashMap<>(5);
 
         if (sim != null) {// dummy user
-            for (AbstractCachingModel policy : sim.getCachingStrategies()) {
+            for (AbstractCachingModel policy : sim.getCachingModels()) {
                 _mostRecentlyConsumedMC.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedFromCacheHits.put(policy, new ArrayList<Chunk>());
                 _mostRecentlyConsumedBH.put(policy, new ArrayList<Chunk>());
@@ -108,7 +108,7 @@ public abstract class CachingUser extends User {
         double mcRateSlice = Math.round((double) getSimulation().getRateMCWlessInBytes() / slices);
 
         for (DocumentRequest nxtRequest : getRequests()) {
-            for (AbstractCachingModel policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel policy : getSimulation().getCachingModels()) {
                 nxtRequest.consumeChunksRemainderFromMC(policy, mcRateSlice, _mostRecentlyConsumedMC);
             }
         }

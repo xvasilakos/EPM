@@ -213,7 +213,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     /**
      * @return the list of caching methods used.
      */
-    public List<AbstractCachingModel> getCachingStrategies() {
+    public List<AbstractCachingModel> getCachingModels() {
         return Collections.unmodifiableList(cachingModels);
     }
 
@@ -398,7 +398,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         _statsHandle = new StatsHandling(this);
 
         // initilize mobile users and arrange initial connectivity and proactive caching  status //
-        musByID = initAndConnectMUs(s, _musGrpsRegistry, theArea, _cellRegistry, getCachingStrategies());
+        musByID = initAndConnectMUs(s, _musGrpsRegistry, theArea, _cellRegistry, getCachingModels());
 
         _loadedDocumentsNum = 0;
         _maxWorklaodRequestsNum = 0;
@@ -1001,7 +1001,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     public void runFinish() {
 
-        for (AbstractCachingModel policy : getCachingStrategies()) {
+        for (AbstractCachingModel policy : getCachingModels()) {
             for (SmallCell sc : _cellRegistry.getSmallCells()) {
                 sc.clearDmdPC(policy);
                 sc.clearBuffer(policy);

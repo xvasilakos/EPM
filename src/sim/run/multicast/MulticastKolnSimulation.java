@@ -40,11 +40,13 @@ import statistics.StatisticException;
 import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
 import traces.area.Cells;
 import utilities.Couple;
-import utils.DebugTool;
 
 /**
  *
- * @author Xenofon Vasilakos xvas@aueb.gr
+ * @author Xenofon Vasilakos ({@literal xvas@aueb.gr} - mm.aueb.gr/~xvas),
+ * Mobile Multimedia Laboratory (mm.aueb.gr), Dept. of Informatics, School of
+ * Information {@literal Sciences & Technology}, Athens University of Economics
+ * and Business, Greece
  */
 public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
@@ -556,7 +558,6 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
             );
         }
 
-//        DebugTool.appendln("logSimulationRound: " + simRound);
     }
 
     private void mobTraceEarlyEndingCheck() throws TraceEndedException {

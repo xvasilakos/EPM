@@ -107,7 +107,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
         muGroupRegistry = groupRegistry;
 
         smallCells = new TreeMap<>();
-        Collection<SmallCell> scs = createSCs(area, simulation.getCachingStrategies());
+        Collection<SmallCell> scs = createSCs(area, simulation.getCachingModels());
         Iterator<SmallCell> cellsIter = scs.iterator();
         while (cellsIter.hasNext()) {
             SmallCell sc = cellsIter.next();
@@ -967,7 +967,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             }
 
             //discover neighbors sanity check
-            if (sim.getCachingStrategies().contains(Values.CACHING__NAIVE__TYPE03)
+            if (sim.getCachingModels().contains(Values.CACHING__NAIVE__TYPE03)
                     && s.intProperty(Space.SC__WARMUP_PERIOD) < 100) {
                 throw new CriticalFailureException(Values.CACHING__NAIVE__TYPE03 + " is enabled."
                         + " Finding neighbors for each SC is mandatory."

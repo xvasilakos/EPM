@@ -135,7 +135,7 @@ final class HandlersUsed {
                     continue;
                 default:
                     // for every caching policy used
-                    for (AbstractCachingModel nxtCachingPolicy : _statsHandlingOuter.theSim.getCachingStrategies()) {
+                    for (AbstractCachingModel nxtCachingPolicy : _statsHandlingOuter.theSim.getCachingModels()) {
                         Object iCompute2Object = Class.forName(statsProp.propertyName() + "." + nxtHandlerName).getConstructor(AbstractCachingModel.class).newInstance(nxtCachingPolicy);
                         if (!(iCompute2Object instanceof AbstractPerformanceStat)) {
                             throw new StatisticException("No known stats handler:" + statsProp.name() + "." + nxtHandlerName);
@@ -207,7 +207,7 @@ final class HandlersUsed {
                     continue;
                 default:
                     for (SmallCell nxtMonitorSC : monitorSCs) {
-                        for (AbstractCachingModel nxtCachePolicy : _statsHandlingOuter.theSim.getCachingStrategies()) {
+                        for (AbstractCachingModel nxtCachePolicy : _statsHandlingOuter.theSim.getCachingModels()) {
                             Object newInstance = Class.forName(statsProp.propertyName() + "." + nxtHandlerName).getConstructor(AbstractCachingModel.class, SmallCell.class).newInstance(nxtCachePolicy, nxtMonitorSC);
                             if (!(newInstance instanceof ICompute0)) {
                                 throw new StatisticException("No known stats handler:" + statsProp.name() + "." + nxtHandlerName);
@@ -282,7 +282,7 @@ final class HandlersUsed {
                 case Values.NULL:
                     continue;
                 default:
-                    for (AbstractCachingModel nxtPolicy : _statsHandlingOuter.theSim.getCachingStrategies()) {
+                    for (AbstractCachingModel nxtPolicy : _statsHandlingOuter.theSim.getCachingModels()) {
                         Object newInstance = Class.forName(statsProp.propertyName() + "." + nxtHandlerName).getConstructor(AbstractCachingModel.class).newInstance(nxtPolicy);
                         if (!(newInstance instanceof ComputeAllPoliciesImpl)) {
                             throw new StatisticException("No known stats handler:" + statsProp.name() + "." + nxtHandlerName);
@@ -307,7 +307,7 @@ final class HandlersUsed {
                 case Values.NULL:
                     continue;
                 default:
-                    for (AbstractCachingModel nxtCachePolicy : _statsHandlingOuter.theSim.getCachingStrategies()) {
+                    for (AbstractCachingModel nxtCachePolicy : _statsHandlingOuter.theSim.getCachingModels()) {
                         UnonymousCompute5 hndlr = new UnonymousCompute5(nxtCachePolicy, nxtHandlerTitl);
                         initHdlSet.add(hndlr);
                         _statsHandlingOuter._simStatististics.addTitle(hndlr.title());

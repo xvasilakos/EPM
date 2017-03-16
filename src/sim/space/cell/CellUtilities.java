@@ -142,7 +142,7 @@ public final class CellUtilities {
 
                 case Values.MAX_CACHED_EPC_STD:
                     //<editor-fold defaultstate="collapsed" desc="The cell with the most items requested by the MU in its cache">
-                    List<AbstractCachingModel> cachingPolicies = mu.getSimulation().getCachingStrategies();
+                    List<AbstractCachingModel> cachingPolicies = mu.getSimulation().getCachingModels();
                     if (cachingPolicies.size() != 1) {
                         throw new exceptions.InvalidOrUnsupportedException(
                                 "There must one and only one caching policy used when simulating a mobile's "

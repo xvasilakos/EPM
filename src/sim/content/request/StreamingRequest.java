@@ -35,11 +35,11 @@ public class StreamingRequest extends DocumentRequest {
 
         if (!userConnected) {
             maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-            for (AbstractCachingModel policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel policy : getSimulation().getCachingModels()) {
                 mergeToFirstMap(fillInWithDownloadedFromMC, super.consumeFromMCwSCDiscon(policy, maxBudget));
             }
         } else {// in this case, downloads from all reasources, with this *priority*: 
-            for (AbstractCachingModel policy : getSimulation().getCachingStrategies()) {
+            for (AbstractCachingModel policy : getSimulation().getCachingModels()) {
 // CAUTION! do not change  the priority of the following invokations!    
 
                 if (policy != caching.incremental.Oracle.instance()) {

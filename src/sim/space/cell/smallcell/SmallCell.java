@@ -413,7 +413,6 @@ public class SmallCell extends AbstractCell {
             return;
         }
 
-//        DebugTool.appendln("\n\n#In cacheDecisions: " + model + " " + cacheRequestor.getClass().getSimpleName());
         /**
          * ************************************************
          * Skip if any of the following.
@@ -893,7 +892,7 @@ public class SmallCell extends AbstractCell {
 
         stationaryUsr = new StationaryUser("Stationary:" + getID(), _sim, _sim.simTime(),
                 this, _sim.macrocell(),
-                _sim.getCachingStrategies());
+                _sim.getCachingModels());
     }
 
     /**

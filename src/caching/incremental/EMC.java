@@ -51,10 +51,6 @@ public class EMC extends caching.incremental.EPC implements IEMC {
     public int cacheDecision(SimulationBaseRunner sim, CachingUser cu, 
             Collection<Chunk> requestChunks, SmallCell hostSC, 
             SmallCell targetSC) throws Throwable {
-//        return EPC.cacheDecision(this, sim, mu, requestChunks, hostSC, targetSC);
-
-        DebugTool.appendln("\n\t EMC.cacheDecision: #" + requestChunks.size());
-
 
         int totalSizeCached = 0;
         for (Chunk nxtChunk : requestChunks) {
