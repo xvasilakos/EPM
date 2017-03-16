@@ -26,11 +26,14 @@ public class MobilityCSVProcessor {
 
     /**
      * ID, x, y, speed
+     *
+     * @param args
      */
     public static void main(String[] args) {
-
-        String originalCSVFile = "D:\\xvas\\dev\\MECOMM\\koln_tr\\koln.tr";
-        String metaDirPath = "D:\\xvas\\dev\\MECOMM\\bsCSV\\d=2500\\";
+        String home = System.getProperty("user.home");
+        String base = home + "/Dropbox/EPC/git/EPM";
+        String originalCSVFile = base + "/MECOMM/koln_tr/koln.tr";
+        String metaDirPath = base + "/MECOMM/bsCSV/d=1000/";
 
         File metaDir = new File(metaDirPath);
         for (String fileName : metaDir.list()) {
@@ -87,7 +90,7 @@ public class MobilityCSVProcessor {
         closePathStreamToOutputMobTrace();
     }
 
-    private static void writeCSVandMetadata(String csvWrFile, List<MobCSVLine> selectedCSVLines) {
+    private static void writeCSVandMetadata(String csvWrFile, List<MobCSVLine> selectedCSVLines, int i) {
 
         File outputCSV = new File(csvWrFile);
         outputCSV.getParentFile().mkdirs();
@@ -96,18 +99,18 @@ public class MobilityCSVProcessor {
         File metaCSV = new File(outputCSV.getParent(), name.substring(0, name.length() - 4) + ".meta");
         metaCSV.getParentFile().mkdir();
 
-        System.err.println("\n\n\n\n\n");
-        LOG.log(Level.INFO, "Appending lines to: \"{0}\""
-                + "\n#added {1} more lines from original CSV.. "
-                + "\nFirst line from trace to add: {2}"
-                + "\nLast line from trace to add: {3}",
-                new Object[]{
-                    csvWrFile,
-                    selectedCSVLines.size(),
-                    selectedCSVLines.get(0).toString(),
-                    selectedCSVLines.get(selectedCSVLines.size() - 1).toString()}
-        );
-
+        if (i % 1000000 == 0) {
+            LOG.log(Level.INFO, "\n\nAppending lines to: \"{0}\""
+                    + "\n#added {1} more lines from original CSV.. "
+                    + "\nFirst line from trace to add: {2}"
+                    + "\nLast line from trace to add: {3}",
+                    new Object[]{
+                        csvWrFile,
+                        selectedCSVLines.size(),
+                        selectedCSVLines.get(0).toString(),
+                        selectedCSVLines.get(selectedCSVLines.size() - 1).toString()}
+            );
+        }
         try {
 
             for (MobCSVLine nxt : selectedCSVLines) {
@@ -233,7 +236,7 @@ public class MobilityCSVProcessor {
                                     "Parsed input mobility trace line #{0}", i
                             );
 
-                    writeCSVandMetadata(mobResultFilePath, selectedMobCSVLines);
+                    writeCSVandMetadata(mobResultFilePath, selectedMobCSVLines, i);
 
                     selectedMobCSVLines.clear();
                 }

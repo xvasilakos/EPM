@@ -7,7 +7,6 @@ package traces.koln_processor;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,7 +22,9 @@ public class CellsCSVProcessor {
 
     public static void main(String[] args) {
 
-        String csvRdFile = "D:\\xvas\\dev\\MECOMM\\bs.csv";
+        String home = System.getProperty("user.home");
+        String base = home + "/Dropbox/EPC/git/EPM";
+        String csvRdFile = base + "/MECOMM/bs.csv";
 
         List<double[]> csvAsList = new ArrayList();
 
@@ -32,7 +33,7 @@ public class CellsCSVProcessor {
         csvLoader.parseCSV(csvRdFile, csvAsList);
 
         // Set the max coverage area
-        double d = 2500;// area will resemble a square d x d
+        double d = 1000;// area will resemble a square d x d
         double maxArea = Math.pow(d, 2);
 
         for (int seed = 0; seed < 129; seed++) {
@@ -173,9 +174,11 @@ public class CellsCSVProcessor {
             double d, int seed, List<double[]> selectedCSV,
             double selectedArea, double targetArea, double minX, double minY, double maxX, double maxY) {
         // if here, then CSV lines are selected and metadata too (min, max, etc..)
-        String csvWrFile = "D:\\xvas\\dev\\MECOMM\\bsCSV\\"
+         String home = System.getProperty("user.home");
+        String base = home + "/Dropbox/EPC/git/EPM";
+        String csvWrFile = base + "/MECOMM/bsCSV/"
                 + "d=" + (int) d
-                + "\\"
+                + "/"
                 + "seed=" + seed + ".log";
 
         File outputCSV = new File(csvWrFile);
