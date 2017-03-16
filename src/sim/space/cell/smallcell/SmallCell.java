@@ -9,6 +9,7 @@ import caching.base.AbstractCachingModel;
 import caching.base.AbstractOracle;
 import caching.base.AbstractPricing;
 import caching.base.IPop;
+import caching.interfaces.rplc.IGainNoRplc;
 import caching.interfaces.rplc.IGainRplc;
 import caching.rplc.mingain.priced.tuned_timened.EMPC_R_Tunned_a;
 import caching.rplc.mingain.priced.tuned_timened.EMPC_R_Tunned_b;
@@ -395,7 +396,7 @@ public class SmallCell extends AbstractCell {
      * Private method to maintain order of method calls for reasons documented
      * internally in this method.
      *
-     * @param policy
+     * @param model
      * @param cacheRequestor
      * @param targetSC
      * @param predictedChunks
@@ -404,7 +405,7 @@ public class SmallCell extends AbstractCell {
      * @throws InvalidOrUnsupportedException
      */
     public void cacheDecisions(
-            AbstractCachingModel policy, CachingUser cacheRequestor, // MobileUser cacheRequestor,
+            AbstractCachingModel model, CachingUser cacheRequestor, // MobileUser cacheRequestor,
             SmallCell targetSC, Collection<Chunk> predictedChunks,
             Collection<Chunk> predictedChunksNaive) throws Throwable {
 
@@ -412,35 +413,31 @@ public class SmallCell extends AbstractCell {
             return;
         }
 
-//TODO recheck the implementation of these policies            /**
-//            * Update access to items for LRU methods.
-//            *
-//            * Caution. Keep the order as it is. It must be called before check for 
-//            * AbstractOracle to allow checking for Oracle + LRU
-//             */
-//            if (nxtCachingPolicy instanceof ILRURplc) {
-//                Iterator<Chunk> reqItr = cacheExpectedRequests.iterator();
-//                while (reqItr.hasNext()) {
-//                    ((ITimeBuffer) targetSC.getBuffer(nxtCachingPolicy)).updtAccessTime(reqItr.next());
-//                }
-//            }
+//        DebugTool.appendln("\n\n#In cacheDecisions: " + model + " " + cacheRequestor.getClass().getSimpleName());
         /**
          * ************************************************
          * Skip if any of the following.
          */
-        if (policy instanceof AbstractOracle /* 
-                    Oracle and subtypes have been taken 
-                * cared off elsewhere */
-                || policy instanceof MaxPop /* 
-                    Taken cared of in simulation contructor */) {
+        if (model instanceof AbstractOracle/*
+                *1) Oracle and subtypes have been taken 
+                * cared off elsewhere..*/
+                || model instanceof MaxPop /*
+                *2) Taken cared of in simulation contructor..*/
+                || (model instanceof caching.incremental.EMC
+                && cacheRequestor instanceof StationaryUser)/*
+                *3) Do not allow EMC for stationary users, as it would need 
+                * mobility information, i.e. it would waste simulation time 
+                * with zero mobile transition probabilities..*/
+                ) {
             return;
         }
-
+IGainNoRplc p;
         /**
          * **************************************************
          * Perform caching for types stemming from IGainNoRplc
          */
-//        if (policy instanceof IGainNoRplc) {
+//TODO: do i have this code anymore?
+//if (policy instanceof IGainNoRplc) {
 ////            if (policy instanceof Naive) {
 ////                ((Naive) policy).
 ////                        cacheDecision(getSim(), cu,
@@ -455,19 +452,16 @@ public class SmallCell extends AbstractCell {
 //
 //            return;
 //        }
-        if (policy instanceof caching.incremental.EMC) {
-            if (!(cacheRequestor instanceof StationaryUser)) {// do not allow EMC for stationary user
-                return;
-            }
-            ((caching.incremental.EMC) policy).
+        if (model instanceof caching.incremental.EMC) {
+            ((caching.incremental.EMC) model).
                     cacheDecision(getSimulation(), cacheRequestor,
                             predictedChunks,
                             this, targetSC);
             return;
         }
 
-        if (policy instanceof caching.incremental.Naive) {
-            ((caching.incremental.Naive) policy).
+        if (model instanceof caching.incremental.Naive) {
+            ((caching.incremental.Naive) model).
                     cacheDecision(getSimulation(), cacheRequestor,
                             predictedChunks,
                             this, targetSC);
@@ -478,13 +472,13 @@ public class SmallCell extends AbstractCell {
          * *************************************************
          * Perform caching for types stemming from IGainRplc
          */
-        if (policy instanceof IGainRplc) {
+        if (model instanceof IGainRplc) {
 
             PriorityQueue<Chunk> cachedOrderByGain
-                    = targetSC.getCachedChunksOrderedByGain((IGainRplc) policy);
+                    = targetSC.getCachedChunksOrderedByGain((IGainRplc) model);
 
             Set<Chunk> rplcd = new HashSet();
-            ((IGainRplc) policy).
+            ((IGainRplc) model).
                     cacheDecision(getSimulation(), cacheRequestor, predictedChunks,
                             this, targetSC, rplcd, cachedOrderByGain);
 
@@ -492,7 +486,7 @@ public class SmallCell extends AbstractCell {
                 _sim.getStatsHandle().updtSCCmpt5(
                         rplcd.size(),
                         new UnonymousCompute5(
-                                policy, UnonymousCompute5.WellKnownTitle.ITMS_RPLCD
+                                model, UnonymousCompute5.WellKnownTitle.ITMS_RPLCD
                         )
                 );
             }
@@ -511,7 +505,7 @@ public class SmallCell extends AbstractCell {
 //                continue;
 //            }
         // for any other type of caching policy ..
-        throw new exceptions.InvalidOrUnsupportedException(policy.toString());
+        throw new exceptions.InvalidOrUnsupportedException(model.toString());
 
     }
 
