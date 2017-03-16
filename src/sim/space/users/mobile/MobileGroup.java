@@ -64,18 +64,23 @@ public class MobileGroup extends sim.space.users.UserGroup {
 
     /**
      * Computes the simulation start simTime for a particular MU based on its
-     * sequential ID and simulation properties file.
+     * hashed ID and simulation properties file.
      *
-     * param muID the ID of the user for which the simulation start simTime is
+     * @param muID the ID of the user for which the simulation start simTime is
      * computed
+     *
      * @return Computes the simulation start simTime for a particular MU based
      * on its ID.
      */
-    public int startRoamingTime(int muID) {
+    public int startRoamingTime(String muID) {
         if (musStartRoaming < 1) {
             return 0;
         }
-        return (int) (muID / musStartRoaming);
+        try {
+            return (int) (Long.valueOf(muID) / musStartRoaming);
+        } catch (NumberFormatException e) {
+            return (int) (muID.hashCode() / musStartRoaming);
+        }
     }
 
     /**
@@ -110,6 +115,7 @@ public class MobileGroup extends sim.space.users.UserGroup {
      * transition probabilities matrix.
      *
      * param i_thMU
+     *
      * @return
      */
     public double[] transProbsForMember(int i_thMU) {
@@ -145,8 +151,5 @@ public class MobileGroup extends sim.space.users.UserGroup {
     public int getHandoverDelayInSC() {
         return _handoverDelayInSC;
     }
-
- 
-  
 
 }

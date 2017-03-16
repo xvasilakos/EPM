@@ -36,6 +36,7 @@ import static sim.space.connectivity.ConnectionStatusUpdate.HANDOVER_DIRECTLY;
 import static sim.space.connectivity.ConnectionStatusUpdate.REMAINS_CONNECTED_TO_SAME_SC;
 import sim.space.users.CachingUser;
 import utilities.Couple;
+import utils.DebugTool;
 
 /**
  *
@@ -45,7 +46,7 @@ public class MobileUser extends CachingUser {
 
     private static final Logger LOG = Logger.getLogger(MobileUser.class.getCanonicalName());
 
-    public static final MobileUser DUMMY_MU = new MobileUser(-2000000);
+    public static final MobileUser DUMMY_MU = new MobileUser("DUMMY_MU");
 
     protected ConnectionStatusUpdate _mostRecentConnStatusUpdate;
     private int _minResidencePeriodInSCExpiration;
@@ -134,7 +135,7 @@ public class MobileUser extends CachingUser {
     private final String _muTransitionDecisions;
     private final List<String> _connectionPolicySC;
 
-    protected static final int ID_UNDEFINED = -1;
+    protected static final String ID_UNDEFINED = "ID_UNDEFINED";
     private static int __idGen;
     private final boolean _softUser;
 
@@ -142,7 +143,7 @@ public class MobileUser extends CachingUser {
 
     // only to be used by the builder class in order to build the object
     protected MobileUser(Builder builder) throws CriticalFailureException {
-        super(/*id*/(builder.__id == ID_UNDEFINED) ? ++__idGen : builder.__id,
+        super(/*id*/(builder.__id.equals(ID_UNDEFINED)) ? String.valueOf(++__idGen) : builder.__id,
                 builder.__simulation,
                 builder._cachingPolicies
         );
@@ -224,7 +225,7 @@ public class MobileUser extends CachingUser {
     /**
      * Used only for dummy user
      */
-    private MobileUser(int dummyID) {
+    private MobileUser(String dummyID) {
         super(dummyID, null, null);
         _velocity = -1;
 
@@ -314,17 +315,24 @@ public class MobileUser extends CachingUser {
 
     public void cacheDescisionsPerformRegisterPC(SmallCell hostingSC) throws IOException, Throwable {
         setLastSCForCacheDecisions(hostingSC);
+        DebugTool.appendln("cacheDescisionsPerformRegisterPC" + hostingSC.toString());
 
         /* take cache descisions for every caching candidate cell*/
         for (SmallCell targetSC : hostingSC.neighbors()) {
 
             double handoverProb = simCellRegistry().handoverProbability(this.getUserGroup(), hostingSC, targetSC);
+
+            DebugTool.appendln("handoverProb=" + handoverProb + " for "
+                    + hostingSC.toSynopsisString()
+                    + "->"
+                    + targetSC.toSynopsisString()
+            );
+
 //            if (handoverProb == 0) {
 //                if (getSim().getNeighborhoodType().equals(Values.DISCOVER)) {
 //                    throw new InconsistencyException("zero probability even though cells are neighbors..");
 //                }
 //            }
-
             CellRegistry cellRegistry = getSimulation().getCellRegistry();
             Couple<Double, Double> residenceStats = cellRegistry.getResidenceDurationBetween(this.getUserGroup(), hostingSC, targetSC, true);
 
@@ -975,6 +983,11 @@ public class MobileUser extends CachingUser {
         _currentCoordinates = newPoint;
         newPoint.addUser(this);
 
+//        DebugTool.appendln(getID() + " moved from:to "
+//                + _previousCoordinates.toSynopsisString()
+//                + ":"
+//                + _currentCoordinates.toSynopsisString()
+//        );
         _penultimateTimeMoved = _lastTimeMoved;
         _lastTimeMoved = simTime();
 

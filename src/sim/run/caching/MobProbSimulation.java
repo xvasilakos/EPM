@@ -51,12 +51,12 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
      * @return
      */
     @Override
-    protected Map<Integer, MobileUser> initAndConnectMUs(
+    protected Map<String, MobileUser> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
             Collection<AbstractCachingModel> cachingPolicies) {
 
-        Map<Integer, MobileUser> musLst = new HashMap<>();
+        Map<String, MobileUser> musLst = new HashMap<>();
 
         List<String> conn2SCPolicy;
 
@@ -84,7 +84,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
 
             for (int i = 1; i <= musNum; i++) {
 
-                int nxtMuID = ugReg.generateMobileID(nxtGroup.getId(), i);
+                String nxtMuID = ugReg.generateMobileID(nxtGroup.getId(), i);
 
                 double[] probs = nxtGroup.transProbsForMember(i);
 
@@ -102,9 +102,9 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
 
                 nxtMUBuilder.setTransitionDecisions(mobTransDecisions);
 
-                int tmp;
+                String tmp;
                 if (itemRndIDRange > 1) {
-                    tmp = (int) (getRandomGenerator().randIntInRange(1, itemRndIDRange));
+                    tmp = String.valueOf(getRandomGenerator().randIntInRange(1, itemRndIDRange));
                 } else {
                     tmp = nxtMuID;
                 }
@@ -172,7 +172,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                 getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-                for (AbstractCachingModel nxtPolicy : cachingStrategies) {/*
+                for (AbstractCachingModel nxtPolicy : cachingModels) {/*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */

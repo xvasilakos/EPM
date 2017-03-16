@@ -31,7 +31,7 @@ public abstract class CachingUser extends User {
     private final Map<AbstractCachingModel, List<Chunk>> _mostRecentlyCacheMissesPerPolicy;
     protected boolean _allowedToCache;
 
-    protected CachingUser(int id, SimulationBaseRunner<?> sim,
+    protected CachingUser(String id, SimulationBaseRunner<?> sim,
             Collection<AbstractCachingModel> cachingPolicies) {
 
         super(id, sim);
@@ -55,7 +55,7 @@ public abstract class CachingUser extends User {
         }
     }
 
-    protected CachingUser(int id, SimulationBaseRunner<?> sim, int connectedSinceSC, SmallCell connectionSC,
+    protected CachingUser(String id, SimulationBaseRunner<?> sim, int connectedSinceSC, SmallCell connectionSC,
             MacroCell connectionMC,
             Collection<AbstractCachingModel> cachingPolicies) {
 

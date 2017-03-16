@@ -69,7 +69,6 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
             initRoamStartGrp(scenario);
             initHandoffResidenceDelays(scenario);
 
-            
             initVelocityStdevGrp(scenario);
             initVelocityMeanGrp(scenario);
             initTransProbsPerGrp(scenario);
@@ -87,12 +86,8 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
             int residenceDelayInSC = -1;
             residenceDelayInSC = residenceDelayInSCGrpFor(nxtGrpIdx);
 
-  
-
             int handoverDelayInSC = -1;
             handoverDelayInSC = handoverDelayGrpFor(nxtGrpIdx);
-
-        
 
             double meanVelocity = -1;
             meanVelocity = velocityMeanGrpFor(nxtGrpIdx);
@@ -123,8 +118,6 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
         }//for
         this.totalNumOfMUs = totalMUsNumSum;
     }
-
-
 
     private String resetPosGrpFor(int nxtGrpIdx) {
         String resetPos;
@@ -185,7 +178,6 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
         }
         return meanVelocity;
     }
-
 
     private int handoverDelayGrpFor(int nxtGrpIdx) {
         int handoverDelayInSC;
@@ -338,9 +330,7 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
     }
 
     /**
-     * Generates a unique universal ID for a RUN__CLASS such that the 1st RUN__CLASS member of
- the 1st group gets ID 1, the 1st RUN__CLASS of the 2nd group gets ID 2, the 1st
- RUN__CLASS of the 3rd group gets id 3 and so forth.
+     * Generates a unique universal ID.
      *
      * Mathematically, the former is described by formula: (k-1) *
      * #registeredGroups + grpID.
@@ -348,11 +338,11 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
      * CAUTION k must be greater than 0 and grpID must be a non negative value.
      *
      * @param grpID the ID of the group
-     * @param k the sequence number of the RUN__CLASS with respect to its group, e.g. 5
- for the 5th RUN__CLASS of the given group.
+     * @param k the sequence number of the RUN__CLASS with respect to its group,
+     * e.g. 5 for the 5th RUN__CLASS of the given group.
      * @return
      */
-    public int generateMobileID(int grpID, int k) {
+    public String generateMobileID(int grpID, int k) {
         if (k < 1) {
             throw new RuntimeException("The sequence number k of the MU must be greater than zero.  "
                     + "Value passed: k=" + k);
@@ -360,7 +350,7 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
         if (grpID < 0) {
             throw new RuntimeException("The group id must be non negative.  Value passed grpID=" + grpID);
         }
-        return grpID + (k - 1) * groupsNum;
+        return String.valueOf(grpID + (k - 1) * groupsNum);
     }
 
     /**

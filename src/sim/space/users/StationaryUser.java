@@ -21,14 +21,14 @@ import sim.space.cell.smallcell.SmallCell;
  */
 public class StationaryUser extends CachingUser {
 
-    public StationaryUser(int id, SimulationBaseRunner sim,
+    public StationaryUser(String id, SimulationBaseRunner sim,
             Collection<AbstractCachingModel> cachingPolicies) throws InvalidOrUnsupportedException {
 
         super(id, sim, cachingPolicies);
         _allowedToCache = sim.getScenario().isTrue(SC__DMD__TRACE__STATIONARY_REQUESTS__REQ2CACHE);
     }
 
-    public StationaryUser(int id, SimulationBaseRunner sim, int connectedSinceSC,
+    public StationaryUser(String id, SimulationBaseRunner sim, int connectedSinceSC,
             SmallCell connectionSC, MacroCell connectionMC,
             Collection<AbstractCachingModel> cachingPolicies) throws InvalidOrUnsupportedException {
 

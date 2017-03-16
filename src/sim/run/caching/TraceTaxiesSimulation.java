@@ -44,19 +44,19 @@ import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
  */
 public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
-    private Scanner _muTraceIn;
+    private Scanner muTraceIn;
     private String mobTrcLine;
     private String mobTrcCSVSep = " ";// default set to " "
 
-    private Map<Integer, TraceMU> _muByID;
+    private Map<String, TraceMU> muByID;
     /**
      * Original number of mobiles, not including clone mobiles
      */
     private int _totalOriginalMUsNum;
-    private Map<Integer, TraceMU> _muImmobileByID;
-    private Map<Integer, TraceMU> _muMovingByID;
+    private Map<String, TraceMU> muImmobileByID;
+    private Map<String, TraceMU> muMovingByID;
     private int _cloneMobsFactor;
-    private double _muAvgVelocity;
+    private double muAvgVelocity;
 
     public TraceTaxiesSimulation(Scenario s) {
         super(s);
@@ -66,14 +66,14 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
     protected void constructorInit(Scenario scenario) {
         String mutracePath = scenario.stringProperty(Space.MU__TRACE, true);
         try {
-            _muTraceIn = new Scanner(new FileReader(mutracePath));
-            mobTrcLine = _muTraceIn.nextLine();// init line
+            muTraceIn = new Scanner(new FileReader(mutracePath));
+            mobTrcLine = muTraceIn.nextLine();// init line
             while (mobTrcLine.startsWith("#")) {
                 if (mobTrcLine.toUpperCase().startsWith("#SEP=")) {
                     mobTrcCSVSep = mobTrcLine.substring(5);
                     LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
                 }
-                mobTrcLine = _muTraceIn.nextLine();// init line
+                mobTrcLine = muTraceIn.nextLine();// init line
             }
         } catch (IOException ioe) {
             throw new CriticalFailureException(ioe);
@@ -90,26 +90,26 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         while (mobTrcLine != null) {
             String[] csv = mobTrcLine.split(mobTrcCSVSep);
             if (csv[0].startsWith("#")) {
-                if (!_muTraceIn.hasNextLine()) {
-                    _muTraceIn.close();
+                if (!muTraceIn.hasNextLine()) {
+                    muTraceIn.close();
                     throw new TraceEndedException(trcEndStr);
                 }
-                mobTrcLine = _muTraceIn.nextLine();
+                mobTrcLine = muTraceIn.nextLine();
                 continue;
             }
 
             int time = Integer.parseInt(csv[0]);
-            int parsedMUID = Integer.parseInt(csv[1]);
+            String parsedMUID = csv[1];
             double dxdt = Math.ceil(Double.parseDouble(csv[2]));
             double dydt = Math.ceil(Double.parseDouble(csv[3]));
 
             switched2moving = updateTraceMUNxtMU(parsedMUID, dxdt, dydt, switched2moving);
 
-            if (!_muTraceIn.hasNextLine()) {
-                _muTraceIn.close();
+            if (!muTraceIn.hasNextLine()) {
+                muTraceIn.close();
                 throw new TraceEndedException(trcEndStr);
             }
-            mobTrcLine = _muTraceIn.nextLine();
+            mobTrcLine = muTraceIn.nextLine();
         }
 
         if (getStatsHandle() != null) {
@@ -118,37 +118,37 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
     }
 
-    private int updateTraceMUNxtMU(int originalID, double dxdt, double dydt, int switched2moving) {
+    private int updateTraceMUNxtMU(String originalID, double dxdt, double dydt, int switched2moving) {
 
-        List<Integer> cloneIDs = cloneIDs(_cloneMobsFactor, _totalOriginalMUsNum, originalID);
+        List<String> cloneIDs = cloneIDs(_cloneMobsFactor, _totalOriginalMUsNum, originalID);
 
         cloneIDs.add(0, originalID);
 
-        for (Integer nxtID : cloneIDs) {
-            TraceMU nxtMU = _muByID.get(nxtID);
+        for (String nxtID : cloneIDs) {
+            TraceMU nxtMU = muByID.get(nxtID);
 
             double prevDx = nxtMU.getdX();
             double prevDy = nxtMU.getdY();
 
             double velocity = Math.sqrt(prevDx * prevDx + prevDy * prevDy);
 
-            _muAvgVelocity -= velocity / _muByID.size();
+            muAvgVelocity -= velocity / muByID.size();
             nxtMU.setDX(dxdt);
             nxtMU.setDY(dydt);
 
             double newVelocity = Math.sqrt(dxdt * dxdt + dydt * dydt);
 
-            _muAvgVelocity += newVelocity / _muByID.size();
+            muAvgVelocity += newVelocity / muByID.size();
 
             if (dxdt == dydt && dxdt == 0) {// if immobile in this round
-                if (_muMovingByID.containsKey(nxtID)) {// if need to change its mobility status
-                    _muMovingByID.remove(nxtID);
-                    _muImmobileByID.put(nxtID, nxtMU);
+                if (muMovingByID.containsKey(nxtID)) {// if need to change its mobility status
+                    muMovingByID.remove(nxtID);
+                    muImmobileByID.put(nxtID, nxtMU);
                 }
-            } else if (_muImmobileByID.containsKey(nxtID)) {// if it were previously immobile
+            } else if (muImmobileByID.containsKey(nxtID)) {// if it were previously immobile
                 switched2moving++;
-                _muImmobileByID.remove(nxtID);
-                _muMovingByID.put(nxtID, nxtMU);
+                muImmobileByID.remove(nxtID);
+                muMovingByID.put(nxtID, nxtMU);
             }
 
         }
@@ -167,7 +167,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
      * @return
      */
     @Override
-    protected Map<Integer, TraceMU> initAndConnectMUs(
+    protected Map<String, TraceMU> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
             Collection<AbstractCachingModel> cachingPolicies
@@ -192,11 +192,11 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         String mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS, false);
         double percentage = scenario.doubleProperty(app.properties.Simulation.PROGRESS_UPDATE);
 
-        _muByID = new HashMap();
-        _muImmobileByID = new HashMap();
-        _muMovingByID = new HashMap();
+        muByID = new HashMap();
+        muImmobileByID = new HashMap();
+        muMovingByID = new HashMap();
 
-        Map<Integer, TraceMU> musByTheirID = new HashMap<>();
+        Map<String, TraceMU> musByTheirID = new HashMap<>();
 
         String metaPath = scenario.stringProperty(Space.MU__TRACE__META, true);
 
@@ -211,7 +211,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         }
 
         // do the cloning or reduction of MUs
-        _totalOriginalMUsNum = _muByID.size();
+        _totalOriginalMUsNum = muByID.size();
         if (_cloneMobsFactor != 0) {
             muCloning(new ArrayList(musByTheirID.values()), area, nxtGroup,
                     conn2SCPolicy, cachingPolicies, mobTransDecisions);
@@ -259,10 +259,10 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
          */
 
         for (TraceMU mu : originalMUs) {
-            int originalID = mu.getID();
-            List<Integer> cloneIDs = cloneIDs(cloneMobsFactor, totalMUsNum, originalID);
+            String originalID = mu.getID();
+            List<String> cloneIDs = cloneIDs(cloneMobsFactor, totalMUsNum, originalID);
 
-            for (Integer nxtID : cloneIDs) {
+            for (String nxtID : cloneIDs) {
                 createTraceMU(nxtGroup, conn2SCPolicy,
                         cachingPolicies, nxtID,
                         area,
@@ -274,13 +274,20 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         LOG.info(cloneMobsFactor + " clones per original mobile added.");
     }
 
-    private List<Integer> cloneIDs(int cloneMobsFactor, int totalMUsNum, int originalID) {
-        List<Integer> cloneIDs = new ArrayList();
+    private List<String> cloneIDs(int cloneMobsFactor, int totalMUsNum, String originalID) {
+        List<String> cloneIDs = new ArrayList();
 
         int count = 0;
         while (++count <= cloneMobsFactor) {
-            int cloneID = count * totalMUsNum + originalID;
-            cloneIDs.add(cloneID);
+            int cloneID = -1;
+
+            try {
+                cloneID = count * totalMUsNum + Integer.parseInt(originalID);
+                 cloneIDs.add(String.valueOf(cloneID));
+            } catch (NumberFormatException e) {
+                cloneIDs.add(count * totalMUsNum + "_" + originalID.hashCode());
+            }
+           
         }
 
         return cloneIDs;
@@ -327,7 +334,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
                 String[] csv = lineCSV.split(sep);
 
-                int nxtMuID = Integer.parseInt(csv[0]);
+                String nxtMuID = csv[0];
 //ignore these, zero init velocities for all mobiles                double avgdxdt = Double.parseDouble(csv[4]);
 //                double avgdydt = Double.parseDouble(csv[6]);
 
@@ -386,7 +393,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         String sep = " ";
 
         int musNum = 0;
-        SortedSet<Integer> ids = new TreeSet<>();
+        SortedSet<String> ids = new TreeSet<>();
         try (BufferedReader bin = new BufferedReader(new FileReader(mutracePath))) {
 
             while ((lineCSV = bin.readLine()) != null) {
@@ -402,7 +409,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 }
 
                 String[] csv = lineCSV.split(sep);
-                int nxtMuID = Integer.parseInt(csv[1]);
+                String nxtMuID = csv[1];
 
                 if (ids.add(nxtMuID)) {
                     musNum++;
@@ -420,7 +427,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         int printPer = (int) (musNum * percentage);
         printPer = printPer == 0 ? 1 : printPer; // otherwise causes arithmetic exception devide by zero in some cases
 
-        for (int nxtMuID : ids) {
+        for (String nxtMuID : ids) {
 
             createTraceMU(nxtGroup, conn2SCPolicy, cachingPolicies, nxtMuID, area, mobTransDecisions, musLst);
 
@@ -447,7 +454,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
     }
 
     private void createTraceMU(MobileGroup nxtGroup, List<String> conn2SCPolicy,
-            Collection<AbstractCachingModel> cachingPolicies, int nxtMuID,
+            Collection<AbstractCachingModel> cachingPolicies, String nxtMuID,
             Area area, String mobTransDecisions, List<TraceMU> musLst) {
         TraceMUBuilder nxtMUBuilder = new TraceMUBuilder(
                 this, nxtGroup, area.getRandPoint(),
@@ -463,13 +470,13 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         TraceMU mu = nxtMUBuilder.build();
 
         musLst.add(mu);
-        int id = mu.getID();
+        String id = mu.getID();
 
-        _muByID.put(id, mu);
+        muByID.put(id, mu);
         mu.setDX(5.25);
         mu.setDY(5.25);// 5.25 is the sqrt of 27.6, which is the average walking speed 5km/h, only in 20 sec
-        _muMovingByID.put(id, mu);
-        _muAvgVelocity = 27.6;
+        muMovingByID.put(id, mu);
+        muAvgVelocity = 27.6;
 
     }
 
@@ -525,7 +532,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 getStatsHandle().resetHandoverscount();
 
                 for (TraceMU nxtMU : shuffldMUs) {
-                    if (_muImmobileByID.containsKey(nxtMU.getID())) {
+                    if (muImmobileByID.containsKey(nxtMU.getID())) {
                         // avoid expensive call to moveRelatively() if possible
                         if (nxtMU.isSoftUser()) {
                             nxtMU.consumeTryAllAtOnceFromSC();
@@ -546,7 +553,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                 getStatsHandle().statHandoversCount();
 /////////////////////////////////////
 
-                for (AbstractCachingModel nxtPolicy : cachingStrategies) {/*
+                for (AbstractCachingModel nxtPolicy : cachingModels) {/*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */
@@ -621,13 +628,11 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
         }
     }
 
-  
-
     @Override
     public void runFinish() {
         super.runFinish();
         _trcLoader.close();
-        _muTraceIn.close();
+        muTraceIn.close();
     }
 
 }

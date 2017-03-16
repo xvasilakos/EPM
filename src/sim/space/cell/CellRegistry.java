@@ -983,8 +983,6 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             
             double percentage = ((int)(10000.0 * coveredSz/areaSz))/100.0;
             LOG.log(Level.INFO, "Created cells cover {0}% of the area.", percentage);
-            System.err.printf("Created cells cover %f of the area.\n", percentage);
-            System.exit(0);
             
             return theSCs;
         } catch (UnsupportedOperationException ex) {

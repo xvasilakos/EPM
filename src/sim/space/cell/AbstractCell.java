@@ -4,8 +4,6 @@ import sim.space.cell.demand_registry.LocalDemand;
 import exceptions.InconsistencyException;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import sim.ISimulationMember;
 import utils.ISynopsisString;
@@ -351,11 +349,7 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
         builder.append(getClass().getSimpleName());
         builder.append("ID=");
         builder.append(getID());
-        builder.append("; center=");
-        builder.append(getCoordinates().toSynopsisString());
-        builder.append(";radius=");
-        builder.append(getRadius());
-
+        
         return builder.toString();
     }
 
@@ -367,6 +361,12 @@ public abstract class AbstractCell implements ISimulationMember, ISpaceMember, I
 
         builder.append(toSynopsisString());
 
+        builder.append("; center=");
+        builder.append(getCoordinates().toSynopsisString());
+        builder.append(";radius=");
+        builder.append(getRadius());
+
+        
         builder.append(">");
         return builder.toString();
     }

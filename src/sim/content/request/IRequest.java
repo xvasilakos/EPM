@@ -76,6 +76,6 @@ public interface IRequest {
     @Override
     int hashCode();
 
-    long requesterUserID();
+    String requesterUserID();
 
 }

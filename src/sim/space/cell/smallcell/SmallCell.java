@@ -229,6 +229,26 @@ public class SmallCell extends AbstractCell {
         throw new RuntimeException("Wrong random number generated: " + rnd); // if reached up to here and not returned..
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(getClass().getSimpleName());
+        builder.append("<");
+
+        builder.append(toSynopsisString());
+
+        builder.append("; center=");
+        builder.append(getCoordinates().toSynopsisString());
+        builder.append(";radius=");
+        builder.append(getRadius());
+
+        builder.append(";#neighbors=");
+        builder.append(neighbors().size());
+
+        builder.append(">");
+        return builder.toString();
+    }
+
     /**
      * Polls the current price a priced buffer of this _cell upon deallocating
      * or allocating space for the item.
@@ -518,16 +538,6 @@ public class SmallCell extends AbstractCell {
 
     public Set<Chunk> currentlyCached(AbstractCachingModel cachingPolicy) {
         return _buffersMap.get(cachingPolicy).cachedChunksUnmodifiable();
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(getClass().getSimpleName());
-        builder.append("<");
-        builder.append(toSynopsisString());
-        builder.append(">");
-        return builder.toString();
     }
 
     public Set<SmallCell> recomputeAntennasInRange__sc(Set<SmallCell> otherSCs) {
@@ -907,7 +917,7 @@ public class SmallCell extends AbstractCell {
                     + "mean and standard deviation parameter values.");
         }
 
-        stationaryUsr = new StationaryUser(-1 * getID(), _sim, _sim.simTime(),
+        stationaryUsr = new StationaryUser("Stationary:" + getID(), _sim, _sim.simTime(),
                 this, _sim.macrocell(),
                 _sim.getCachingStrategies());
     }

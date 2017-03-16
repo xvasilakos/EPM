@@ -34,12 +34,12 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
 
     private UserGroup _userGroup;
     protected int _lastTimeReqsUpdt;
-    protected final int _id;
+    protected final String _id;
     protected MacroCell _currConnectedMC;
     protected SmallCell _currentlyConnectedSC;
     protected int _connectedSinceSC;
 
-    protected User(int id, SimulationBaseRunner<?> sim) {
+    protected User(String id, SimulationBaseRunner<?> sim) {
         _id = id;
         _simulation = sim;
 
@@ -49,7 +49,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         _lastResidenceDuration = -1;
     }
 
-    public User(int id, SimulationBaseRunner<?> sim, int connectedSinceSC, SmallCell connectionSC, MacroCell connectionMC) {
+    public User(String id, SimulationBaseRunner<?> sim, int connectedSinceSC, SmallCell connectionSC, MacroCell connectionMC) {
         _requests = new ArrayList<>();
         _requestsInChunks = new ArrayList<>();
         _id = id;
@@ -82,9 +82,8 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 89 * hash + this._id;
-        return hash;
+        
+        return _id.hashCode();
     }
 
     @Override
@@ -174,7 +173,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         return !_requests.isEmpty();
     }
 
-    public final int getID() {
+    public final String getID() {
         return _id;
     }
 

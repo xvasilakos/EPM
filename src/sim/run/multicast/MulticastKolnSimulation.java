@@ -1,9 +1,10 @@
-package sim.run.caching;
+package sim.run.multicast;
 
 import sim.run.SimulationBaseRunner;
 import sim.Scenario;
 import app.properties.Space;
 import app.properties.StatsProperty;
+import static app.properties.valid.Values.DISCOVER;
 import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
@@ -28,8 +29,8 @@ import sim.space.Area;
 import sim.space.Point;
 import sim.space.cell.CellRegistry;
 import sim.space.cell.smallcell.SmallCell;
+import sim.space.connectivity.ConnectionStatusUpdate;
 import sim.time.NormalSimulationEndException;
-import sim.space.users.StationaryUser;
 import sim.space.users.mobile.MobileGroup;
 import sim.space.users.mobile.MobileGroupsRegistry;
 import sim.space.users.mobile.MobileUser;
@@ -39,19 +40,20 @@ import statistics.StatisticException;
 import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
 import traces.area.Cells;
 import utilities.Couple;
+import utils.DebugTool;
 
 /**
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
+public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
     private String muTracePath;
     private Scanner muTraceScan;
     private String mobTrcLine;
     private String mobTrcCSVSep = " ";// default set to " "
 
-    private static final Logger LOG = Logger.getLogger(TraceKolnSimulation.class.getName());
+    private static final Logger LOG = Logger.getLogger(MulticastKolnSimulation.class.getName());
 
     private MobileGroup mobileGroup;
     private List<String> conn2SCPolicy;
@@ -77,7 +79,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     private int simRound;
     private int linesReadFromMob;
 
-    public TraceKolnSimulation(Scenario s) {
+    public MulticastKolnSimulation(Scenario s) {
         super(s);
         this.roundDuration = getScenario().intProperty(StatsProperty.STATS__AGGREGATES__RECORDING_PERIOD);
     }
@@ -398,35 +400,42 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 logSimulationRound();
 
                 mobTraceFinished = readFromMobilityTrace();
-                int roundTimeSpan = simTime() - trackClockTime; // in time units specified by the trace
                 trackClockTime = simTime();
 
-                if (stationaryRequestsUsed()) {
-
-                    /*
-                     * Consume data and keep gain stats for stationary users
-                     */
-                    for (SmallCell nxtSC : smallCells()) {
-                        StationaryUser nxtSU = nxtSC.getStationaryUsr();
-                        nxtSC.updtLclDmdByStationary(false);
-                        nxtSU.consumeDataTry(roundTimeSpan);
-                        nxtSU.tryCacheRecentFromBH();// try to cache whatever not already in the cache that you just downloaded.
-                    }
-
-                }
-
-                /////////////////////////////////////
+//TODO ksexna tous stationary pros to paron  
+//                if (stationaryRequestsUsed()) {
+//                int roundTimeSpan = simTime() - trackClockTime; // in time units specified by the trace
+//                    /*
+//                     * Consume data and keep gain stats for stationary users
+//                     */
+//                    for (SmallCell nxtSC : smallCells()) {
+//                        StationaryUser nxtSU = nxtSC.getStationaryUsr();
+//                        nxtSC.updtLclDmdByStationary(false);
+//                        nxtSU.consumeDataTry(roundTimeSpan);//TODO
+//                        nxtSU.tryCacheRecentFromBH();// try to cache whatever not already in the cache that you just downloaded.
+//                    }
+//
+//                }
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// mobiles move //////////////////////////////////////
                 _haveExitedPrevCell.clear();
                 _haveHandedOver.clear();
                 getStatsHandle().resetHandoverscount();
                 for (TraceMU nxtMU : batchOfMUsOfCurrRound) {
                     if (nxtMU.getSpeed() > 0.0) {
-                        nxtMU.moveRelatively(); // otherwise avoid expensive call to moveRelatively() if possible
+                        ConnectionStatusUpdate updtSCConnChange = nxtMU.moveRelatively();
+                    
+                        //TODO reconsider this... added only to run example codes
+                        if (theNeighborhoodType.equalsIgnoreCase(DISCOVER)
+                                && updtSCConnChange.isHandedOver()) {
+                            nxtMU.getPreviouslyConnectedSC().addNeighbor(nxtMU.getCurrentlyConnectedSC());
+                        }
+                    
                     }
                     if (nxtMU.isSoftUser()) {
-                        nxtMU.consumeTryAllAtOnceFromSC();
+                        nxtMU.consumeTryAllAtOnceFromSC();//TODO
                     } else {
-                        nxtMU.consumeDataTry(
+                        nxtMU.consumeDataTry(//TODO
                                 // consume based on time span since last move for user
                                 nxtMU.getdTraceTime()
                         );
@@ -434,9 +443,11 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 }// for all all MUs
 
                 getStatsHandle().statHandoversCount();
-/////////////////////////////////////
+//////////////////////////// mobiles move //////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////                
 
-                for (AbstractCachingModel nxtPolicy : cachingModels) {/*
+                for (AbstractCachingModel nxtPolicy : cachingModels) {//TODO
+                    /*
                      * update priority queues of cached chunks for each
                      * IGainRplc replacement policy, in every small cell.
                      */
@@ -453,18 +464,21 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                      * can consume after handover
                      */
                     nxtMU.setReqsConsumeReady();
+
                 }
 
                 /////////////////////////////////////////////////    
                 int clearedReqs = 0;
                 int newAddedReqs = 0;
+
+                
                 for (MobileUser nxtMU : _haveExitedPrevCell) {
 
-                    SmallCell lastSCForCacheDecisions = nxtMU.getLastSCForCacheDecisions();
+                    SmallCell lastSCForCacheDecisions = nxtMU.getLastSCForCacheDecisions();//TODO
                     if (lastSCForCacheDecisions != null) {
                         getStatsHandle().updtPerformanceStats(nxtMU);
                         // cancel past PC decisions
-                        nxtMU.cancelAndDeregisterPCOrders();
+                        nxtMU.cancelAndDeregisterPCOrders();//TODO
                     }
 
                     if (usesTraceOfRequests()) {
@@ -472,9 +486,11 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                         newAddedReqs += updtLoadWorkloadRequests(nxtMU, _dmdTrcReqsLoadedPerUser);
                     }
 
+
                     // finaly take caching decisions
-                    nxtMU.cacheDescisionsPerformRegisterPC(nxtMU.getLastKnownConnectedSC());
+                    nxtMU.cacheDescisionsPerformRegisterPC(nxtMU.getLastKnownConnectedSC());//TODO
                 }
+
                 getStatsHandle().updtSCCmpt6(clearedReqs,
                         new UnonymousCompute6(
                                 new UnonymousCompute6.WellKnownTitle("ClearedReqs"))
@@ -487,8 +503,8 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 ////////////////////////////////////////////////////
                 /*
                  * Update the statistics for this round. Unlike its base class 
-                 * implementation, it tries to commit the statistics without checking the 
-                 * simulation time.
+                 * implementation, it tries to commit the statistics without 
+                 * checking the simulation time.
                  */
                 getStatsHandle().updtIterativeSCCmpt4();
                 getStatsHandle().updtIterativeSCCmpt4NoCachePolicy();
@@ -498,7 +514,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 getStatsHandle().appendTransient(false);
                 getStatsHandle().checkFlushTransient(false);
 
-            }// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues// while simulation continues
+            }// while simulation continues
 
         } catch (NormalSimulationEndException simEndEx) {
             LOG.log(Level.INFO, "Simulation {0} ended: {1}",
@@ -539,6 +555,8 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                     }
             );
         }
+
+//        DebugTool.appendln("logSimulationRound: " + simRound);
     }
 
     private void mobTraceEarlyEndingCheck() throws TraceEndedException {

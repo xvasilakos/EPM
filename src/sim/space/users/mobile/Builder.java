@@ -24,7 +24,7 @@ public abstract class Builder {
     protected final List<String> __connectionPolicySC;
     protected final List<DocumentRequest> __requests;
 
-    protected int __id = MobileUser.ID_UNDEFINED;
+    protected String __id = MobileUser.ID_UNDEFINED;
 
     protected Area __area;
     protected String __transitionDecisions;
@@ -54,7 +54,7 @@ public abstract class Builder {
         this._cachingPolicies = cachingPolicies;
     }
 
-    public Builder setId(int id) {
+    public Builder setId(String id) {
         this.__id = id;
         return this;
     }

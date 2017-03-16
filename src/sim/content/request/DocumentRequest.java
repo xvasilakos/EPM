@@ -21,11 +21,11 @@ import sim.space.users.StationaryUser;
 import traces.dmdtrace.TraceWorkloadRecord;
 
 /**
- * 
- * @author Xenofon Vasilakos - xvas@aueb.gr, mm.aueb.gr/~xvas,
- * Mobile Multimedia Laboratory (mm.aueb.gr),
- * Dept. of Informatics, School of Information {@literal Sciences & Technology},
- * Athens University of Economics and Business, Greece
+ *
+ * @author Xenofon Vasilakos - xvas@aueb.gr, mm.aueb.gr/~xvas, Mobile Multimedia
+ * Laboratory (mm.aueb.gr), Dept. of Informatics, School of Information
+ * {@literal Sciences & Technology}, Athens University of Economics and
+ * Business, Greece
  */
 public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisString, IRequest {
 
@@ -86,7 +86,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                 .append("-->" + "DocumentRequest").append("{")
                 .append("_issuedAtSimTime=").append(_issuedAtSimTime)
                 .append(", _uncompletedPolicies=").append(_uncompletedPolicies)
-                .append(", _requesterUser=").append(_requesterUser.getClass().getSimpleName()).append(_requesterUser)
+                .append(", _requesterUser=").append(_requesterUser.getClass().getSimpleName()).append(":").append(_requesterUser.getID())
                 .append(", _completitionTimes=").append(_completitionTimes)
                 .append(", _consumeReady=").append(_consumeReady)
                 .append(",  referredContentDocument synopsis:\n\t\t")
@@ -144,7 +144,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
     }
 
     @Override
-    public long requesterUserID() {
+    public String requesterUserID() {
         return getRequesterUser().getID();
     }
 
@@ -233,7 +233,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
                 seqNum <= lastValidSeq;
                 seqNum++) {
             Chunk chunk = chunksInSequence.get(seqNum);
-            
+
             chunks.add(chunk);
         }
 
@@ -321,12 +321,10 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             return new ArrayList<>();//return empty in this case
         }
 
-
         long cachableChunks = Math.min(
                 cachableChunksDuringHandoff,
                 consumableChunksDuringSCConnection
         );
-
 
         long lastValidSeq = Math.min(
                 chunksInSequence.lastKey(),
@@ -338,7 +336,6 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             Chunk chunk = chunksInSequence.get(seqNum);
             chunks.add(chunk);
         }
-
 
 //        //yyy
 //        getSim().getStatsHandle().updtSCCmpt6(consumedFromMCDuringHandoff,

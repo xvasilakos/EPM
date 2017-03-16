@@ -42,7 +42,7 @@ public class DebugTool {
     public static PrintStream printer;//yyy
 
     private static final int monitorCellID = -1;//  21;
-    private static final int monitorUID = -1;//  21;
+    private static final String monitorUID = "-1";//  21;
     private static final AbstractCachingModel MODEL = EMC.instance();
 
     public static void init() {
@@ -92,7 +92,7 @@ public class DebugTool {
     }
 
     public static void trackUser(boolean newRec, String txt, User usr, boolean overrideMU) {
-        if (usr.getID() == monitorUID
+        if (usr.getID().equals(monitorUID)
                 || overrideMU) {
 
             printer.append("\n\n");
@@ -192,8 +192,5 @@ public class DebugTool {
         }
     }
 
-    public static void println(String msg) {
-        appendln(msg); 
-    }
 
 }

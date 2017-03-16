@@ -94,7 +94,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      */
     protected final MobileGroupsRegistry _musGrpsRegistry;
 
-    protected Map<Integer, M> musByID;
+    protected Map<String, M> musByID;
     /**
      * The _sim "clock" which keeps the _sim simTime "ticking".
      */
@@ -105,7 +105,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     /**
      * Main caching method simulated.
      */
-    protected final List<AbstractCachingModel> cachingStrategies;
+    protected final List<AbstractCachingModel> cachingModels;
     private final double _maxPopCachingCutter;
     protected int warmupPeriod;
     /**
@@ -214,7 +214,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * @return the list of caching methods used.
      */
     public List<AbstractCachingModel> getCachingStrategies() {
-        return Collections.unmodifiableList(cachingStrategies);
+        return Collections.unmodifiableList(cachingModels);
     }
 
     /**
@@ -379,7 +379,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         }
 
         //  initilize caching methods //
-        cachingStrategies = s.loadCachingPolicies();
+        cachingModels = s.loadCachingPolicies();
         _maxPopCachingCutter = s.doubleProperty(CACHING__POLICIES__MAXPOP_CUTTER);
         // initialize the theArea //
         theArea = initArea();
@@ -422,13 +422,13 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                     + MaxPop.class.getCanonicalName() + " when loaded requests trace is " + null);
         }
         if (preloadAll) {
-            if (!cachingStrategies.contains(MaxPop.instance())) {
+            if (!cachingModels.contains(MaxPop.instance())) {
                 throw new WrongOrImproperArgumentException("Can not preload most popular"
                         + " documents in the cache for all policies without using "
                         + MaxPop.instance().toString()
                 );
             }
-            for (AbstractCachingModel nxtPolicy : cachingStrategies) {
+            for (AbstractCachingModel nxtPolicy : cachingModels) {
                 if (!(nxtPolicy instanceof IGainRplc)) {
                     continue;
                 }
@@ -437,7 +437,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
         }
 
         // do it anyway for MaxPop
-        if (cachingStrategies.contains(MaxPop.instance())) {
+        if (cachingModels.contains(MaxPop.instance())) {
             preLoad(scs, MaxPop.instance()); // else do it only for maxPop
         }
     }
@@ -697,7 +697,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      * @param cachingPolicies
      * @return
      */
-    abstract protected Map<Integer, M> initAndConnectMUs(
+    abstract protected Map<String, M> initAndConnectMUs(
             Scenario scenario, MobileGroupsRegistry ugReg,
             Area area, CellRegistry scReg,
             Collection<AbstractCachingModel> cachingPolicies);
@@ -866,7 +866,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     protected void runGoldenRatioSearchEMPCLC() throws Exception {
 
         // checkSimEnded if needed
-        if (!cachingStrategies.contains(caching.rplc.mingain.priced.tuned_timened.EMPC_R_Tunned_a.instance())
+        if (!cachingModels.contains(caching.rplc.mingain.priced.tuned_timened.EMPC_R_Tunned_a.instance())
                 || simTime() <= getSimulation().getScenario().intProperty(StatsProperty.STATS__MIN_TIME)) {
             return;
         }
