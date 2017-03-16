@@ -11,7 +11,11 @@ import sim.space.users.CachingUser;
  * after parameter
  * #SimulationBaseRunner.CACHING_POLICIES__NAIVE__TYPE02__THREASHOLD
  *
- * @author xvas
+ *
+ * @author Xenofon Vasilakos ({@literal xvas@aueb.gr} - mm.aueb.gr/~xvas),
+ * Mobile Multimedia Laboratory (mm.aueb.gr), Dept. of Informatics, School of
+ * Information {@literal Sciences & Technology}, Athens University of Economics
+ * and Business, Greece
  */
 public final class NaiveLess extends Naive {
 

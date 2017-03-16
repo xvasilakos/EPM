@@ -2,7 +2,7 @@ package caching.rplc.mingain.priced;
 
 import caching.Utils;
 import caching.base.AbstractCachingModel;
-import caching.base.AbstractEPC;
+import caching.base.AbstractPricing;
 import caching.base.IEMC;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
@@ -29,7 +29,7 @@ import sim.space.users.CachingUser;
  * Information {@literal Sciences & Technology}, Athens University of Economics and
  * Business, Greece
  */
-public class EMC_R extends AbstractEPC implements IGainRplc, IEMC {
+public class EMC_R extends AbstractPricing implements IGainRplc, IEMC {
 
     private static final AbstractCachingModel singelton = new EMC_R();
 
@@ -49,6 +49,8 @@ public class EMC_R extends AbstractEPC implements IGainRplc, IEMC {
     public double assess(Chunk item, SmallCell sc) throws Throwable {
         return Utils.assessEMC(item, sc, this);
     }
+    
+  
 
     protected double assessDiff(Chunk a, Chunk b, SmallCell sc) throws Throwable {
         return assess(a, sc) / a.sizeInMBs() - assess(b, sc) / b.sizeInMBs();
@@ -162,5 +164,7 @@ public class EMC_R extends AbstractEPC implements IGainRplc, IEMC {
 
         return optForEviction;
     }
+
+   
 
 }

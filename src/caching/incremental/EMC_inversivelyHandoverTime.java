@@ -39,10 +39,10 @@ public final class EMC_inversivelyHandoverTime extends caching.incremental.EMC {
     }
 
     @Override
-    public int cacheDecision(SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell sc2Cache)
+    public int cacheDecision(SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell targetSC)
             throws Throwable {
 
-        double distance = DistanceComparator.euclidianDistance(cu, sc2Cache) - sc2Cache.getRadius();
+        double distance = DistanceComparator.euclidianDistance(cu, targetSC) - targetSC.getRadius();
         double velocity = -1;
         if (cu instanceof MobileUser) {
             velocity = ((MobileUser) cu).getVelocity();
@@ -56,20 +56,20 @@ public final class EMC_inversivelyHandoverTime extends caching.incremental.EMC {
 
         int totalSizeCached = 0;
         for (Chunk nxtItem : requestChunks) {
-            if (sc2Cache.isCached(this, nxtItem)) {
+            if (targetSC.isCached(this, nxtItem)) {
                 continue;
             }
 
-            double cachePrice = sc2Cache.cachePricePoll(this);
-            double assessment = assess(cu, nxtItem, sc2Cache) / time2Handoff;
+            double cachePrice = targetSC.cachePricePoll(this);
+            double assessment = assess(cu, nxtItem, targetSC) / time2Handoff;
 
             if (assessment / nxtItem.sizeInMBs() >= cachePrice) {
-                if (!Utils.isSpaceAvail(this, sc2Cache, nxtItem.sizeInBytes())) {//since no eviction policy supported
+                if (!Utils.isSpaceAvail(this, targetSC, nxtItem.sizeInBytes())) {//since no eviction policy supported
                     continue;
                 }
 
                 totalSizeCached += nxtItem.sizeInBytes();
-                sc2Cache.cacheItemAttempt(cu, this, nxtItem);
+                targetSC.cacheItemAttempt(cu, this, nxtItem);
             }
 
         }

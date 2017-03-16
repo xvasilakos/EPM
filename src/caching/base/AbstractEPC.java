@@ -1,6 +1,5 @@
 package caching.base;
 
-import caching.Utils;
 import sim.content.Chunk;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
@@ -16,13 +15,11 @@ import sim.space.users.CachingUser;
 public abstract class AbstractEPC extends AbstractPricing {
 
     /**
-     * @param item
-     * @param cu
-     * @param sc
-     * @return the delay gain weighted by the transition probability
+     * @param chnk the chunk to be assessed
+     * @param cu the requesting/caching user
+     * @param sc the small cell for which the chunks are assessed
+     * @return the assessed gain
      */
-    public double assess(CachingUser cu, Chunk item, SmallCell sc) {
-       return Utils.assessEPC(cu, item, sc);
-    }
+    public abstract double assess(CachingUser cu, Chunk chnk, SmallCell sc) ;
 
 }

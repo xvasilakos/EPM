@@ -315,19 +315,17 @@ public class MobileUser extends CachingUser {
 
     public void cacheDescisionsPerformRegisterPC(SmallCell hostingSC) throws IOException, Throwable {
         setLastSCForCacheDecisions(hostingSC);
-        DebugTool.appendln("cacheDescisionsPerformRegisterPC" + hostingSC.toString());
 
         /* take cache descisions for every caching candidate cell*/
         for (SmallCell targetSC : hostingSC.neighbors()) {
 
             double handoverProb = simCellRegistry().handoverProbability(this.getUserGroup(), hostingSC, targetSC);
 
-            DebugTool.appendln("handoverProb=" + handoverProb + " for "
-                    + hostingSC.toSynopsisString()
-                    + "->"
-                    + targetSC.toSynopsisString()
-            );
-
+//            DebugTool.appendln("handoverProb=" + handoverProb + " for "
+//                    + hostingSC.toSynopsisString()
+//                    + "->"
+//                    + targetSC.toSynopsisString()
+//            );
 //            if (handoverProb == 0) {
 //                if (getSim().getNeighborhoodType().equals(Values.DISCOVER)) {
 //                    throw new InconsistencyException("zero probability even though cells are neighbors..");
@@ -1164,9 +1162,10 @@ public class MobileUser extends CachingUser {
 
 ///////////////////////select chunks and 
 ///////////////////////update popularity info for requests
-        for (AbstractCachingModel policy : getCachingPolicies()) {
-            if (policy instanceof MaxPop
-                    || policy instanceof Oracle) {
+        for (AbstractCachingModel model : getCachingPolicies()) {
+
+            if (model instanceof MaxPop
+                    || model instanceof Oracle) {
                 // cached object stay permanently in cache.
                 continue;
             }
@@ -1177,32 +1176,37 @@ public class MobileUser extends CachingUser {
 // update popularity info for requests
                 //targetSC.getPopInfo().registerPopInfo(nxtReq);
 // select chunks
-                predictedChunks.addAll(nxtReq.predictChunks2Request(//                                targetSC.getID() == 13 && policy == caching.incremental.EMC.instance(),
-                        policy, handoverProb, isSoftUser(),
-                        expectedHandoffDuration, conf95HandoffDur,
-                        expectedResidenceDuration, conf95ResidenceDur, mcRateSliceBytes,
-                        bhRateSliceBytes,
-                        scRateSliceBytes)
+                predictedChunks.addAll(
+                        nxtReq.predictChunks2Request(
+                                model, handoverProb, isSoftUser(),
+                                expectedHandoffDuration, conf95HandoffDur,
+                                expectedResidenceDuration, conf95ResidenceDur, mcRateSliceBytes,
+                                bhRateSliceBytes,
+                                scRateSliceBytes
+                        )
                 );
-                predictedChunksNaive.addAll(nxtReq.predictChunks2Request(//                                false,
-                        policy, handoverProb, isSoftUser(),
-                        getSimulation().getRandomGenerator().
-                        randDoubleInRange(0, expectedHandoffDuration),
-                        0,
-                        getSimulation().getRandomGenerator().
-                        randDoubleInRange(0, expectedResidenceDuration),
-                        0,
-                        mcRateSliceBytes,
-                        bhRateSliceBytes,
-                        scRateSliceBytes)
+                predictedChunksNaive.addAll(
+                        nxtReq.predictChunks2Request(
+                                model, handoverProb, isSoftUser(),
+                                getSimulation().getRandomGenerator().
+                                randDoubleInRange(0, expectedHandoffDuration),
+                                0,
+                                getSimulation().getRandomGenerator().
+                                randDoubleInRange(0, expectedResidenceDuration),
+                                0,
+                                mcRateSliceBytes,
+                                bhRateSliceBytes,
+                                scRateSliceBytes)
                 );
 
+                
+
                 for (Chunk nxtChunk : predictedChunks) {
-                    targetSC.getDmdPC(policy).registerUpdtInfoPC(nxtChunk, this, handoverProb);
+                    targetSC.getDmdPC(model).registerUpdtInfoPC(nxtChunk, this, handoverProb);
                 }
 
 ///////////////////////take cache decisions    
-                targetSC.cacheDecisions(policy, this, targetSC,
+                targetSC.cacheDecisions(model, this, targetSC,
                         predictedChunks, predictedChunks);
             }// FOR EVERY REQUEST
         }// FOR EVERY POLICY

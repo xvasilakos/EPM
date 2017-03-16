@@ -7,6 +7,7 @@ import caching.interfaces.rplc.IGainNoRplc;
 import java.util.Collection;
 import sim.run.SimulationBaseRunner;
 import sim.content.Chunk;
+import static sim.space.cell.smallcell.BufferBase.BufferAllocationStatus.Success;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
 
@@ -40,36 +41,41 @@ public final class PopOnly extends AbstractPop implements IIncrementalAggregate,
 
     @Override
     public int cacheDecision(
-            SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell sc) throws Throwable {
-        return EPC.cacheDecision(this, sim, cu, requestChunks, hostSC, hostSC);
-//
-//        int totalSizeCached = 0;
-//        for (DocumentRequest nxtRequest : cu.getRequests()) {
-//            for (Chunk nxtReqChunk : nxtRequest.referredContentDocument().chunks()) {
-//
-//                if (sc.isCachedBy(cu, this, nxtReqChunk)) {
-//                    continue;
-//                }
-//
-//                double cachePrice = sc.cachePricePoll(false, nxtReqChunk, this);
-//                if (assess(nxtReqChunk, sc) >= cachePrice) {
-//
-//                    if (sc.isCached(this, nxtReqChunk)) {
-//                        sc.addCacher(cu, this, nxtReqChunk);
-//                        continue;
-//                    }// otherwise, it may need to evict:
-//
-//                    if (!Utils.isSpaceAvail(this, sc, nxtReqChunk.sizeInBytes())) { //since no replacement policy supported
-//                        continue;//cannot add this item
-//                    }
-//
-//                    totalSizeCached += nxtReqChunk.sizeInBytes();
-//                    sc.cacheItemAttempt(cu, this, nxtReqChunk);
-//                }
-//
+            SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell targetSC) throws Throwable {
+
+        int totalSizeCached = 0;
+        for (Chunk nxtChunk : requestChunks) {
+
+            double cachePrice = targetSC.cachePrice(this);
+            double assessment = -1.0;
+
+            assessment = assess(nxtChunk, targetSC);
+
+//never do that:
+//            if (targetSC.isCached(model, nxtChunk)) {
+//                targetSC.addCacher(cu, model, nxtChunk);
+//                continue;
 //            }
-//        }
-//        return totalSizeCached;
+            if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
+//                targetSC.cacheItem(cu, model, nxtChunk);
+                if (targetSC.cacheItemAttempt(cu, this, nxtChunk) == Success) {
+                    totalSizeCached += nxtChunk.sizeInBytes();
+                    targetSC.cachePriceUpdt(this);
+                }
+            }
+//            else {
+//                throw new RuntimeException(
+//                        "policy_ instanceof caching.incremental.EMC" + (policy_ instanceof caching.incremental.EMC) + "\n"
+//                        + "policy_ " + (policy_.getClass().getCanonicalName()) + "\n"
+//                        + "assessment=" + assessment + "\n"
+//                        + "nxtChunk.sizeInMBs()=" + nxtChunk.sizeInMBs() + "\n"
+//                        + "assessment / nxtChunk.sizeInMBs()=" + (assessment / nxtChunk.sizeInMBs()) + "\n"
+//                        + "cachePrice=" + cachePrice + "\n"
+//                );
+//            }
+
+        }
+        return totalSizeCached;
     }
 
 }

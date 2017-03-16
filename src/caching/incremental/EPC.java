@@ -41,8 +41,8 @@ public class EPC extends AbstractEPC implements IIncremental, IGainNoRplc {
         return "EPC";
     }
 
-    @Override
-    public int cacheDecision(SimulationBaseRunner sim, CachingUser mu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell targetSC) throws Throwable {
+//    @Override
+//    public int cacheDecision(SimulationBaseRunner sim, CachingUser mu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell targetSC) throws Throwable {
 //        int totalSizeCached = 0;
 //        for (Chunk nxtChunk : requestChunks) {
 //
@@ -66,62 +66,46 @@ public class EPC extends AbstractEPC implements IIncremental, IGainNoRplc {
 //
 //        }
 //        return totalSizeCached;
-        return cacheDecision(this, sim, mu, requestChunks, hostSC, targetSC);
-    }
-
-    static int cacheDecision(IGainNoRplc _model, SimulationBaseRunner sim,
+//    }
+    @Override
+    public int cacheDecision(SimulationBaseRunner sim,
             CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell targetSC) throws Throwable {
-
-        AbstractPricing model = (AbstractPricing) _model;
 
         int totalSizeCached = 0;
         for (Chunk nxtChunk : requestChunks) {
 
-            double cachePrice = targetSC.cachePrice(model);
+            double cachePrice = targetSC.cachePrice(this);
             double assessment = -1.0;
 
-            if (_model instanceof caching.incremental.EMC) {
-                assessment = ((caching.incremental.EMC) _model).assess(cu, nxtChunk, hostSC);
-            }
-            if (_model instanceof caching.incremental.EPC) {
-                assessment = ((caching.incremental.EPC) _model).assess(cu, nxtChunk, hostSC);
-            }
-            if (_model instanceof EPCP) {
-                assessment = ((EPCP) _model).assess(cu, nxtChunk, hostSC);
-            }
-            if (_model instanceof PopOnly) {
-                assessment = ((PopOnly) _model).assess(nxtChunk, hostSC);
-            }
-            if (assessment == -1.0) {
-                throw new UnsupportedOperationException("Not supported for: " + _model.getClass().getCanonicalName());
-            }
+            assessment = assess(cu, nxtChunk, targetSC);
 
 //never do that:
 //            if (targetSC.isCached(model, nxtChunk)) {
 //                targetSC.addCacher(cu, model, nxtChunk);
 //                continue;
 //            }
-
             if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
 //                targetSC.cacheItem(cu, model, nxtChunk);
-                if (targetSC.cacheItemAttempt(cu, model, nxtChunk) == Success) {
+                if (targetSC.cacheItemAttempt(cu, this, nxtChunk) == Success) {
                     totalSizeCached += nxtChunk.sizeInBytes();
-                    targetSC.cachePriceUpdt(model);
+                    targetSC.cachePriceUpdt(this);
                 }
-            } 
-//            else {
-//                throw new RuntimeException(
-//                        "policy_ instanceof caching.incremental.EMC" + (policy_ instanceof caching.incremental.EMC) + "\n"
-//                        + "policy_ " + (policy_.getClass().getCanonicalName()) + "\n"
-//                        + "assessment=" + assessment + "\n"
-//                        + "nxtChunk.sizeInMBs()=" + nxtChunk.sizeInMBs() + "\n"
-//                        + "assessment / nxtChunk.sizeInMBs()=" + (assessment / nxtChunk.sizeInMBs()) + "\n"
-//                        + "cachePrice=" + cachePrice + "\n"
-//                );
-//            }
-
+            }
         }
         return totalSizeCached;
+    }
+    
+    
+    
+    /**
+     * @param chnk the chunk to be assessed
+     * @param cu the requesting/caching user
+     * @param sc the small cell for which the chunks are assessed
+     * @return the expected gain weighted by the mobile transition probability
+     */
+    @Override
+    public double assess(CachingUser cu, Chunk chnk, SmallCell sc) {
+        return Utils.assessEPC(cu, chnk, sc);
     }
 
 }

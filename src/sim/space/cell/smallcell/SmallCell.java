@@ -431,27 +431,7 @@ public class SmallCell extends AbstractCell {
                 ) {
             return;
         }
-IGainNoRplc p;
-        /**
-         * **************************************************
-         * Perform caching for types stemming from IGainNoRplc
-         */
-//TODO: do i have this code anymore?
-//if (policy instanceof IGainNoRplc) {
-////            if (policy instanceof Naive) {
-////                ((Naive) policy).
-////                        cacheDecision(getSim(), cu,
-////                                predictedChunksNaive,
-////                                this, targetSC);
-////            } else {
-//                ((IGainNoRplc) policy).
-//                        cacheDecision(getSim(), cu,
-//                                predictedChunks,
-//                                this, targetSC);
-////            }
-//
-//            return;
-//        }
+
         if (model instanceof caching.incremental.EMC) {
             ((caching.incremental.EMC) model).
                     cacheDecision(getSimulation(), cacheRequestor,

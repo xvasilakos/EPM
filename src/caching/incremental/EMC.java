@@ -10,6 +10,7 @@ import sim.run.SimulationBaseRunner;
 import static sim.space.cell.smallcell.BufferBase.BufferAllocationStatus.Success;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
+import utils.DebugTool;
 
 /**
  * Efficient Proactive Caching implementation with Cache decisions cancelation
@@ -52,6 +53,9 @@ public class EMC extends caching.incremental.EPC implements IEMC {
             SmallCell targetSC) throws Throwable {
 //        return EPC.cacheDecision(this, sim, mu, requestChunks, hostSC, targetSC);
 
+        DebugTool.appendln("\n\t EMC.cacheDecision: #" + requestChunks.size());
+
+
         int totalSizeCached = 0;
         for (Chunk nxtChunk : requestChunks) {
 
@@ -64,6 +68,8 @@ public class EMC extends caching.incremental.EPC implements IEMC {
             double cachePrice = targetSC.cachePrice(this);
             double assessment = assess(cu, nxtChunk, hostSC);
 
+            
+            
             if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
 //                targetSC.cacheItem(cu, model, nxtChunk);
                 if (targetSC.cacheItemAttempt(cu, this, nxtChunk) == Success) {
