@@ -38,21 +38,22 @@ public class ConsumedMCPercent extends AbstractPerformanceStat<CachingUser, Smal
         consumedChunksFromMC.addAll(r.getChunksConsumedHistoryFromMCBeforeEnteringSC(model));
         consumedChunksFromMC.addAll(r.getChunksConsumedHistoryFromMCwSCConn(model));
 
-        double sum = r.getChunksConsumedOverall(model).size();
+        double sumConsumed = r.getChunksConsumedOverall(model).size();
 //                consumedChunksFromSC.size()
 //                + consumedChunksFromBH.size()
 //                + consumedChunksFromMC.size();
 
-        double all = r.referredContentDocument().chunks().size();
+        double allChunks = r.referredContentDocument().chunks().size();
 
-        if (all != sum) {
-            throw new RuntimeException(
-                    "sum: " + sum
-                    + " but #chunks: " + all
-            );
-        }
+        //TODO the next lines are probably not right, legacy code from testing...
+//        if (allChunks != sumConsumed) {
+//            throw new RuntimeException(
+//                    "sumConsumed: " + sumConsumed
+//                    + " but #chunks: " + allChunks
+//            );
+//        }
 
-        return consumedChunksFromMC.size() / all;
+        return consumedChunksFromMC.size() / allChunks;
     }
 
     @Override

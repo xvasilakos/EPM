@@ -4,7 +4,6 @@ import sim.ISimulationMember;
 import sim.Scenario;
 import sim.run.stats.StatsHandling;
 import app.SimulatorApp;
-import static app.properties.Caching.CACHING__POLICIES__MAXPOP_CUTTER;
 import app.properties.Networking;
 import app.properties.Simulation;
 import app.properties.Space;
@@ -52,6 +51,7 @@ import traces.dmdtrace.TraceWorkloadRecord;
 import utilities.Couple;
 import utils.CommonFunctions;
 import utils.random.RandomGeneratorWrapper;
+import static app.properties.Caching.CACHING__MODELS__MAXPOP_CUTTER;
 
 /**
  *
@@ -334,10 +334,30 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
             // global variables for data rates
             // 125000 bytes <=> 1Mbps
-            _chunkSizeInBytes = Math.round(125000 * getSimulation().getScenario().doubleProperty(Networking.Rates.CHUNK_SIZE));
-            _rateMCWlessInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.MC_WIRELESS));
-            _rateSCWlessInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.SC_WIRELESS));
-            _rateBHInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.SC_BACKHAUL));
+//            _chunkSizeInBytes = Math.round(125000 * getSimulation().getScenario().doubleProperty(Networking.Rates.CHUNK_SIZE));
+//            _rateMCWlessInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.MC_WIRELESS));
+//            _rateSCWlessInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.SC_WIRELESS));
+//            _rateBHInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.SC_BACKHAUL));
+            _chunkSizeInBytes = utils.CommonFunctions.parseSizeToBytes(
+                    getSimulation().getScenario().stringProperty(
+                            Networking.Rates.CHUNK_SIZE
+                    )
+            );
+            _rateMCWlessInBytes = utils.CommonFunctions.parseSizeToBytes(
+                    getSimulation().getScenario().stringProperty(
+                            Networking.Rates.MC_WIRELESS
+                    )
+            );
+            _rateSCWlessInBytes =  utils.CommonFunctions.parseSizeToBytes(
+                    getSimulation().getScenario().stringProperty(
+                            Networking.Rates.SC_WIRELESS
+                    )
+            );
+            _rateBHInBytes =  utils.CommonFunctions.parseSizeToBytes(
+                    getSimulation().getScenario().stringProperty(
+                            Networking.Rates.SC_BACKHAUL
+                    )
+            );
 
             warmupPeriod = getScenario().intProperty(Space.SC__WARMUP_PERIOD);
             _itemPopCmptType = scenarioSetup.stringProperty(Space.ITEM__POP_CMPT, false);
@@ -380,7 +400,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
         //  initilize caching methods //
         cachingModels = s.loadCachingPolicies();
-        _maxPopCachingCutter = s.doubleProperty(CACHING__POLICIES__MAXPOP_CUTTER);
+        _maxPopCachingCutter = s.doubleProperty(CACHING__MODELS__MAXPOP_CUTTER);
         // initialize the theArea //
         theArea = initArea();
 

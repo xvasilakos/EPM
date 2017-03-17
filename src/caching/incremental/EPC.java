@@ -86,9 +86,8 @@ public class EPC extends AbstractEPC implements IIncremental, IGainNoRplc {
 //            }
             if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
 //                targetSC.cacheItem(cu, model, nxtChunk);
-                if (targetSC.cacheItemAttempt(cu, this, nxtChunk) == Success) {
+                if (targetSC.cacheItemAttemptPriceUpdate(cu, this, nxtChunk) == Success) {
                     totalSizeCached += nxtChunk.sizeInBytes();
-                    targetSC.cachePriceUpdt(this);
                 }
             }
         }

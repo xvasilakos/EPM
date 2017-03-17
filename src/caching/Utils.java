@@ -50,18 +50,13 @@ public abstract class Utils {
         for (Chunk nxtReqChunk : nxtRequest.referredContentDocument().chunks()) {
             if (targetSC.bufferContains(model, cu, nxtReqChunk)) {
                 Set<CachingUser> stillRequesting = targetSC.bufferTryEvict(cu, model, nxtReqChunk);
-                /**
-                 * There may be still requesting mus, but they may be requesting
-                 * with zero probability, because the item was previously
-                 * cached!
-                 */
                 if (stillRequesting.isEmpty()) {
+                    /*
+                     * Note: There may be still requesting mus, but they may be requesting
+                     * with zero probability, because the item was previously
+                     * cached!
+                     */
                     itemsTotallyRmvd.add(nxtReqChunk);
-//                    Utils.trackSC(true,
-//                            "chunk " + nxtReqChunk.toSynopsisString() + " "
-//                            + "is evicted in cell " + targetSC.getID()
-//                            + " by mobile " + cu.getID(),
-//                            cu, true);
                 }
 
             }
@@ -101,7 +96,6 @@ public abstract class Utils {
         return optToEvict;
     }
 
-   
     public static final boolean isSpaceAvail(AbstractCachingModel cacheModel, SmallCell sc, long size) {
         return sc.buffAvailable(cacheModel) >= size;
     }

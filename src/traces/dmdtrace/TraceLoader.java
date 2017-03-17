@@ -52,7 +52,7 @@ public class TraceLoader implements sim.ISimulationMember {
     private long _totalReqNum = 0;
     private long _sumSize = 0;
     private double _stdev = -1;
-    private long _overrideSizes;
+    private long overrideSizeBytes;
     private long _maxItemSize = Long.MIN_VALUE;
     private long _minItemSize = Long.MAX_VALUE;
     /////
@@ -80,7 +80,7 @@ public class TraceLoader implements sim.ISimulationMember {
     private final boolean _randInitInTrace;
 
     public TraceLoader(SimulationBaseRunner sim, List<String> docsInfoPaths, List<String> workloadPaths,
-            String overideSize, int wrkLoadLimit, boolean randInitInTrace, boolean shuffleReqTimes) throws FileNotFoundException, IOException {
+            String overrideSz, int wrkLoadLimit, boolean randInitInTrace, boolean shuffleReqTimes) throws FileNotFoundException, IOException {
         _wrkloadSize = 0;
         _sim = sim;
         _randInitInTrace = randInitInTrace;
@@ -112,7 +112,7 @@ public class TraceLoader implements sim.ISimulationMember {
             File docFile = new File(nxtDocsPth).getCanonicalFile();
             _docTraceFiles.add(docFile);
             loadFromDocs(sim, docFile,
-                    utils.CommonFunctions.parseSizeToBytes(overideSize), _traceIdx);
+                    utils.CommonFunctions.parseSizeToBytes(overrideSz), _traceIdx);
             _traceIdx++;
             _traceIdx %= _howManyTraces;
         }
@@ -153,7 +153,7 @@ public class TraceLoader implements sim.ISimulationMember {
 //                SimulatorApp.CROSS_SIM_TRC_DOCS.removeDocumentsOfTrace(docFile);
 //                totallyLoaded = loadFromDocs_(docFile, overrideSize, traceIdx, sim);
             } else {
-                _overrideSizes = meta.get(0);
+                overrideSizeBytes = meta.get(0);
                 _totalReqNum = meta.get(1);
                 _maxItemSize = meta.get(2);
                 _sumSize = meta.get(3);
@@ -275,7 +275,7 @@ public class TraceLoader implements sim.ISimulationMember {
                         "\n Loading documents from trace for simulation {0}",
                         simID());
         try (BufferedReader br = new BufferedReader(new FileReader(docFile))) {
-            _overrideSizes = overrideSize;
+            overrideSizeBytes = overrideSize;
 
             String nxtLine;
             StringTokenizer toks;
@@ -303,7 +303,7 @@ public class TraceLoader implements sim.ISimulationMember {
                 _totalReqNum += reqNum;
 
                 long sizeInBytes = (long) Double.parseDouble(toks.nextToken());
-                sizeInBytes = _overrideSizes < 0 ? sizeInBytes : _overrideSizes;
+                sizeInBytes = overrideSizeBytes < 0 ? sizeInBytes : overrideSizeBytes;
                 _sumSize += sizeInBytes;
 
                 _maxItemSize = _maxItemSize < sizeInBytes ? sizeInBytes : _maxItemSize;
@@ -361,7 +361,7 @@ public class TraceLoader implements sim.ISimulationMember {
 
         }
         meta.clear();
-        meta.add(0, _overrideSizes);
+        meta.add(0, overrideSizeBytes);
         meta.add(1, _totalReqNum);
         meta.add(2, _maxItemSize);
         meta.add(3, _sumSize);
@@ -607,7 +607,7 @@ public class TraceLoader implements sim.ISimulationMember {
 
                 }
 
-                long theSizeInBytes = _overrideSizes < 0 ? Long.parseLong(toks.nextToken()) : _overrideSizes;
+                long theSizeInBytes = overrideSizeBytes < 0 ? Long.parseLong(toks.nextToken()) : overrideSizeBytes;
 
                 TraceWorkloadRecord rec = new TraceWorkloadRecord(getSimulation(), theSizeInBytes, theID, theTime);
 

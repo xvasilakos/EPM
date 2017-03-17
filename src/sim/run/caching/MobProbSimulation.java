@@ -150,7 +150,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                     for (SmallCell nxtSC : smallCells()) {
                         StationaryUser nxtSU = nxtSC.getStationaryUsr();
                         nxtSC.updtLclDmdByStationary(false);
-                        nxtSU.consumeDataTry(1);
+                        nxtSU.consumeHardUsr(1);
                         nxtSU.tryCacheRecentFromBH();// try to cache whatever not already in the cache that you just downloaded.
                     }
                 }
@@ -163,9 +163,9 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                 for (MobileUser nxtMU : shuffldMUs) {
                     nxtMU.moveRelatively(false, false);
                     if (nxtMU.isSoftUser()) {
-                        nxtMU.consumeTryAllAtOnceFromSC();
+                        nxtMU.consumeSftUsr();
                     } else {
-                        nxtMU.consumeDataTry(1);// consume in one simulation time step
+                        nxtMU.consumeHardUsr(1);// consume in one simulation time step
                     }
                 }// for all all MUs
 

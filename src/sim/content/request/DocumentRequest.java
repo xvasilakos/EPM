@@ -156,15 +156,12 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
     @Override
     public List<Chunk> predictChunks2Request(
             AbstractCachingModel model, double handoverProb,
-            boolean isSoftMU, double expectedHandoffDuration,
+            boolean isHard, double expectedHandoffDuration,
             double conf95HandoffDur, double expectedResidenceDuration,
             double conf95ResidenceDur, int mcRateSliceBytes,
             int bhRateSliceBytes, int scRateSliceBytes) {
 
-        if (isSoftMU) {
-            return new ArrayList<>(referredContentDocument().getChunksInSequence().values());
-        }
-
+       
         List<Chunk> chunks = new ArrayList<>();// keep insertion order in returned 
 
 //////////////////////        
@@ -185,7 +182,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
         long consumedFromMCDuringHandoff, consumedFromMCDuringHandoffConf;
         consumedFromMCDuringHandoff = consumedFromMCDuringHandoffConf = 0;
 
-        if (!isSoftMU && _consumeReady) {
+        if (isHard && _consumeReady) {
             /* If soft ussr, never consume from macro cell.
              * If not consume-ready yet, then it will start consuming only after
              * entering the first cell
@@ -435,46 +432,34 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             return;
         }
 
-        boolean userConnected = getRequesterUser().isConnected();
 
-        if (!userConnected) {
-            return;
-//                maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
-//                for (AbstractCachingModel model : getSim().getCachingPolicies()) {
-//                    Map<AbstractCachingModel, List<Chunk>> consumedMCwSCDiscon
-//                            = consumeFromMCwSCDiscon(model, maxBudget);
-//                    mergeToFirstMap(fillInWithDownloadedFromMC, consumedMCwSCDiscon);
-//                }
+        // in this case, downloads from all reasources, with this *priority*: 
+        Map<AbstractCachingModel, Set<Chunk>> hitsNowInCachePerModel
+                = new HashMap<>(5);
 
-        } else {// in this case, downloads from all reasources, with this *priority*: 
+        for (AbstractCachingModel model : getSimulation().getCachingModels()) {
 
-            Map<AbstractCachingModel, Set<Chunk>> hitsNowInCachePerModel
-                    = new HashMap<>(5);
+            long maxBudget = (long) Math.ceil(sizeInChunks());
 
-            for (AbstractCachingModel model : getSimulation().getCachingModels()) {
+            /**
+             * ***************************
+             * First, consumeTry from the cache
+             *
+             */
+            Map<AbstractCachingModel, Set<Chunk>> hits
+                    = tryHitsFromCachePerModel(model, maxBudget);
+            hitsNowInCachePerModel.putAll(hits);
+            merge2(fillInWithCacheHits, hitsNowInCachePerModel);
 
-                long maxBudget = (long) Math.ceil(sizeInChunks());
+            /**
+             * ***************************
+             * Second, from backhaul whatever not hit
+             *
+             */
+            Map<AbstractCachingModel, Set<Chunk>> consumedNowFromBH
+                    = consumeCacheMissedFromBH(model, maxBudget, hitsNowInCachePerModel);
+            merge2(fillInWithDownloadedFromBH, consumedNowFromBH);
 
-                /**
-                 * ***************************
-                 * First, consumeTry from the cache
-                 *
-                 */
-                Map<AbstractCachingModel, Set<Chunk>> hits
-                        = tryHitsFromCachePerModel(model, maxBudget);
-                hitsNowInCachePerModel.putAll(hits);
-                merge2(fillInWithCacheHits, hitsNowInCachePerModel);
-
-                /**
-                 * ***************************
-                 * Second, from backhaul whatever not hit
-                 *
-                 */
-                Map<AbstractCachingModel, Set<Chunk>> consumedNowFromBH
-                        = consumeCacheMissedFromBH(model, maxBudget, hitsNowInCachePerModel);
-                merge2(fillInWithDownloadedFromBH, consumedNowFromBH);
-
-            }
         }
 
     }

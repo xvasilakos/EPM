@@ -58,9 +58,8 @@ public final class PopOnly extends AbstractPop implements IIncrementalAggregate,
 //            }
             if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
 //                targetSC.cacheItem(cu, model, nxtChunk);
-                if (targetSC.cacheItemAttempt(cu, this, nxtChunk) == Success) {
+                if (targetSC.cacheItemAttemptPriceUpdate(cu, this, nxtChunk) == Success) {
                     totalSizeCached += nxtChunk.sizeInBytes();
-                    targetSC.cachePriceUpdt(this);
                 }
             }
 //            else {

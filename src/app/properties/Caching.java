@@ -5,11 +5,11 @@ package app.properties;
  * @author xvas
  */
 public enum Caching implements IProperty {
-    CACHING__POLICIES(
-            "caching.policies",
+    CACHING__MODELS(
+            "caching.models",
             TooltipMsgs.CACHING_POLICIES),
-    CACHING__POLICIES__MAXPOP_CUTTER(
-            "caching.policies.MaxPop_cutter",
+    CACHING__MODELS__MAXPOP_CUTTER(
+            "caching.models.MaxPop_cutter",
             ""),
     CACHING__PRELOAD__CACHES__ALL__POLICIES(
             "caching.preload_caches_all_policies",

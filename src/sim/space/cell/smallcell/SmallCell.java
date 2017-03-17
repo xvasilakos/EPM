@@ -4,7 +4,7 @@ import static app.properties.Caching.CACHING__RPLC__MINGAIN__SUM__HEURISTIC__TIM
 import app.properties.Space;
 import app.properties.valid.Values;
 import caching.MaxPop;
-import caching.CachingPoliciesFactory;
+import caching.ModelsFactory;
 import caching.base.AbstractCachingModel;
 import caching.base.AbstractOracle;
 import caching.base.AbstractPricing;
@@ -46,6 +46,7 @@ import statistics.StatisticException;
 import statistics.handlers.iterative.sc.cmpt5.UnonymousCompute5;
 import traces.dmdtrace.TraceWorkloadRecord;
 import static utils.CommonFunctions.PHI;
+import utils.DebugTool;
 
 /**
  *
@@ -64,7 +65,7 @@ public class SmallCell extends AbstractCell {
     public SmallCell(
             int id, SimulationBaseRunner sim, Point center, double radius,
             Area area,
-            Collection<AbstractCachingModel> cachingPolicys, long capacity)
+            Collection<AbstractCachingModel> cachingMdls, long capacity)
             throws InvalidOrUnsupportedException {
 
         super(id, sim, center.getY(), center.getX(), radius, area);
@@ -87,7 +88,7 @@ public class SmallCell extends AbstractCell {
 
         _buffersMap = new HashMap<>(5);
         _orderedCachedByGainMap = new HashMap<>(170);
-        fillMaps(cachingPolicys, sim, capacity);
+        fillMaps(cachingMdls, sim, capacity);
 
         area.addSC(this);
         area.updtCoverageByRadius(this);
@@ -100,19 +101,19 @@ public class SmallCell extends AbstractCell {
      * @param sim
      * @param center
      * @param area
-     * @param cachingPolicys s
+     * @param cachingMdls s
      *
      * @throws Exception
      */
     public SmallCell(SimulationBaseRunner sim, Point center, Area area,
-            Collection<AbstractCachingModel> cachingPolicys) throws Exception {
+            Collection<AbstractCachingModel> cachingMdls) throws Exception {
         this(sim, center,
                 sim.getRandomGenerator().getGaussian(
                         sim.getScenario().doubleProperty(Space.SC__RADIUS__MEAN),
                         sim.getScenario().doubleProperty(Space.SC__RADIUS__STDEV)
                 ),
                 area,
-                cachingPolicys, utils.CommonFunctions.parseSizeToBytes(sim.getScenario()
+                cachingMdls, utils.CommonFunctions.parseSizeToBytes(sim.getScenario()
                         .stringProperty(Space.SC__BUFFER__SIZE, false)
                 ));
     }
@@ -184,7 +185,7 @@ public class SmallCell extends AbstractCell {
             throws InvalidOrUnsupportedException {
         for (AbstractCachingModel thePolicy : cachingPolicies) {
             try {
-                Class bufferType = CachingPoliciesFactory.bufferTypeOf(thePolicy);
+                Class bufferType = ModelsFactory.bufferTypeOf(thePolicy);
                 BufferBase newBf = (BufferBase) bufferType.getConstructor(SimulationBaseRunner.class, SmallCell.class, long.class
                 ).newInstance(
                         sim, this, capacity
@@ -250,55 +251,38 @@ public class SmallCell extends AbstractCell {
         return builder.toString();
     }
 
-    /**
-     * Polls the current price a priced buffer of this _cell upon deallocating
-     * or allocating space for the item.
-     *
-     * @param cachingPolicy
-     * @return the double
-     *
-     */
-    public double cachePricePoll(AbstractPricing cachingPolicy) throws Throwable {
-        return ((PricedBuffer) _buffersMap.get(cachingPolicy)).pricePoll();
+    public double cachePrice(AbstractPricing cachingMdl) {
+        return ((PricedBuffer) _buffersMap.get(cachingMdl)).getPrice();
     }
 
-    public double cachePrice(AbstractPricing cachingPolicy) {
-        return ((PricedBuffer) _buffersMap.get(cachingPolicy)).getPrice();
+    public void setCachePrice(AbstractPricing cachingMdl, double price) throws Throwable {
+        ((PricedBuffer) _buffersMap.get(cachingMdl)).setPrice(price);
     }
 
-    public void cachePriceUpdt(AbstractPricing cachingPolicy) throws Throwable {
-        double pricePoll = ((PricedBuffer) _buffersMap.get(cachingPolicy)).pricePoll();
-        ((PricedBuffer) _buffersMap.get(cachingPolicy)).setPrice(pricePoll);
+    public double cachePriceUpdt4Rplc(IGainRplc cachingMdl) throws Throwable {
+        return ((PricedBuffer) _buffersMap.get(cachingMdl)).priceUpdt4Rplc(cachingMdl);
     }
 
-    public void setCachePrice(AbstractPricing cachingPolicy, double price) throws Throwable {
-        ((PricedBuffer) _buffersMap.get(cachingPolicy)).setPrice(price);
+    public double cachePrice4Rplc(IGainRplc cachingMdl) throws Throwable {
+        return ((PricedBuffer) _buffersMap.get(cachingMdl)).getPrice4Rplc();
     }
 
-    public double cachePriceUpdt4Rplc(IGainRplc cachingPolicy) throws Throwable {
-        return ((PricedBuffer) _buffersMap.get(cachingPolicy)).priceUpdt4Rplc(cachingPolicy);
-    }
-
-    public double cachePrice4Rplc(IGainRplc cachingPolicy) throws Throwable {
-        return ((PricedBuffer) _buffersMap.get(cachingPolicy)).getPrice4Rplc();
-    }
-
-    public double cacheUtilUpdt4Rplc(IGainRplc cachingPolicy) throws Throwable {
-        return ((PricedBuffer) _buffersMap.get(cachingPolicy)).utilization4Rplc(cachingPolicy);
+    public double cacheUtilUpdt4Rplc(IGainRplc cachingMdl) throws Throwable {
+        return ((PricedBuffer) _buffersMap.get(cachingMdl)).utilization4Rplc(cachingMdl);
     }
 
     /**
      *
      * @param cu
-     * @param cachingPolicy
+     * @param cachingMdl
      * @param item
      * @throws WrongOrImproperArgumentException
      */
-    public void addCacher(CachingUser cu, AbstractCachingModel cachingPolicy,
+    public void addCacher(CachingUser cu, AbstractCachingModel cachingMdl,
             Chunk item) throws WrongOrImproperArgumentException {
 //@todo have no clue what to do with this piece of... code ..
 //     initially, i thought like:   uncomment this        
-//            if (!(cachingPolicy instanceof IRplcBase)) {
+//            if (!(cachingMdl instanceof IRplcBase)) {
 //            throw new exceptions.WrongOrImproperArgumentException(
 //                    "Method addCacher() must NOT be called if the caching policy in use"
 //                    + "does not support replacements due to "
@@ -306,7 +290,7 @@ public class SmallCell extends AbstractCell {
 //                    + "caching users without replacemt results in poor performance gains."
 //            );
 //        }
-        _buffersMap.get(cachingPolicy).addCacher(cu, item);
+        _buffersMap.get(cachingMdl).addCacher(cu, item);
     }
 
     /**
@@ -326,22 +310,31 @@ public class SmallCell extends AbstractCell {
 
     /**
      * @param cu
-     * @param cachePolicy
+     * @param cachingMdl
      * @param chunk
      * @return
      *
      */
     public BufferBase.BufferAllocationStatus cacheItemAttempt(CachingUser cu,
-            AbstractCachingModel cachePolicy, Chunk chunk) {
+            AbstractCachingModel cachingMdl, Chunk chunk) {
         BufferBase.BufferAllocationStatus result
-                = _buffersMap.get(cachePolicy).allocateAttempt(cu, chunk, this);
+                = _buffersMap.get(cachingMdl).allocateAttempt(cu, chunk, this);
+        return result;
+    }
+
+    public BufferBase.BufferAllocationStatus cacheItemAttemptPriceUpdate(CachingUser cu,
+            AbstractPricing cachingMdl, Chunk chunk) {
+
+        BufferBase.BufferAllocationStatus result
+                = _buffersMap.get(cachingMdl).allocateAttempt(cu, chunk, this);
+
         return result;
     }
 
     public BufferBase.BufferAllocationStatus initCacheAttempt(
-            AbstractCachingModel cachePolicy, Chunk chunk) {
+            AbstractCachingModel cachingMdl, Chunk chunk) {
         BufferBase.BufferAllocationStatus result
-                = _buffersMap.get(cachePolicy).initCacheAttempt(chunk, this);
+                = _buffersMap.get(cachingMdl).initCacheAttempt(chunk, this);
         return result;
     }
 
@@ -351,41 +344,41 @@ public class SmallCell extends AbstractCell {
     }
 
     /**
-     * @param cachingPolicy the specified caching policy
+     * @param cachingMdl the specified caching policy
      * @return the percentage of utilization of the buffer _used for the
      * specified caching policy.
      */
-    public double buffUtilization(AbstractCachingModel cachingPolicy) {
-        return _buffersMap.get(cachingPolicy).utilization();
+    public double buffUtilization(AbstractCachingModel cachingMdl) {
+        return _buffersMap.get(cachingMdl).utilization();
     }
 
 //    public double buffUtilizationPoll(boolean deallocateSpace,
-//            AbstractCachingModel cachingPolicy, Chunk... items) {
+//            AbstractCachingModel cachingMdl, Chunk... items) {
 //        int totalSize = 0;
 //        for (Chunk item : items) {
 //            totalSize += item.sizeInBytes();
 //        }
-//        return _buffersMap.get(cachingPolicy).utilizationPollAndCheck(totalSize, deallocateSpace);
+//        return _buffersMap.get(cachingMdl).utilizationPollAndCheck(totalSize, deallocateSpace);
 //    }
 //    public double buffUtilizationPoll(boolean deallocateSpace,
-//            Set<Chunk> itemsSet, AbstractCachingModel cachingPolicy) {
+//            Set<Chunk> itemsSet, AbstractCachingModel cachingMdl) {
 //        int totalSize = 0;
 //        for (Chunk item : itemsSet) {
 //            totalSize += item.sizeInBytes();
 //        }
-//        return _buffersMap.get(cachingPolicy).utilizationPollAndCheck(totalSize, deallocateSpace);
+//        return _buffersMap.get(cachingMdl).utilizationPollAndCheck(totalSize, deallocateSpace);
 //    }
 //
-//    public List<Chunk> deallocatePoll(AbstractCachingModel cachingPolicy,
+//    public List<Chunk> deallocatePoll(AbstractCachingModel cachingMdl,
 //            Chunk... requests) {
 //        List<Chunk> itemsEvicted = new ArrayList<>();
 //
-//        if (!checkExistsFor(cachingPolicy)) {
-//            throw new InconsistencyException("No buffer found for caching policy " + cachingPolicy);
+//        if (!checkExistsFor(cachingMdl)) {
+//            throw new InconsistencyException("No buffer found for caching policy " + cachingMdl);
 //        }
 //
 //        for (Chunk nxt_item : requests) {
-//            if (getBuffer(cachingPolicy).isCached(nxt_item)) {
+//            if (getBuffer(cachingMdl).isCached(nxt_item)) {
 //                itemsEvicted.add(nxt_item);
 //            }
 //        }
@@ -426,8 +419,7 @@ public class SmallCell extends AbstractCell {
                 && cacheRequestor instanceof StationaryUser)/*
                 *3) Do not allow EMC for stationary users, as it would need 
                 * mobility information, i.e. it would waste simulation time 
-                * with zero mobile transition probabilities..*/
-                ) {
+                * with zero mobile transition probabilities..*/) {
             return;
         }
 
@@ -488,20 +480,20 @@ public class SmallCell extends AbstractCell {
 
     }
 
-    public Set<Chunk> pricedBuffcacheHits(AbstractCachingModel cachingPolicy, Chunk[] requests) {
+    public Set<Chunk> pricedBuffcacheHits(AbstractCachingModel cachingMdl, Chunk[] requests) {
         Set<Chunk> hits = new HashSet<>();
         for (Chunk item : requests) {
-            if (_buffersMap.get(cachingPolicy).isCached(item)) {
+            if (_buffersMap.get(cachingMdl).isCached(item)) {
                 hits.add(item);
             }
         }
         return hits;
     }
 
-    public Set<Chunk> buffCacheHits(AbstractCachingModel cachingPolicy, Collection<Chunk> requests) {
+    public Set<Chunk> buffCacheHits(AbstractCachingModel cachingMdl, Collection<Chunk> requests) {
         Set<Chunk> hits = new HashSet<>();
         for (Chunk item : requests) {
-            BufferBase buffer = getBuffer(cachingPolicy);
+            BufferBase buffer = getBuffer(cachingMdl);
             if (buffer.isCached(item)) {
                 hits.add(item);
             }
@@ -509,8 +501,8 @@ public class SmallCell extends AbstractCell {
         return hits;
     }
 
-    public Set<Chunk> currentlyCached(AbstractCachingModel cachingPolicy) {
-        return _buffersMap.get(cachingPolicy).cachedChunksUnmodifiable();
+    public Set<Chunk> currentlyCached(AbstractCachingModel cachingMdl) {
+        return _buffersMap.get(cachingMdl).cachedChunksUnmodifiable();
     }
 
     public Set<SmallCell> recomputeAntennasInRange__sc(Set<SmallCell> otherSCs) {
@@ -588,39 +580,39 @@ public class SmallCell extends AbstractCell {
     }
 
     /**
-     * @param cachingPolicy the caching policy
+     * @param cachingMdl the caching policy
      * @return the available tryCacheRecentFromBH space in the buffer
      * corresponding to the caching policy.
      */
-    public long buffAvailable(AbstractCachingModel cachingPolicy) {
-        return _buffersMap.get(cachingPolicy).availableSpaceInBytes();
+    public long buffAvailable(AbstractCachingModel cachingMdl) {
+        return _buffersMap.get(cachingMdl).availableSpaceInBytes();
     }
 
     /**
      *
-     * @param cachingPolicy
+     * @param cachingMdl
      * @return capacity of buffer capacity in bytes
      */
-    public double buffCapacity(AbstractCachingModel cachingPolicy) {
-        return _buffersMap.get(cachingPolicy).getCapacityInBytes();
+    public double buffCapacity(AbstractCachingModel cachingMdl) {
+        return _buffersMap.get(cachingMdl).getCapacityInBytes();
     }
 
-    public long buffUsed(AbstractCachingModel cachingPolicy) {
-        return _buffersMap.get(cachingPolicy).getUsed();
+    public long buffUsed(AbstractCachingModel cachingMdl) {
+        return _buffersMap.get(cachingMdl).getUsed();
     }
 
-    public boolean bufferContains(AbstractCachingModel cachingPolicy, CachingUser cu, Chunk item) {
+    public boolean bufferContains(AbstractCachingModel cachingMdl, CachingUser cu, Chunk item) {
         if (cu == null) {
-            return _buffersMap.get(cachingPolicy).isCached(item);
+            return _buffersMap.get(cachingMdl).isCached(item);
         }
-        return _buffersMap.get(cachingPolicy).hasCachedMapping(cu, item);
+        return _buffersMap.get(cachingMdl).hasCachedMapping(cu, item);
     }
 
-    public Set<Chunk> bufferCached(AbstractCachingModel cachingPolicy, CachingUser cu) {
+    public Set<Chunk> bufferCached(AbstractCachingModel cachingMdl, CachingUser cu) {
         try {
-            return _buffersMap.get(cachingPolicy).getCached(cu);
+            return _buffersMap.get(cachingMdl).getCached(cu);
         } catch (RuntimeException rte) {
-            throw new RuntimeException(cachingPolicy.toString(), rte);
+            throw new RuntimeException(cachingMdl.toString(), rte);
         }
     }
 
@@ -637,26 +629,26 @@ public class SmallCell extends AbstractCell {
      */
     public Set<CachingUser> bufferTryEvict(MobileUser cu, AbstractCachingModel policy, Chunk item)
             throws InconsistencyException {
-        return _buffersMap.get(policy).deallocateTry(item, cu, policy, this);
+        return _buffersMap.get(policy).deallocateAttempt(item, cu, policy, this);
     }
 
-    public void bufferForceEvict(AbstractCachingModel cachingPolicy, Chunk theChunk) throws InconsistencyException, Throwable {
-        _buffersMap.get(cachingPolicy).deallocateForce(theChunk);
+    public void bufferForceEvict(AbstractCachingModel cachingMdl, Chunk theChunk) throws InconsistencyException, Throwable {
+        _buffersMap.get(cachingMdl).deallocateForce(theChunk);
     }
 
-    public Map<Chunk, Set<CachingUser>> bufferItemCachers(AbstractCachingModel cachingPolicy) {
-        return _buffersMap.get(cachingPolicy).getItemCachers();
+    public Map<Chunk, Set<CachingUser>> bufferItemCachers(AbstractCachingModel cachingMdl) {
+        return _buffersMap.get(cachingMdl).getItemCachers();
     }
 
     /**
      * *
      *
-     * @param cachingPolicy
+     * @param cachingMdl
      * @param item
      * @return the mobiles that have requested this ID of a cached item.
      */
-    public Set<CachingUser> bufferCachers(AbstractCachingModel cachingPolicy, Chunk item) {
-        return _buffersMap.get(cachingPolicy).getCachers(item);
+    public Set<CachingUser> bufferCachers(AbstractCachingModel cachingMdl, Chunk item) {
+        return _buffersMap.get(cachingMdl).getCachers(item);
     }
 
     /**
@@ -728,44 +720,44 @@ public class SmallCell extends AbstractCell {
      * Checks if an item with the same id is already cached by any mobile user
      * according to the specified caching policy.
      *
-     * @param cachingPolicy
+     * @param cachingMdl
      *
      * @param chunk
      * @return
      */
-    public boolean isCached(AbstractCachingModel cachingPolicy, Chunk chunk) {
-        return getBuffer(cachingPolicy).isCached(chunk);
+    public boolean isCached(AbstractCachingModel cachingMdl, Chunk chunk) {
+        return getBuffer(cachingMdl).isCached(chunk);
     }
 
     /**
      * Checks if an item with the same id is already cached by cu according to
      * the specified caching policy.
      *
-     * @param cachingPolicy
+     * @param cachingMdl
      * @param cu
      * @param item
      *
      * @return
      */
-    public boolean isCachedBy(CachingUser cu, AbstractCachingModel cachingPolicy, Chunk item) {
-        return getBuffer(cachingPolicy).hasCachedMapping(cu, item);
+    public boolean isCachedBy(CachingUser cu, AbstractCachingModel cachingMdl, Chunk item) {
+        return getBuffer(cachingMdl).hasCachedMapping(cu, item);
     }
 
-    public BufferBase getBuffer(AbstractCachingModel cachingPolicy) {
-        return _buffersMap.get(cachingPolicy);
+    public BufferBase getBuffer(AbstractCachingModel cachingMdl) {
+        return _buffersMap.get(cachingMdl);
     }
 
-    public void clearBuffer(AbstractCachingModel cachingPolicy) {
-        _buffersMap.get(cachingPolicy).clear();
+    public void clearBuffer(AbstractCachingModel cachingMdl) {
+        _buffersMap.get(cachingMdl).clear();
     }
 
-    public void clearBuffer(IGainRplc cachingPolicy) {
-        _buffersMap.get(cachingPolicy).clear();
-        _orderedCachedByGainMap.get(cachingPolicy).clear();
+    public void clearBuffer(IGainRplc cachingMdl) {
+        _buffersMap.get(cachingMdl).clear();
+        _orderedCachedByGainMap.get(cachingMdl).clear();
     }
 
-    public PricedBuffer getBuffer(AbstractPricing cachingPolicy) {
-        return (PricedBuffer) _buffersMap.get(cachingPolicy);
+    public PricedBuffer getBuffer(AbstractPricing cachingMdl) {
+        return (PricedBuffer) _buffersMap.get(cachingMdl);
     }
 
     public PriorityQueue<Chunk> getCachedChunksOrderedByGain(IGainRplc policy) {
@@ -793,21 +785,21 @@ public class SmallCell extends AbstractCell {
         _orderedCachedByGainMap.put(policy, orderedCached);
     }
 
-    public boolean checkExistsFor(AbstractCachingModel cachingPolicy) {
-        return _buffersMap.keySet().contains(cachingPolicy);
+    public boolean checkExistsFor(AbstractCachingModel cachingMdl) {
+        return _buffersMap.keySet().contains(cachingMdl);
     }
 
-    public Set<Chunk> cachedChunksUnmodifiable(AbstractCachingModel cachingPolicy) {
-        return this.getBuffer(cachingPolicy).cachedChunksUnmodifiable();
+    public Set<Chunk> cachedChunksUnmodifiable(AbstractCachingModel cachingMdl) {
+        return this.getBuffer(cachingMdl).cachedChunksUnmodifiable();
     }
 
-    public long getCacheAvailable(AbstractCachingModel cachingPolicy) {
-        BufferBase buffer = this.getBuffer(cachingPolicy);
+    public long getCacheAvailable(AbstractCachingModel cachingMdl) {
+        BufferBase buffer = this.getBuffer(cachingMdl);
         return buffer.availableSpaceInBytes();
     }
 
-    public Set<CachingUser> registeredUsersDmdPC(Chunk item, AbstractCachingModel cachingPolicy) {
-        return this.musCurrDmdProact(item, cachingPolicy);
+    public Set<CachingUser> registeredUsersDmdPC(Chunk item, AbstractCachingModel cachingMdl) {
+        return this.musCurrDmdProact(item, cachingMdl);
     }
 
     /**

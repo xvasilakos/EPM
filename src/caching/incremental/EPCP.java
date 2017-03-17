@@ -57,9 +57,8 @@ public final class EPCP extends AbstractEMPC implements IIncremental {
 //            }
             if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
 //                targetSC.cacheItem(cu, model, nxtChunk);
-                if (targetSC.cacheItemAttempt(cu, this, nxtChunk) == Success) {
+                 if (targetSC.cacheItemAttemptPriceUpdate(cu, this, nxtChunk) == Success) {
                     totalSizeCached += nxtChunk.sizeInBytes();
-                    targetSC.cachePriceUpdt(this);
                 }
             }
 //            else {

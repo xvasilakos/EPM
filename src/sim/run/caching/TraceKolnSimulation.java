@@ -413,7 +413,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                     for (SmallCell nxtSC : smallCells()) {
                         StationaryUser nxtSU = nxtSC.getStationaryUsr();
                         nxtSC.updtLclDmdByStationary(false);
-                        nxtSU.consumeDataTry(roundTimeSpan);
+                        nxtSU.consumeHardUsr(roundTimeSpan);
                         nxtSU.tryCacheRecentFromBH();// try to cache whatever not already in the cache that you just downloaded.
                     }
 
@@ -435,9 +435,9 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
                     }
                     if (nxtMU.isSoftUser()) {
-                        nxtMU.consumeTryAllAtOnceFromSC();
+                        nxtMU.consumeSftUsr();
                     } else {
-                        nxtMU.consumeDataTry(
+                        nxtMU.consumeHardUsr(
                                 // consume based on time span since last move for user
                                 nxtMU.getdTraceTime()
                         );

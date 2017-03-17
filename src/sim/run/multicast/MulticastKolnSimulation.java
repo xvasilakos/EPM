@@ -354,9 +354,15 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
             if (!muTraceScan.hasNextLine()) {
                 muTraceScan.close();
-                String trcEndStr = "The mobility trace has ended too early:"
+                String trcEndStr = "The mobility trace has ended too early"
+                        + "(after initilisation):"
+                        + "\n\t- path:"
                         + "\""
                         + muTracePath
+                        + "\""
+                        + "\n\t- trace line read:"
+                        + "\""
+                        + mobTrcCSVSep
                         + "\"";
                 throw new TraceEndedException(trcEndStr);
             }
@@ -404,7 +410,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                 mobTraceFinished = readFromMobilityTrace();
                 trackClockTime = simTime();
 
-//TODO ksexna tous stationary pros to paron  
+//TODO commented to lighten the sim..
 //                if (stationaryRequestsUsed()) {
 //                int roundTimeSpan = simTime() - trackClockTime; // in time units specified by the trace
 //                    /*
@@ -435,9 +441,9 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                     
                     }
                     if (nxtMU.isSoftUser()) {
-                        nxtMU.consumeTryAllAtOnceFromSC();//TODO
+                        nxtMU.consumeSftUsr();//TODO
                     } else {
-                        nxtMU.consumeDataTry(//TODO
+                        nxtMU.consumeHardUsr(//TODO
                                 // consume based on time span since last move for user
                                 nxtMU.getdTraceTime()
                         );

@@ -15,7 +15,10 @@ import sim.space.cell.smallcell.SmallCell;
  */
 public final class CommonFunctions extends utilities.CommonFunctions {
 
-    public static final double PHI = (1 + Math.sqrt(5)) / 2;
+    private static final double GBPS_FACTOR = Math.pow(10, 9) / 8;
+    private static final double MBPS_FACTOR = Math.pow(10, 6)  / 8;
+    private static final double KBPS_FACTOR = Math.pow(10, 3)  / 8;
+    private static final double BPS_FACTOR = 1 / 8;
 
     public static double[] doubleArray(Double[] array) {
         double[] _doubleArray = new double[array.length];
@@ -211,31 +214,45 @@ public final class CommonFunctions extends utilities.CommonFunctions {
      * @return
      */
     public static long parseSizeToBytes(String str) {
-        if (str.endsWith("KB") || str.endsWith("kb")) {
+        if (str.toLowerCase().endsWith("gbps")) {
+            String substring = str.substring(0, str.length() - 4);
+            double tmp = Double.parseDouble(substring);
+            return (long) (tmp * GBPS_FACTOR);
+        } else if (str.toLowerCase().endsWith("mbps")) {
+            String substring = str.substring(0, str.length() - 4);
+            double tmp = Double.parseDouble(substring);
+            return (long) (tmp * MBPS_FACTOR);
+        } else if (str.toLowerCase().endsWith("kbps")) {
+            String substring = str.substring(0, str.length() - 4);
+            double tmp = Double.parseDouble(substring);
+            return (long) (tmp * KBPS_FACTOR);
+        } else if (str.toLowerCase().endsWith("bps")) {
+            String substring = str.substring(0, str.length() - 3);
+            double tmp = Double.parseDouble(substring);
+            return (long) (tmp * BPS_FACTOR);// 125 bytes <=> 1Mbps
+        } else if (str.endsWith("B") || str.endsWith("b")) {
+            String substring = str.substring(0, str.length() - 1);
+            double tmp = Double.parseDouble(substring);
+            return (long) (tmp);
+        } else if (str.endsWith("KB") || str.endsWith("kb")) {
             String substring = str.substring(0, str.length() - 2);
-            Double tmp = Double.parseDouble(substring);//for numbers in scientific notation like 1e123
+            Double tmp = Double.parseDouble(substring);
             return (long) (1024 * tmp);
-        }
-
-        if (str.endsWith("MB") || str.endsWith("mb")) {
+        } else if (str.endsWith("MB") || str.endsWith("mb")) {
             String substring = str.substring(0, str.length() - 2);
-            Double tmp = Double.parseDouble(substring);//for numbers in scientific notation like 1e123
+            Double tmp = Double.parseDouble(substring);
             return (long) (Math.pow(1024, 2) * tmp);
-        }
-
-        if (str.endsWith("GB") || str.endsWith("gb")) {
+        } else if (str.endsWith("GB") || str.endsWith("gb")) {
             String substring = str.substring(0, str.length() - 2);
-            Double tmp = Double.parseDouble(substring);//for numbers in scientific notation like 1e123
+            Double tmp = Double.parseDouble(substring);
             return (long) (Math.pow(1024, 3) * tmp);
-        }
-
-        if (str.endsWith("TB") || str.endsWith("tb")) {
+        } else if (str.endsWith("TB") || str.endsWith("tb")) {
             String substring = str.substring(0, str.length() - 2);
-            Double tmp = Double.parseDouble(substring);//for numbers in scientific notation like 1e123
+            Double tmp = Double.parseDouble(substring);
             return (long) (Math.pow(1024, 4) * tmp);
+        } else {
+            return (int) Double.parseDouble(str);
         }
-
-        return (int) Double.parseDouble(str);
     }
 
     public static Logger getLoggerFor(ISimulationMember iSimClass) {

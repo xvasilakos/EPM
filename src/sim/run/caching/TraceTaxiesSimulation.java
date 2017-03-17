@@ -519,7 +519,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                     for (SmallCell nxtSC : smallCells()) {
                         StationaryUser nxtSU = nxtSC.getStationaryUsr();
                         nxtSC.updtLclDmdByStationary(false);
-                        nxtSU.consumeDataTry(1);
+                        nxtSU.consumeHardUsr(1);
                         nxtSU.tryCacheRecentFromBH();// try to cache whatever not already in the cache that you just downloaded.
                     }
 
@@ -535,17 +535,17 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                     if (muImmobileByID.containsKey(nxtMU.getID())) {
                         // avoid expensive call to moveRelatively() if possible
                         if (nxtMU.isSoftUser()) {
-                            nxtMU.consumeTryAllAtOnceFromSC();
+                            nxtMU.consumeSftUsr();
                         } else {
-                            nxtMU.consumeDataTry(1);// consume in one simulation time step
+                            nxtMU.consumeHardUsr(1);// consume in one simulation time step
                         }
                         continue;
                     }
                     nxtMU.moveRelatively(false, false);
                     if (nxtMU.isSoftUser()) {
-                        nxtMU.consumeTryAllAtOnceFromSC();
+                        nxtMU.consumeSftUsr();
                     } else {
-                        nxtMU.consumeDataTry(1);// consume in one simulation time step
+                        nxtMU.consumeHardUsr(1);// consume in one simulation time step
                     }
 
                 }// for all all MUs

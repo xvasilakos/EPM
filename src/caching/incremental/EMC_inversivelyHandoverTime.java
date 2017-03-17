@@ -60,7 +60,7 @@ public final class EMC_inversivelyHandoverTime extends caching.incremental.EMC {
                 continue;
             }
 
-            double cachePrice = targetSC.cachePricePoll(this);
+            double cachePrice = targetSC.cachePrice(this);
             double assessment = assess(cu, nxtItem, targetSC) / time2Handoff;
 
             if (assessment / nxtItem.sizeInMBs() >= cachePrice) {

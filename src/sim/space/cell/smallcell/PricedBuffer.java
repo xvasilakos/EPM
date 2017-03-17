@@ -13,15 +13,16 @@ import sim.content.Chunk;
 import sim.space.users.CachingUser;
 import sim.space.users.mobile.MobileUser;
 import utils.CommonFunctions;
+import utils.DebugTool;
 
 /**
  * Buffer type that applies a cache congestion pricing scheme.
  *
- 
+ *
  * @author Xenofon Vasilakos (xvas{@literal @}aueb.gr - mm.aueb.gr/~xvas),
- * Mobile Multimedia Laboratory (mm.aueb.gr),
- * Dept. of Informatics, School of Information {@literal Sciences & Technology},
- * Athens University of Economics and Business, Greece
+ * Mobile Multimedia Laboratory (mm.aueb.gr), Dept. of Informatics, School of
+ * Information {@literal Sciences & Technology}, Athens University of Economics
+ * and Business, Greece
  */
 public class PricedBuffer extends BufferBase {
 
@@ -61,6 +62,38 @@ public class PricedBuffer extends BufferBase {
     }
 
     /**
+     * Extends the inherited functionality from #BufferBase by updating the
+     * price of the buffer, unless the requested chunk is already cached in the
+     * buffer, in which case the price remains as it is.
+     *
+     *
+     * @param cu
+     * @param chunk
+     * @param sc
+     * @return the BufferAllocationStatus after trying to allocate space in the
+     * buffer for chunk
+     */
+    @Override
+    BufferAllocationStatus allocateAttempt(CachingUser cu, Chunk chunk, SmallCell sc) {
+        //        DebugTool.appendln("pre-utilization()=" + utilization());
+
+        BufferAllocationStatus result = super.allocateAttempt(cu, chunk, sc);
+
+        DebugTool.appendln("post-utilization()=" + utilization());
+
+        if (result == BufferAllocationStatus.Success 
+                ) {
+            double pricePoll = priceΑllocatePoll(chunk);
+//            DebugTool.appendln(
+//                    "prev price " + getPrice()
+//                    + "\npost price " + pricePoll
+//            );
+            setPrice(pricePoll);
+        }
+        return result;
+    }
+
+    /**
      *
      * @param chnk
      * @param mu
@@ -71,26 +104,19 @@ public class PricedBuffer extends BufferBase {
      * @throws NoSuchElementException
      */
     @Override
-    public Set<CachingUser> deallocateTry(Chunk chnk, MobileUser mu,
+    public Set<CachingUser> deallocateAttempt(Chunk chnk, MobileUser mu,
             AbstractCachingModel policy, SmallCell sc)
             throws NoSuchElementException {
 
         double pricePolled = PricedBuffer.this.priceDeallocatePoll(chnk);
 
-        Set<CachingUser> mobsStillRequesting = super.deallocateTry(chnk, mu, policy, sc);
-        if (!mobsStillRequesting.isEmpty()) {// if the super class implementation did evict the theChnk
+        Set<CachingUser> mobsStillRequesting = super.deallocateAttempt(chnk, mu, policy, sc);
+
+        if (mobsStillRequesting.isEmpty()) {
             _price = pricePolled;
         }
 
         return mobsStillRequesting;
-    }
-
-    public Set<CachingUser> deallocate(Chunk theChnk, MobileUser mu,
-            IGainRplc policy, SmallCell sc) throws NoSuchElementException, Throwable {
-        Set<CachingUser> result = super.deallocateTry(theChnk, mu, (AbstractCachingModel) policy, sc);
-        //CAUTION, must reduce _used before re-assessing price
-        priceUpdt4Rplc(policy);
-        return result;
     }
 
     /**
@@ -145,9 +171,9 @@ public class PricedBuffer extends BufferBase {
      * caching the theChnk or not.
      *
      *
-     * deallocateTry true if this call is for evicting the items, false if it is
-     * for adding the items. theChnk the theChnk polled to be cached or evicted
-     * from items.
+     * deallocateAttempt true if this call is for evicting the items, false if
+     * it is for adding the items. theChnk the theChnk polled to be cached or
+     * evicted from items.
      *
      * @return The polled price
      */
@@ -168,11 +194,28 @@ public class PricedBuffer extends BufferBase {
                 "Unknown or unsupported parameter value: " + _pricingScheme);
     }
 
+    double priceΑllocatePoll(Chunk theChnk) {
+        if (theChnk == null) {
+            throw new InconsistencyException(
+                    "No theChnk passed: " + theChnk);
+        }
+        switch (_pricingScheme) {
+            case Values.DYNAMIC__TYPE_01:
+                return pricingDynamic01Αlloc(theChnk);
+
+            case Values.DYNAMIC__TYPE_02:
+                return pricingDynamic02Αlloc(theChnk);
+        }
+        // if reached here, then ..
+        throw new UnsupportedOperationException(
+                "Unknown or unsupported parameter value: " + _pricingScheme);
+    }
+
     double pricePoll() throws Throwable {
 
         switch (_pricingScheme) {
             case Values.DYNAMIC__TYPE_01:
-                return pricingDynamic01Poll(false);
+                return pricingDynamic01Poll();
 
             case Values.DYNAMIC__TYPE_02:
                 return pricingDynamic02Poll(false);
@@ -186,16 +229,14 @@ public class PricedBuffer extends BufferBase {
      * See properties description for parameter cost.cache.pricing_scheme when
      * value dynamic.type_01 is _used.
      *
-     * theChnk the chunk polled to add/evict deallocateTry true for eviction,
-     * otherwise false for addition.
+     * theChnk the chunk polled to add/evict deallocateAttempt true for
+     * eviction, otherwise false for addition.
      *
      * @return
      */
     private double pricingDynamic01Dealloc(Chunk theChnk) {
         double pricePolled;
-        long size
-                = //theChnk == null ? 0 : 
-                theChnk.sizeInBytes();
+        long size = theChnk.sizeInBytes();
         double polledUtil = utilizationPollAndCheck(size, true);
 
         pricePolled = getPrice() + getGamma() * (polledUtil - getTrgtUtililzation());
@@ -204,10 +245,32 @@ public class PricedBuffer extends BufferBase {
         return pricePolled;
     }
 
-    private double pricingDynamic01Poll(boolean deallocate) {
+    private double pricingDynamic01Αlloc(Chunk theChnk) {
+        double pricePolled;
+        long size = theChnk.sizeInBytes();
+        double polledUtil = utilizationPollAndCheck(size, false);
+
+        pricePolled = getPrice() + getGamma() * (polledUtil - getTrgtUtililzation());
+        pricePolled = pricePolled < 0 ? 0 : pricePolled; // do not allow negative values
+
+//        DebugTool.appendln(
+//                "getPrice() + getGamma() * (polledUtil - getTrgtUtililzation() = "
+//                + getPrice()
+//                + " + " + getGamma()
+//                + " * "
+//                + " + "
+//                + "("
+//                + polledUtil + "-" + getTrgtUtililzation()
+//                + ")"
+//        );
+
+        return pricePolled;
+    }
+
+    private double pricingDynamic01Poll() {
         double pricePolled;
 
-        double polledUtil = utilizationPollAndCheck(0, deallocate);
+        double polledUtil = _used / _capacityInBytes;
 
         pricePolled = getPrice() + getGamma() * (polledUtil - getTrgtUtililzation());
         pricePolled = pricePolled < 0 ? 0 : pricePolled; // do not allow negative values
@@ -219,7 +282,7 @@ public class PricedBuffer extends BufferBase {
      * See properties description for parameter cost.cache.pricing_scheme when
      * value dynamic.type_02 is _used.
      *
-     * theChnk the list of items polled to add/evict deallocateTry true for
+     * theChnk the list of items polled to add/evict deallocateAttempt true for
      * eviction, otherwise false for addition.
      *
      * @return
@@ -238,9 +301,37 @@ public class PricedBuffer extends BufferBase {
         return pricePolled;
     }
 
+    private double pricingDynamic02Αlloc(Chunk theChnk) {
+        double pricePolled;
+        long size = theChnk == null ? 0 : theChnk.sizeInBytes();
+        double polledUtil = utilizationPollAndCheck(size, false);
+
+        if (polledUtil > getTrgtUtililzation()) {
+            pricePolled = getPrice() + getGamma() * (polledUtil - getTrgtUtililzation());
+        } else {
+            pricePolled = 0.0;
+        }
+
+        return pricePolled;
+    }
+
+    /**
+     *
+     * @param deallocate if false, then it computes the price based on
+     * allocating added buffer space; other based on deallocating space from the
+     * allocated part of the buffer.
+     * @return
+     */
     private double pricingDynamic02Poll(boolean deallocate) {
         double pricePolled;
         double polledUtil = utilizationPollAndCheck(0, deallocate);
+
+//        DebugTool.appendln(
+//                "\n\t"
+//                + "post-getUsed()=" + getUsed()
+//                + "\n\t"
+//                + "post-getPrice()=" + getPrice()
+//        );
 
         if (polledUtil > getTrgtUtililzation()) {
             pricePolled = getPrice() + getGamma() * (polledUtil - getTrgtUtililzation());

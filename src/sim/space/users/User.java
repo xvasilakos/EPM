@@ -278,9 +278,9 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         return _connectedSinceSC;
     }
 
-    public abstract void consumeDataTry(int timeWindow) throws Throwable;
+    public abstract void consumeHardUsr(int timeWindow) throws Throwable;
 
-    public abstract void consumeTryAllAtOnceFromSC() throws Throwable;
+    public abstract void consumeSftUsr() throws Throwable;
 
     /**
      * _userGroup the _userGroup to set

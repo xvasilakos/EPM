@@ -8,6 +8,7 @@ import caching.interfaces.incremental.IIncrementalAggregate;
 import java.util.Collection;
 import sim.run.SimulationBaseRunner;
 import sim.content.Chunk;
+import static sim.space.cell.smallcell.BufferBase.BufferAllocationStatus.Success;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
 
@@ -37,27 +38,28 @@ public final class EMPC extends AbstractEMPC implements IIncrementalAggregate, I
 
     @Override
     public int cacheDecision(
-            SimulationBaseRunner sim, CachingUser mu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell targetSC) throws Throwable {
+            SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> requestChunks, SmallCell hostSC, SmallCell targetSC) throws Throwable {
 
         int totalSizeCached = 0;
 
-        for (Chunk nxtItem : requestChunks) {
+        for (Chunk nxtChunk : requestChunks) {
 
-            if (targetSC.isCached(this, nxtItem)) {
+            if (targetSC.isCached(this, nxtChunk)) {
 //never do that neighbSC.addCacher(mu, this, nxtItem);
                 continue;
             }
 
-            if (!Utils.isSpaceAvail(this, targetSC, nxtItem.sizeInBytes())) { //since no replacement policy supported
+            if (!Utils.isSpaceAvail(this, targetSC, nxtChunk.sizeInBytes())) { //since no replacement policy supported
                 continue;//cannot add this item
             }
 
-            double cachePrice = targetSC.cachePricePoll(this);
-            if (assess(nxtItem, targetSC) / nxtItem.sizeInMBs() >= cachePrice) {
-                totalSizeCached += nxtItem.sizeInBytes();
-//                neighbSC.cacheItemAttempt(mu, this, nxtItem);
-                targetSC.cacheItem(mu, this, nxtItem);
-                targetSC.cachePriceUpdt(this);
+            double cachePrice = targetSC.cachePrice(this);
+            if (assess(nxtChunk, targetSC) / nxtChunk.sizeInMBs() >= cachePrice) {
+                
+                if (targetSC.cacheItemAttemptPriceUpdate(cu, this, nxtChunk) == Success) {
+                    totalSizeCached += nxtChunk.sizeInBytes();
+                }
+                
             }
         }
         return totalSizeCached;

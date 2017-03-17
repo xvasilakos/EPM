@@ -137,7 +137,7 @@ public class MobileUser extends CachingUser {
 
     protected static final String ID_UNDEFINED = "ID_UNDEFINED";
     private static int __idGen;
-    private final boolean _softUser;
+    private final boolean sftUsr;
 
     ;
 
@@ -147,7 +147,7 @@ public class MobileUser extends CachingUser {
                 builder.__simulation,
                 builder._cachingPolicies
         );
-        this._softUser = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT, false));
+        this.sftUsr = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT, false));
 
         this._lastTimeReqsUpdt = -1;
 
@@ -251,7 +251,7 @@ public class MobileUser extends CachingUser {
         _lastKnownGotConnected = new HashMap<>(22);
         _lastKnownGotdisconnected = new HashMap<>(22);
 
-        _softUser = false;// Boolean.parseBoolean(getSim().getScenario().stringProperty(Space.MU__ISSOFT, false));
+        sftUsr = false;// Boolean.parseBoolean(getSim().getScenario().stringProperty(Space.MU__ISSOFT, false));
 
     }
 
@@ -332,12 +332,18 @@ public class MobileUser extends CachingUser {
 //                }
 //            }
             CellRegistry cellRegistry = getSimulation().getCellRegistry();
-            Couple<Double, Double> residenceStats = cellRegistry.getResidenceDurationBetween(this.getUserGroup(), hostingSC, targetSC, true);
+            Couple<Double, Double> residenceStats
+                    = cellRegistry.getResidenceDurationBetween(
+                            this.getUserGroup(), hostingSC, targetSC, true
+                    );
 
             Double expectedResidenceDuration = residenceStats.getFirst();
             Double conf95ResidenceDur = residenceStats.getSecond();
 
-            Couple<Double, Double> handoverStats = cellRegistry.getHandoverDurationBetween(getUserGroup(), hostingSC, targetSC, true);
+            Couple<Double, Double> handoverStats
+                    = cellRegistry.getHandoverDurationBetween(
+                            getUserGroup(), hostingSC, targetSC, true
+                    );
             Double expectedHandoffDuration = handoverStats.getFirst();
             Double conf95HandoverDur = handoverStats.getSecond();
 
@@ -367,17 +373,17 @@ public class MobileUser extends CachingUser {
 
     public final void cancelAndDeregisterPCOrders(SmallCell sc) {
         for (DocumentRequest nxtRequest : getRequests()) {
-            for (AbstractCachingModel policy : getSimulation().getCachingModels()) {
-                if (policy instanceof MaxPop) {
+            for (AbstractCachingModel cachingMdl : getSimulation().getCachingModels()) {
+                if (cachingMdl instanceof MaxPop) {
                     // cached object stay permanently in cache.
                     continue;
                 }
                 Utils.cancelCachingOrders(
                         this,
-                        policy,
+                        cachingMdl,
                         sc, nxtRequest
                 );
-                sc.getDmdPC(policy).deregisterUpdtInfoPC(this, nxtRequest);
+                sc.getDmdPC(cachingMdl).deregisterUpdtInfoPC(this, nxtRequest);
             }
         }
     }
@@ -1162,44 +1168,23 @@ public class MobileUser extends CachingUser {
 
 ///////////////////////select chunks and 
 ///////////////////////update popularity info for requests
-        for (AbstractCachingModel model : getCachingPolicies()) {
-
-            if (model instanceof MaxPop
-                    || model instanceof Oracle) {
-                // cached object stay permanently in cache.
-                continue;
-            }
-
+        if (isSoftUser()) {
             List<Chunk> predictedChunks = new ArrayList();
             List<Chunk> predictedChunksNaive = new ArrayList();
-            for (DocumentRequest nxtReq : getRequests()) {
-// update popularity info for requests
-                //targetSC.getPopInfo().registerPopInfo(nxtReq);
-// select chunks
-                predictedChunks.addAll(
-                        nxtReq.predictChunks2Request(
-                                model, handoverProb, isSoftUser(),
-                                expectedHandoffDuration, conf95HandoffDur,
-                                expectedResidenceDuration, conf95ResidenceDur, mcRateSliceBytes,
-                                bhRateSliceBytes,
-                                scRateSliceBytes
-                        )
-                );
-                predictedChunksNaive.addAll(
-                        nxtReq.predictChunks2Request(
-                                model, handoverProb, isSoftUser(),
-                                getSimulation().getRandomGenerator().
-                                randDoubleInRange(0, expectedHandoffDuration),
-                                0,
-                                getSimulation().getRandomGenerator().
-                                randDoubleInRange(0, expectedResidenceDuration),
-                                0,
-                                mcRateSliceBytes,
-                                bhRateSliceBytes,
-                                scRateSliceBytes)
-                );
 
-                
+            for (DocumentRequest nxtReq : getRequests()) {
+                predictedChunks.addAll(nxtReq.referredContentDocument().getChunksInSequence().values());
+                predictedChunksNaive.addAll(nxtReq.referredContentDocument().getChunksInSequence().values());
+            }
+
+
+            for (AbstractCachingModel model : getCachingPolicies()) {
+
+                if (model instanceof MaxPop
+                        || model instanceof Oracle) {
+                    // cached object stay permanently in cache.
+                    continue;
+                }
 
                 for (Chunk nxtChunk : predictedChunks) {
                     targetSC.getDmdPC(model).registerUpdtInfoPC(nxtChunk, this, handoverProb);
@@ -1208,8 +1193,61 @@ public class MobileUser extends CachingUser {
 ///////////////////////take cache decisions    
                 targetSC.cacheDecisions(model, this, targetSC,
                         predictedChunks, predictedChunks);
-            }// FOR EVERY REQUEST
-        }// FOR EVERY POLICY
+
+            }// FOR EVERY MODEL
+
+        }// if soft user
+        //////////////////////////////////////////////
+        ////////////////  HARD USERS  ////////////////
+        //////////////////////////////////////////////
+        else { // if hard user
+            for (AbstractCachingModel model : getCachingPolicies()) {
+                if (model instanceof MaxPop
+                        || model instanceof Oracle) {
+                    // cached object stay permanently in cache.
+                    continue;
+                }
+                // need different chunks per model as some might be consumed allready during transition
+                List<Chunk> predictedChunks = new ArrayList();
+                List<Chunk> predictedChunksNaive = new ArrayList();
+                for (DocumentRequest nxtReq : getRequests()) {
+// update popularity info for requests
+                    //targetSC.getPopInfo().registerPopInfo(nxtReq);
+// select chunks
+                    predictedChunks.addAll(
+                            nxtReq.predictChunks2Request(
+                                    model, handoverProb, true,
+                                    expectedHandoffDuration, conf95HandoffDur,
+                                    expectedResidenceDuration, conf95ResidenceDur, mcRateSliceBytes,
+                                    bhRateSliceBytes,
+                                    scRateSliceBytes
+                            )
+                    );
+                    predictedChunksNaive.addAll(
+                            nxtReq.predictChunks2Request(
+                                    model, handoverProb, true,
+                                    getSimulation().getRandomGenerator().
+                                    randDoubleInRange(0, expectedHandoffDuration),
+                                    0,
+                                    getSimulation().getRandomGenerator().
+                                    randDoubleInRange(0, expectedResidenceDuration),
+                                    0,
+                                    mcRateSliceBytes,
+                                    bhRateSliceBytes,
+                                    scRateSliceBytes)
+                    );
+
+
+                    for (Chunk nxtChunk : predictedChunks) {
+                        targetSC.getDmdPC(model).registerUpdtInfoPC(nxtChunk, this, handoverProb);
+                    }
+
+///////////////////////take cache decisions    
+                    targetSC.cacheDecisions(model, this, targetSC,
+                            predictedChunks, predictedChunks);
+                }// FOR EVERY REQUEST
+            }// FOR EVERY MODEL
+        }
     }
 
     public int getLastHandoffTime() {
@@ -1347,11 +1385,11 @@ public class MobileUser extends CachingUser {
      * @return the _softUser
      */
     public boolean isSoftUser() {
-        return _softUser;
+        return sftUsr;
     }
 
     public boolean isHardUser() {
-        return !_softUser;
+        return !sftUsr;
     }
 
 }

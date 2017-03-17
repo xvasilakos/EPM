@@ -10,7 +10,7 @@ import java.util.HashMap;
  *
  * @author xvas
  */
-public class CachingPoliciesFactory {
+public class ModelsFactory {
 
     /**
      * The registry of the supported caching methods.

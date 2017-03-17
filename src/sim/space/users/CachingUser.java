@@ -116,7 +116,7 @@ public abstract class CachingUser extends User {
     }
 
     @Override
-    public void consumeDataTry(int timeWindow) throws Throwable {
+    public void consumeHardUsr(int timeWindow) throws Throwable {
 
         // because one stationary emulates multiple stationary users with one request
         double slices = this instanceof StationaryUser ? 1
@@ -153,10 +153,18 @@ public abstract class CachingUser extends User {
     }
 
     @Override
-    public void consumeTryAllAtOnceFromSC() throws Throwable {
-        // because one stationary emulates multiple stationary users with one request
-        double slices = this instanceof StationaryUser ? 1
-                : getRequests().size();
+    public void consumeSftUsr() throws Throwable {
+
+        if (!isConnected()) {
+            return;
+//                maxBudget = Math.round(mcRateSlice / chunkSizeInBytes);
+//                for (AbstractCachingModel model : getSim().getCachingPolicies()) {
+//                    Map<AbstractCachingModel, List<Chunk>> consumedMCwSCDiscon
+//                            = consumeFromMCwSCDiscon(model, maxBudget);
+//                    mergeToFirstMap(fillInWithDownloadedFromMC, consumedMCwSCDiscon);
+//                }
+
+        }
 
         // clear from previous move
         for (List<Chunk> recentChunks : _mostRecentlyConsumedMC.values()) {

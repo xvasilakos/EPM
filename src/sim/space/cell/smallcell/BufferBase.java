@@ -44,7 +44,7 @@ public class BufferBase {
     /**
      * this buffer's capacity.
      */
-    private final double _capacityInBytes; // double for it helps computations e.g. when deviding for utilization percetage
+    protected final double _capacityInBytes; // double for it helps computations e.g. when deviding for utilization percetage
 
     protected long _used;
 
@@ -124,7 +124,7 @@ public class BufferBase {
      * @throws NoSuchElementException
      * @throws InconsistencyException
      */
-    public Set<CachingUser> deallocateTry(
+    public Set<CachingUser> deallocateAttempt(
             Chunk theChunk, MobileUser cu, AbstractCachingModel policy, SmallCell sc
     ) throws NoSuchElementException, InconsistencyException {
 
@@ -134,39 +134,39 @@ public class BufferBase {
         }
 
         // else ..  in this case let the item removed only if it is cached only for the cu
-        Set<Chunk> itemsOfMu = _chunksPerCachingUser.get(cu);
-        if (itemsOfMu == null) {
+        Set<Chunk> itemsOfCu = _chunksPerCachingUser.get(cu);
+        if (itemsOfCu == null) {
             throw new NoSuchElementException(_simulation.simTime()
                     + ": [NULL] No item to evict for cu: " + cu.getID());
         }
 
-        if (!itemsOfMu.remove(theChunk)) {
+        if (!itemsOfCu.remove(theChunk)) {
             throw new InconsistencyException(_simulation.simTime()
                     + ": No such item " + theChunk + " cached for mobile " + cu.getID()
-                    + " the items cached for this mobile are " + CommonFunctions.toString(itemsOfMu)
+                    + " the items cached for this mobile are " + CommonFunctions.toString(itemsOfCu)
             );
         }
 
-        if (itemsOfMu.isEmpty()) {
+        if (itemsOfCu.isEmpty()) {
             _chunksPerCachingUser.remove(cu);
         }
 
-        Set<CachingUser> mobs = _cachingUsersPerChunk.get(theChunk);
+        Set<CachingUser> mobsStillRequesting = _cachingUsersPerChunk.get(theChunk);
 
         // cu != null for sure, so in this case add back the record of mobiles for the item if there are more mobile requestors
-        if (!mobs.remove(cu)) {
+        if (!mobsStillRequesting.remove(cu)) {
             throw new InconsistencyException(_simulation.simTime()
                     + ": record kept for item " + theChunk + " but not for mobile user " + cu.getID()
-                    + " Mobiles registered for order this item are: " + CommonFunctions.toString(mobs)
+                    + " Mobiles registered for order this item are: " + CommonFunctions.toString(mobsStillRequesting)
             );
         }
 
         // do not evict if the method uses its own replacement policy
-        if (mobs.isEmpty() && !(policy instanceof IRplcBase)) {
+        if (mobsStillRequesting.isEmpty() && !(policy instanceof IRplcBase)) {
             _used -= theChunk.sizeInBytes();
             _cachingUsersPerChunk.remove(theChunk);
         }
-        return Collections.unmodifiableSet(mobs);
+        return Collections.unmodifiableSet(mobsStillRequesting);
     }
 
     protected void deallocateForce(Chunk theChunk) {
@@ -441,9 +441,10 @@ public class BufferBase {
 
     /**
      * Removes a cacher provided the item is already cached. Caution: this
- methods does not deallocateTry space for the item. use deallocateTry() instead.
-
- cu item
+     * methods does not deallocateAttempt space for the item. use
+     * deallocateAttempt() instead.
+     *
+     * cu item
      */
     public void removeCacher(CachingUser cu, Chunk chk) {
         Set<CachingUser> musOfItm;
@@ -499,7 +500,11 @@ public class BufferBase {
     /**
      * pollSize the (total) size the item(s) polled for eviction/addition evict
      *
-     * @return if polled utilization GT 1.0, it means that there is not enough
+     * @param pollSize the size of the chunk to be evicted or added
+     * @param evict true if polling chunk eviction; otherwise false for polling
+     * chunk addition.
+     * 
+     * @return if polled utilization (@literal > 1.0}, it means that there is not enough
      *
      * @throws InconsistencyException in case the polled utilization is negative
      * space for adding item(s).

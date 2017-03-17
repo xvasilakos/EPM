@@ -3,6 +3,7 @@ package sim;
 import app.SimulatorApp;
 import app.arguments.MainArguments;
 import app.properties.IProperty;
+import app.properties.Networking;
 import app.properties.Preprocessor;
 import app.properties.Registry;
 import app.properties.Simulation;
@@ -12,7 +13,7 @@ import static app.properties.valid.Values.CLOSEST_IN_RANGE;
 import static app.properties.valid.Values.MAX_CACHED_EPC_STD;
 import static app.properties.valid.Values.OUT_OF_RANGE;
 import static app.properties.valid.Values.RANDOM_IN_RANGE;
-import caching.CachingPoliciesFactory;
+import caching.ModelsFactory;
 import caching.base.AbstractCachingModel;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
@@ -533,7 +534,9 @@ public class Scenario implements Comparable<Scenario> {
     public String stringProperty(IProperty property, boolean isPath) {
         return stringProperty(property.propertyName(), isPath);
     }
-
+public String stringProperty(IProperty prop) {
+       return stringProperty(prop, false);
+    }
     public String stringProperty(String propertyName, boolean isPath) {
         String toreturn = _strProps.get(propertyName);
 //        if (toreturn == null) {
@@ -867,12 +870,12 @@ public class Scenario implements Comparable<Scenario> {
     public List<AbstractCachingModel> loadCachingPolicies() throws CriticalFailureException {
         List<AbstractCachingModel> loaded = new ArrayList();
 
-        Collection<String> cachingPolicies = listOfStringsProperty(app.properties.Caching.CACHING__POLICIES, false
+        Collection<String> cachingPolicies = listOfStringsProperty(app.properties.Caching.CACHING__MODELS, false
         );
 
         for (String nxtMthd : cachingPolicies) {
             try {
-                loaded.add(CachingPoliciesFactory.addCachingPolicy(nxtMthd));
+                loaded.add(ModelsFactory.addCachingPolicy(nxtMthd));
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
                 throw new CriticalFailureException(ex);
             }
@@ -898,5 +901,7 @@ public class Scenario implements Comparable<Scenario> {
     public String getIDStr() {
         return String.valueOf(_id);
     }
+
+  
 
 }// inner class Scenario
