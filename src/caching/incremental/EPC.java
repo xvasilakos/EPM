@@ -74,16 +74,15 @@ public class EPC extends AbstractEPC implements IIncremental, IGainNoRplc {
         int totalSizeCached = 0;
         for (Chunk nxtChunk : requestChunks) {
 
-            double cachePrice = targetSC.cachePrice(this);
-            double assessment = -1.0;
-
-            assessment = assess(cu, nxtChunk, targetSC);
-
 //never do that:
 //            if (targetSC.isCached(model, nxtChunk)) {
 //                targetSC.addCacher(cu, model, nxtChunk);
 //                continue;
 //            }
+            double cachePrice = targetSC.cachePrice(this);
+            double assessment = assess(cu, nxtChunk, targetSC);
+
+
             if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
 //                targetSC.cacheItem(cu, model, nxtChunk);
                 if (targetSC.cacheItemAttemptPriceUpdate(cu, this, nxtChunk) == Success) {
