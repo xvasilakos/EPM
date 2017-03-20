@@ -504,7 +504,7 @@ public class BufferBase {
      * @param evict true if polling chunk eviction; otherwise false for polling
      * chunk addition.
      * 
-     * @return if polled utilization (@literal > 1.0}, it means that there is not enough
+     * @return if polled utilization {@literal > 1.0}, it means that there is not enough
      *
      * @throws InconsistencyException in case the polled utilization is negative
      * space for adding item(s).

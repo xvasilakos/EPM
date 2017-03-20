@@ -79,15 +79,9 @@ public class PricedBuffer extends BufferBase {
 
         BufferAllocationStatus result = super.allocateAttempt(cu, chunk, sc);
 
-        DebugTool.appendln("post-utilization()=" + utilization());
-
         if (result == BufferAllocationStatus.Success 
                 ) {
             double pricePoll = priceΑllocatePoll(chunk);
-//            DebugTool.appendln(
-//                    "prev price " + getPrice()
-//                    + "\npost price " + pricePoll
-//            );
             setPrice(pricePoll);
         }
         return result;

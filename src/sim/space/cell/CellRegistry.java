@@ -92,6 +92,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     private final String mobModel;
     private final MobileGroupsRegistry muGroupRegistry;
     private final double probJitter;
+    private final TraceCellsLoader traceCellsLoader;
 
     public CellRegistry(
             SimulationBaseRunner simulation, MobileGroupsRegistry groupRegistry,
@@ -107,6 +108,11 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
         muGroupRegistry = groupRegistry;
 
         smallCells = new TreeMap<>();
+
+        traceCellsLoader = new TraceCellsLoader();
+
+        this._macroCell = mc;
+
         Collection<SmallCell> scs = createSCs(area, simulation.getCachingModels());
         Iterator<SmallCell> cellsIter = scs.iterator();
         while (cellsIter.hasNext()) {
@@ -114,8 +120,6 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             int scID = sc.getID();
             this.smallCells.put(scID, sc);
         }
-
-        this._macroCell = mc;
 
     }
 
@@ -129,6 +133,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 + "; probability jitter: " + probJitter;
     }
 
+    @Override
     public String toSynopsisString() {
         return this.sim.toString() + " "
                 + this.muGroupRegistry.toSynopsisString() + " "
@@ -542,13 +547,26 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     /**
-     * grp srcCell destCell
+     * Returns probability based on srcCell destCell and -if using a mobile
+     * transitions history- the grp parameter.
      *
-     * @return the transition probability or -1 in case there is no transition
-     * previously recorded or in case the source and destination cells coincide.
-     * transition between the cells.
+     * Tries to use a probability matrix, which indicates the use of a trace for
+     * cells. If there is no known probability matrix, then probabilities are
+     * computed on the fly based on a history of mobile transitions between the
+     * cells. Note, that in the latter case, the history ustilises also the grp
+     * parameter.
+     *
+     * @param grp
+     * @param srcCell
+     * @param destCell
+     * @return the mobile transition probability
+     *
      */
     public double handoverProbability(MobileGroup grp, SmallCell srcCell, SmallCell destCell) {
+
+        if (probMatrix() != null) {
+            return probMatrix().get(traceCellsLoader.hashKey(srcCell, destCell));
+        }
 
         if (destCell.equals(srcCell)) {
             return 0;
@@ -562,11 +580,14 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             return 0.0;
         }
 
-        double prob = getSimulation().getRandomGenerator().getGaussian(1.0, probJitter)
-                /*robustness testing: intentional random error*/
-                * handoffsBetweenCells / outgoingHandoffs;
+        // TODO the folowing makes sence only when using a fixed/synthetic/artificial mobilty model 
+        //double prob = getSimulation().getRandomGenerator().getGaussian(1.0, probJitter)
+        //        /*robustness testing: intentional random error*/
+        //        * handoffsBetweenCells / outgoingHandoffs;
+        // return Math.max(Math.min(1.0, prob), 0);// due to probability jittering
+        double prob = handoffsBetweenCells / outgoingHandoffs;
 
-        return Math.max(Math.min(1.0, prob), 0);// due to jittering
+        return Math.max(Math.min(1.0, prob), 0);// due to probability jittering
     }
 
     public SmallCell getCellCenteredAt(Point point) {
@@ -635,7 +656,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     private List<SmallCell> initSCsRndUniform(
-            Area area, Collection<AbstractCachingModel> cachingMethods)
+            Area area, Collection<AbstractCachingModel> cacheMdls)
             throws CriticalFailureException {
         Scenario s = getSimulation().getScenario();
 
@@ -665,7 +686,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 toX = (int) ((i + 1.0) * area.getLengthX() / scsNum);
 
                 Point randCenter = area.getRandPoint(fromY, toY, fromX, toX);
-                SmallCell nxt_sc = new SmallCell(getSimulation(), randCenter, area, cachingMethods);
+                SmallCell nxt_sc = new SmallCell(getSimulation(), randCenter, area, cacheMdls);
                 //<editor-fold defaultstate="collapsed" desc="logging">
                 if (++count % printPer == 0) {
                     sum += (int) (10000.0 * printPer / scsNum) / 100;// roiunding, then percent
@@ -682,7 +703,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     private List<SmallCell> initSCsRnd(
-            Area area, Collection<AbstractCachingModel> cachingMethods)
+            Area area, Collection<AbstractCachingModel> cacheMdls)
             throws CriticalFailureException {
 
         try {
@@ -700,7 +721,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 //</editor-fold>
             for (int i = 0; i < scs_num; i++) {
                 Point randCenter = area.getRandPoint();
-                SmallCell nxt_sc = new SmallCell(sim, randCenter, area, cachingMethods);
+                SmallCell nxt_sc = new SmallCell(sim, randCenter, area, cacheMdls);
                 //<editor-fold defaultstate="collapsed" desc="logging">
                 if (++count % printPer == 0) {
                     sum += (int) (10000.0 * printPer / scs_num) / 100;// roiunding, then percent
@@ -717,7 +738,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
     }
 
     private List<SmallCell> initSCs(
-            Area area, Collection<AbstractCachingModel> cachingMethods,
+            Area area, Collection<AbstractCachingModel> cacheMdls,
             Point... center) throws CriticalFailureException {
 
         try {
@@ -742,7 +763,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
             for (int i = 0; i < scsNum; i++) {
                 Point nxtCenter = center[i];
-                SmallCell nxtSC = new SmallCell(sim, nxtCenter, area, cachingMethods);
+                SmallCell nxtSC = new SmallCell(sim, nxtCenter, area, cacheMdls);
 
 //<editor-fold defaultstate="collapsed" desc="log user update">
                 boolean logUsrUpdt = ++count % printPer == 0;
@@ -758,163 +779,6 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             return initSCs;
         } catch (Exception ex) {
             throw new CriticalFailureException(ex);
-        }
-    }
-
-    /**
-     * Each line in the trace must be in the following, comma separated textual
-     * format, modeling the next small cell to be created: integer coordinate x;
-     * integer coordinate y; double radius; double maximum data transmission
-     * rate; boolean compute area coverage based on radius length; double
-     * backhaul data rate\n
-     *
-     * sim area
-     *
-     * @return
-     * @throws CriticalFailureException
-     */
-    private List<SmallCell> initSCsTrace(
-            Area area, Collection<AbstractCachingModel> cachingMethods
-    ) throws CriticalFailureException {
-
-        Area.RealArea theRealDimensions = area.getREAL_AREA();
-        int minX = theRealDimensions.minX,
-                minY = theRealDimensions.minY,
-                maxX = theRealDimensions.maxX,
-                maxY = theRealDimensions.maxY;
-
-//        String metadataPath = s.stringProperty(Space.SC__TRACE_METADATA_PATH, true);
-//        File metaF = (new File(metadataPath)).getAbsoluteFile();
-//        Couple<Point, Point> areaDimensions = Cells.extractAreaFromMetadata(metaF, minX, minY, maxX, maxY);
-//        
-//        minX = areaDimensions.getFirst().getX();
-//        minY = areaDimensions.getFirst().getY();
-//        maxX = areaDimensions.getSecond().getX();
-//        maxY = areaDimensions.getSecond().getY();
-        String nxtLn = "";
-
-        Scenario s = getSimulation().getScenario();
-
-        String tracePath = s.stringProperty(Space.SC__TRACE_PATH, true);
-
-        double meanR = s.doubleProperty(Space.SC__RADIUS__MEAN);
-        double stdevR = s.doubleProperty(Space.SC__RADIUS__STDEV);
-
-        LOG.log(Level.INFO, "Initializing small cells on the area with mean "
-                + "radius size {0} (std.dev. {1}) based on trace: \"{2}\". ",
-                new Object[]{
-                    meanR,
-                    stdevR,
-                    tracePath
-                }
-        );
-
-        List<SmallCell> initFromTrace = new ArrayList<>();
-
-        File traceF = null;
-        long byteConsumed = 0;
-        long traceSize = 0;
-        try {
-            traceF = (new File(tracePath)).getCanonicalFile();
-            traceSize = traceF.length();
-
-            if (!traceF.exists()) {
-                throw new FileNotFoundException("Path to file for initializing small "
-                        + "cells not exist: "
-                        + "\""
-                        + traceF.getCanonicalPath()
-                        + "\"");
-            }
-
-        } catch (IOException iOException) {
-            throw new CriticalFailureException(iOException);
-        }
-
-        int countLines = 0;
-        try (BufferedReader traceR = new BufferedReader(new FileReader(traceF))) {
-            while (null != (nxtLn = traceR.readLine())) {
-                countLines++;
-
-                if (nxtLn.startsWith("#") || nxtLn.isEmpty()) {
-                    continue; // ignore comments
-                }
-
-                String[] tokens = nxtLn.split(" ");
-
-                Point center = null;
-
-                int id = (int) Double.parseDouble(tokens[0]);
-
-                int x = (int) Double.parseDouble(tokens[1]);
-                if (x > maxX || x < minX) {
-                    throw new InconsistencyException(
-                            "Cell with id " + id + " has dimension x="
-                            + x + " out of bounds:"
-                            + " ["
-                            + minX
-                            + ","
-                            + maxX
-                            + "]."
-                    );
-                }
-
-                int y = (int) Double.parseDouble(tokens[2]);
-                if (y > maxY || y < minY) {
-                    throw new InconsistencyException(
-                            "Cell with id " + id + " has dimension y="
-                            + y + " out of bounds:"
-                            + " ["
-                            + minY
-                            + ","
-                            + maxY
-                            + "]."
-                    );
-                }
-
-                // use relative dimensions as area will be translated 
-                // relatively to starting point [0,0]
-                center = new Point(x - minX, y - minY);
-
-                //use a random radius ..
-                int radius = (int) sim.getRandomGenerator().
-                        getGaussian(meanR, stdevR);
-
-                long capacity = utils.CommonFunctions.parseSizeToBytes(
-                        s.stringProperty(Space.SC__BUFFER__SIZE, false));
-
-                SmallCell newSC = new SmallCell(
-                        id, sim, center, radius,
-                        area, cachingMethods, capacity
-                );
-
-                initFromTrace.add(newSC);
-
-                //<editor-fold defaultstate="collapsed" desc="logging progress">
-                byteConsumed += nxtLn.length() * 2; //16 bit chars
-                int progress = (int) (10000.0 * byteConsumed / traceSize) / 100;// rounding, then percent
-                LOG.log(Level.INFO, "\t{0}%", progress);
-                LOG.log(Level.INFO, "\tSmall Cell created: {0}", newSC.toSynopsisString());
-                //</editor-fold>
-            }
-
-            LOG.log(Level.INFO, "Finished. {0} small cells created: {1}",
-                    new Object[]{initFromTrace.size(), CommonFunctions.toString(initFromTrace)}
-            );
-
-            
-
-
-            return initFromTrace;
-        } catch (InvalidOrUnsupportedException | CriticalFailureException | IOException | NumberFormatException | NoSuchElementException ex) {
-            String msg = "";
-            if (ex.getClass() == NumberFormatException.class
-                    || ex.getClass() == NoSuchElementException.class) {
-                msg = "Trace file is mulformed at line "
-                        + countLines
-                        + ":\n\t"
-                        + nxtLn;
-            }
-            throw new CriticalFailureException(msg, ex);
         }
     }
 
@@ -951,7 +815,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                         break;
 
                     case Values.TRACE:
-                        theSCs = initSCsTrace(area, cachingPolicies);
+                        theSCs = traceCellsLoader.initSCsTrace(scenario, area, cachingPolicies);
                         break;
 
                     default:
@@ -980,13 +844,306 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             for (SmallCell nxtSC : theSCs) {
                 coveredSz += nxtSC.CoverageSize();
             }
-            
-            double percentage = ((int)(10000.0 * coveredSz/areaSz))/100.0;
+
+            double percentage = ((int) (10000.0 * coveredSz / areaSz)) / 100.0;
             LOG.log(Level.INFO, "Created cells cover {0}% of the area.", percentage);
-            
+
             return theSCs;
         } catch (UnsupportedOperationException ex) {
             throw new CriticalFailureException(ex);
+        }
+    }
+
+    private Map<String, Double> probMatrix() {
+        return traceCellsLoader.probMatrix;
+    }
+
+    public class TraceCellsLoader {
+
+        private Map<String, Double> probMatrix = null;
+
+        private TraceCellsLoader() {
+
+        }
+
+        /**
+         * Each line in the trace must be in the following, comma separated
+         * textual format, modeling the next small cell to be created: integer
+         * coordinate x; integer coordinate y; double radius; double maximum
+         * data transmission rate; boolean compute area coverage based on radius
+         * length; double backhaul data rate\n
+         *
+         *
+         * @param s the scenario for extracting the parameters needed
+         * @param area the simulation area
+         * @param cacheMdls
+         * @return
+         * @throws CriticalFailureException
+         */
+        private List<SmallCell> initSCsTrace(Scenario s,
+                Area area, Collection<AbstractCachingModel> cacheMdls
+        ) throws CriticalFailureException {
+
+            Area.RealArea theRealDimensions = area.getREAL_AREA();
+            int minX = theRealDimensions.minX,
+                    minY = theRealDimensions.minY,
+                    maxX = theRealDimensions.maxX,
+                    maxY = theRealDimensions.maxY;
+
+//        String metadataPath = s.stringProperty(Space.SC__TRACE_METADATA_PATH, true);
+//        File metaF = (new File(metadataPath)).getAbsoluteFile();
+//        Couple<Point, Point> areaDimensions = Cells.extractAreaFromMetadata(metaF, minX, minY, maxX, maxY);
+//        
+//        minX = areaDimensions.getFirst().getX();
+//        minY = areaDimensions.getFirst().getY();
+//        maxX = areaDimensions.getSecond().getX();
+//        maxY = areaDimensions.getSecond().getY();
+            String nxtLn = "";
+
+//            = CellRegistry.this.getSimulation().getScenario();
+            String tracePath = s.stringProperty(Space.SC__TRACE_PATH, true);
+            String probsPath = s.stringProperty(Space.SC__TRACE_PATH__PROB_MATRIX, true);
+
+            double meanR = s.doubleProperty(Space.SC__RADIUS__MEAN);
+            double stdevR = s.doubleProperty(Space.SC__RADIUS__STDEV);
+
+            LOG.log(Level.INFO, "Initializing small cells on the area with mean "
+                    + "radius size {0} (std.dev. {1}) based on trace: \"{2}\". ",
+                    new Object[]{
+                        meanR,
+                        stdevR,
+                        tracePath
+                    }
+            );
+
+            File cellsTraceF = null;
+            File probsMatrixF = null;
+            long byteConsumed = 0;
+            long sz = 0;
+            try {
+                cellsTraceF = (new File(tracePath)).getCanonicalFile();
+                probsMatrixF = (new File(probsPath)).getCanonicalFile();
+                sz = cellsTraceF.length();
+
+                if (!cellsTraceF.exists()) {
+                    throw new FileNotFoundException("Path to file for initializing small "
+                            + "cells not exist: "
+                            + "\""
+                            + cellsTraceF.getCanonicalPath()
+                            + "\"");
+                }
+
+                if (!probsMatrixF.exists()) {
+                    throw new FileNotFoundException("Path to probability cells' matrix file for initializing small "
+                            + "cells not exist: "
+                            + "\""
+                            + probsMatrixF.getCanonicalPath()
+                            + "\"");
+                }
+
+            } catch (IOException iOException) {
+                throw new CriticalFailureException(iOException);
+            }
+
+            List<SmallCell> initialisedFromTrc = new ArrayList<>();
+            parseTraceFile(cellsTraceF, nxtLn, maxX, minX, maxY, minY, meanR, stdevR, s, area, cacheMdls, initialisedFromTrc, byteConsumed, sz);
+            parseProbsMatrix(probsMatrixF, initialisedFromTrc);
+
+            return initialisedFromTrc;
+
+        }
+
+        /**
+         * *
+         * Parses the trace file.
+         *
+         * @param traceF
+         * @param nxtLn
+         * @param maxX
+         * @param minX
+         * @param maxY
+         * @param minY
+         * @param meanR
+         * @param stdevR
+         * @param scellsParsed@param area
+         * @param cacheMdls
+         * @param initFromTrace
+         * @param byteConsumed
+         * @param sz
+         * @return
+         * @throws CriticalFailureException
+         * @throws InconsistencyException
+         */
+        private List<SmallCell> parseTraceFile(
+                File traceF, String nxtLn,
+                int maxX, int minX, int maxY, int minY,
+                double meanR, double stdevR, Scenario s,
+                Area area, Collection<AbstractCachingModel> cacheMdls,
+                List<SmallCell> cellsParsed,
+                long byteConsumed, long sz) throws CriticalFailureException, InconsistencyException {
+            int countLines = 0;
+            try (
+                    BufferedReader rdr = new BufferedReader(new FileReader(traceF))) {
+                while (null != (nxtLn = rdr.readLine())) {
+                    countLines++;
+
+                    if (nxtLn.startsWith("#") || nxtLn.isEmpty()) {
+                        continue; // ignore comments
+                    }
+
+                    String[] tokens = nxtLn.split(" ");
+
+                    Point center = null;
+
+                    int id = (int) Double.parseDouble(tokens[0]);
+
+                    int x = (int) Double.parseDouble(tokens[1]);
+                    if (x > maxX || x < minX) {
+                        throw new InconsistencyException(
+                                "Cell with id " + id + " has dimension x="
+                                + x + " out of bounds:"
+                                + " ["
+                                + minX
+                                + ","
+                                + maxX
+                                + "]."
+                        );
+                    }
+
+                    int y = (int) Double.parseDouble(tokens[2]);
+                    if (y > maxY || y < minY) {
+                        throw new InconsistencyException(
+                                "Cell with id " + id + " has dimension y="
+                                + y + " out of bounds:"
+                                + " ["
+                                + minY
+                                + ","
+                                + maxY
+                                + "]."
+                        );
+                    }
+
+                    // use relative dimensions as area will be translated 
+                    // relatively to starting point [0,0]
+                    center = new Point(x - minX, y - minY);
+
+                    //use a random radius ..
+                    int radius = (int) sim.getRandomGenerator().
+                            getGaussian(meanR, stdevR);
+
+                    long capacity = utils.CommonFunctions.parseSizeToBytes(
+                            s.stringProperty(Space.SC__BUFFER__SIZE, false));
+
+                    SmallCell newSC = new SmallCell(
+                            id, sim, center, radius,
+                            area, cacheMdls, capacity
+                    );
+
+                    cellsParsed.add(newSC);
+
+                    //<editor-fold defaultstate="collapsed" desc="logging progress">
+                    byteConsumed += nxtLn.length() * 2; //16 bit chars
+                    int progress = (int) (10000.0 * byteConsumed / sz) / 100;// rounding, then percent
+                    LOG.log(Level.INFO, "\t{0}%", progress);
+                    LOG.log(Level.INFO, "\tSmall Cell created: {0}", newSC.toSynopsisString());
+                    //</editor-fold>
+                }
+
+                LOG.log(Level.INFO, "Finished. {0} small cells created: {1}",
+                        new Object[]{cellsParsed.size(), CommonFunctions.toString(cellsParsed)}
+                );
+
+                return cellsParsed;
+            } catch (InvalidOrUnsupportedException | CriticalFailureException | IOException | NumberFormatException | NoSuchElementException ex) {
+                String msg = "";
+                if (ex.getClass() == NumberFormatException.class
+                        || ex.getClass() == NoSuchElementException.class) {
+                    msg = "Trace file is mulformed at line "
+                            + countLines
+                            + ":\n\t"
+                            + nxtLn;
+                }
+                throw new CriticalFailureException(msg, ex);
+            }
+        }
+
+        private List<SmallCell> parseProbsMatrix(
+                File probsMatrixF, List<SmallCell> cellsParsed)
+                throws CriticalFailureException, InconsistencyException {
+
+            initProbMatrix(cellsParsed);
+            int countLines = 0;
+            String nxtLn = null;
+
+            try (
+                    BufferedReader reader = new BufferedReader(new FileReader(probsMatrixF))) {
+
+                // ignore first line
+                if (null == (nxtLn = reader.readLine())) {
+                    throw new InconsistencyException("Title line in \"" + probsMatrixF.getCanonicalPath() + "\" is empty");
+                }
+
+                while (null != (nxtLn = reader.readLine())) {
+
+                    SmallCell nxtCl = cellsParsed.get(countLines++);
+
+                    String[] tokens = nxtLn.split(",");
+
+                    if (tokens.length != cellsParsed.size() + 1) {
+                        throw new InconsistencyException(""
+                                + "Line #" + countLines
+                                + " in \"" + probsMatrixF.getCanonicalPath() + "\""
+                                + " has wrong number of tokens = " + tokens.length
+                                + ". The expected number of tokens is equal to the cell ID and the number of all cells, i.e: "
+                                + (cellsParsed.size() + 1)
+                        );
+                    }
+
+                    int id = (int) Double.parseDouble(tokens[0].replace("\"", "")); //TODO ignore it for now; pending to fix in future by mohammad
+                    for (int i = 1; i < tokens.length; i++) {
+                        double prob = Double.parseDouble(tokens[i]);
+                        SmallCell nxtNeigh = cellsParsed.get(i - 1);
+                        nxtCl.addNeighbor(nxtNeigh);
+                        probMatrix.put(hashKey(nxtCl, nxtNeigh), prob);
+                    }
+
+                }
+
+                LOG.log(Level.INFO, "Finished. Small cells probability matrix is: \n{0}",
+                        new Object[]{CommonFunctions.toString(probMatrix)}
+                );
+
+               
+
+                return cellsParsed;
+            } catch (IOException | NumberFormatException | NoSuchElementException ex) {
+                String msg = "";
+                if (ex.getClass() == NumberFormatException.class
+                        || ex.getClass() == NoSuchElementException.class) {
+                    msg = "Trace file is mulformed at line "
+                            + countLines
+                            + ":\n\t"
+                            + nxtLn;
+                }
+                throw new CriticalFailureException(msg, ex);
+            }
+        }
+
+        private void initProbMatrix(List<SmallCell> cellsParsed) {
+            probMatrix = new HashMap<>();
+            for (SmallCell nxtCl : cellsParsed) {
+                for (SmallCell nxtNghb : cellsParsed) {
+                    probMatrix.put(hashKey(nxtCl, nxtNghb), 0.0);
+                }
+            }
+        }
+
+        String hashKey(SmallCell a, SmallCell b) {
+            // use id + coordinates due to collitions when hashing the string based only on IDs..
+            return a.getID()
+                    + "@" + a.getCoordinates().toSynopsisString()
+                    + ":" + b.getID()
+                    + "@" + b.getCoordinates().toSynopsisString();
         }
     }
 

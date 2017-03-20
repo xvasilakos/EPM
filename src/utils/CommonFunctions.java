@@ -16,8 +16,8 @@ import sim.space.cell.smallcell.SmallCell;
 public final class CommonFunctions extends utilities.CommonFunctions {
 
     private static final double GBPS_FACTOR = Math.pow(10, 9) / 8;
-    private static final double MBPS_FACTOR = Math.pow(10, 6)  / 8;
-    private static final double KBPS_FACTOR = Math.pow(10, 3)  / 8;
+    private static final double MBPS_FACTOR = Math.pow(10, 6) / 8;
+    private static final double KBPS_FACTOR = Math.pow(10, 3) / 8;
     private static final double BPS_FACTOR = 1 / 8;
 
     public static double[] doubleArray(Double[] array) {
@@ -33,7 +33,20 @@ public final class CommonFunctions extends utilities.CommonFunctions {
     }
 
     public static String toString(Map map) {
-        return map.toString();
+        StringBuilder sb = new StringBuilder("\n=== MAP ===\n{\n");
+
+        for (Iterator iterator = map.keySet().iterator(); iterator.hasNext();) {
+            Object k = iterator.next();
+            sb.append("\t").
+                    append("\"").
+                    append(k.toString()).
+                    append("\"").
+                    append(" --> ");
+            sb.append("\"").
+                    append(map.get(k).toString()).
+                    append("\"\n");
+        }
+        return sb.toString();
     }
 
     public static String toSynopsisString(Collection<ISynopsisString> objs) {
@@ -47,6 +60,8 @@ public final class CommonFunctions extends utilities.CommonFunctions {
     public static String toSynopsisString(String nesting, Collection<ISynopsisString> objs) {
         return toSynopsisString(nesting, "\n\t{\n\t", "\n\t}", ",\n\t", objs);
     }
+
+   
 
     public static String toString(Object... objs) {
         return toString("", objs);

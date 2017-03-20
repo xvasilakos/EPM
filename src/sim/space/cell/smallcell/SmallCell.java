@@ -578,6 +578,7 @@ public class SmallCell extends AbstractCell {
         }
         neighbors.add(sc);
     }
+   
 
     /**
      * @param cachingMdl the caching policy
