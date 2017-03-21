@@ -817,7 +817,8 @@ public class SmallCell extends AbstractCell {
 //        shouldLoad = simTime() % _loadStationaryReqsJitter == 0;
         shouldLoad = simTime() % getSmoothedHandoverDuration() < 1;
 
-        stationaryUsr.setLastResidenceDuration(getSmoothedHandoverDuration());
+        // only for the case of stationaries:
+        stationaryUsr.setLastSojournTime(getSmoothedHandoverDuration());
 
         if (!shouldLoad && !force) {
             return false;

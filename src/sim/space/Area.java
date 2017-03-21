@@ -395,7 +395,18 @@ public class Area implements ISimulationMember, ISynopsisString {
                 return null;
             }
         }
+//        try {
         return new Couple(pointArray[pointOfReference.getY()][newX], looped);
+//        } catch (ArrayIndexOutOfBoundsException e) {
+//            System.out.println("pointOfReference.getX()=" + pointOfReference.getX());
+//            System.out.println("pointOfReference.getY()=" + pointOfReference.getY());
+//            System.out.println("newX=" + newX);
+//            System.out.println("pointArray[0].length=" + pointArray[0].length);
+//            System.out.println("pointArray.length=" + pointArray.length);
+//
+////            System.exit(0);
+//        }
+
     }
 
     public Couple<Point, Boolean> west(boolean loop, Point pointOfReference) {

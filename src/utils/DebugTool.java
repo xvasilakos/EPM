@@ -22,6 +22,7 @@ import sim.space.cell.CellRegistry;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.User;
 import sim.space.users.mobile.MobileGroup;
+import sim.space.users.mobile.MobileUser;
 
 /**
  *
@@ -174,12 +175,12 @@ public class DebugTool {
         printer.append(msg);
     }
 
-    public static void printProbs(MobileGroup grp, CellRegistry r) {
+    public static void printProbs(MobileUser mu, CellRegistry r) {
         for (SmallCell s1 : r.getSmallCells()) {
             printer.append('\n');
             SortedSet<Double> probsSorted = new TreeSet(Collections.reverseOrder());
             for (SmallCell s2 : r.getSmallCells()) {
-                double p = r.handoverProbability(grp, s1, s2);
+                double p = r.handoverProbability(mu, s1, s2);
                 probsSorted.add(p);
             }
             int max = 5; //print the first 5 at most

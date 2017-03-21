@@ -88,7 +88,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     }
 
     @Override
-    protected void constructorInit(Scenario scenario) {
+    protected void init(Scenario scenario) {
         muTracePath = scenario.stringProperty(Space.MU__TRACE, true);
         try {
             muTraceScan = new Scanner(new FileReader(muTracePath));
@@ -129,10 +129,11 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     @Override
     public Area initArea() throws CriticalFailureException {
 
-        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_METADATA_PATH, true);
+        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE, true) 
+                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA, true);
+        
         File metaF = (new File(metadataPath)).getAbsoluteFile();
-        Couple<Point, Point> areaDimensions
-                = Cells.extractAreaFromMetadata(metaF, minX, minY, maxX, maxY);
+        Couple<Point, Point> areaDimensions = Cells.extractAreaFromMetadata(metaF);
         minX = areaDimensions.getFirst().getX();
         minY = areaDimensions.getFirst().getY();
         maxX = areaDimensions.getSecond().getX();
@@ -406,7 +407,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 trackClockTime = simTime();
 
                 if (stationaryRequestsUsed()) {
-                int roundTimeSpan = simTime() - trackClockTime; // in time units specified by the trace
+                    int roundTimeSpan = simTime() - trackClockTime; // in time units specified by the trace
                     /*
                      * Consume data and keep gain stats for stationary users
                      */

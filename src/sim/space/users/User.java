@@ -30,7 +30,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
     private final SimulationBaseRunner<?> _simulation;
     private final List<DocumentRequest> _requests;
     private final List<Chunk> _requestsInChunks;
-    private double _lastResidenceDuration;
+    private double lastSojournTime;
 
     private UserGroup _userGroup;
     protected int _lastTimeReqsUpdt;
@@ -46,7 +46,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         _requests = new ArrayList<>();
         _requestsInChunks = new ArrayList<>();
 
-        _lastResidenceDuration = -1;
+        lastSojournTime = -1;
     }
 
     public User(String id, SimulationBaseRunner<?> sim, int connectedSinceSC, SmallCell connectionSC, MacroCell connectionMC) {
@@ -61,7 +61,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
         _currentlyConnectedSC = connectionSC;
         connectionSC.connectUser(this);
 
-        _lastResidenceDuration = -1;
+        lastSojournTime = -1;
     }
 
     public boolean isConnected() {
@@ -124,7 +124,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
                 + ", _simulation=" + _simulation
                 + ", _requests=" + _requests
                 + ", _requestsInChunks=" + _requestsInChunks
-                + ", _lastResidenceDuration=" + _lastResidenceDuration
+                + ", _lastResidenceDuration=" + lastSojournTime
                 + ", _userGroup=" + _userGroup
                 + ", _lastTimeReqsUpdt=" + _lastTimeReqsUpdt
                 + ", _currConnectedMC=" + _currConnectedMC
@@ -140,7 +140,7 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
                 + ", _simulation=" + _simulation.getID()
                 + ", _requests=" + _requests.size()
                 + ", _requestsInChunks=" + _requestsInChunks.size()
-                + ", _lastResidenceDuration=" + _lastResidenceDuration
+                + ", _lastResidenceDuration=" + lastSojournTime
                 + ", _userGroup=" + _userGroup.getId()
                 + ", _lastTimeReqsUpdt=" + _lastTimeReqsUpdt
                 + (_currConnectedMC != null ? ", _currConnectedMC=" + _currConnectedMC.getID() : "NONE")
@@ -148,12 +148,12 @@ public abstract class User implements ISimulationMember, ISpaceMember, ISynopsis
                 + ", _connectedSinceSC=" + _connectedSinceSC + '}';
     }
 
-    public double getLastResidenceDuration() {
-        return _lastResidenceDuration;
+    public double getLastSojournTime() {
+        return lastSojournTime;
     }
 
-    public void setLastResidenceDuration(double duration) {
-        _lastResidenceDuration = duration;
+    public void setLastSojournTime(double duration) {
+        lastSojournTime = duration;
     }
 
     @Override

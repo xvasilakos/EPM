@@ -24,9 +24,10 @@ public enum Space implements IProperty {
             + "This feature is used for caching method decisions "
             + "which use the popularity either to cache or to replace a cached item."),
     SC__INIT("space.sc.init", "tooltip TBD"),
-    SC__TRACE_PATH("space.sc.trace_path", "tooltip TBD"),
-    SC__TRACE_PATH__PROB_MATRIX("space.sc.trace_path.prob_matrix", "tooltip TBD"),
-    SC__TRACE_METADATA_PATH("space.sc.trace_metadata_path", "tooltip TBD"),
+    SC__TRACE("space.sc.trace", "tooltip TBD"),
+    SC__TRACE_BASE("space.sc.trace_base", "tooltip TBD"),
+    SC__TRACE__PROB_MATRIX("space.sc.trace.prob_matrix", "tooltip TBD"),
+    SC__TRACE_METADATA("space.sc.trace_metadata", "tooltip TBD"),
     SC__COVERAGE("space.sc.coverage", "tooltip TBD"),
     SC__NEIGHBORHOOD("space.sc.neighborhood", "Defines how the neighborhood of each cell is build"),
     SC__NEIGHBORHOOD__ALLOW_SELF("space.sc.neighborhood.allow_self", "Allows small cells to have their own self as a neighbor, e.g. due to mobile looping back within the area."),

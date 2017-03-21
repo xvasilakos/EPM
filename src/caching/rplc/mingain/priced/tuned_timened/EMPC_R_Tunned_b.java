@@ -48,7 +48,7 @@ public final class EMPC_R_Tunned_b extends AbstractEMPC_R_Tunned {
                     nxtCU, sc);
             double velocity = -1;
             if (nxtCU instanceof MobileUser) {
-                velocity = ((MobileUser) nxtCU).getVelocity();
+                velocity = ((MobileUser) nxtCU).getSpeed();
             } else if (nxtCU instanceof StationaryUser) {
                 velocity = 0;
             } else {

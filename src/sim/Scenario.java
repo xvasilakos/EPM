@@ -62,7 +62,7 @@ public class Scenario implements Comparable<Scenario> {
      * Map of properties with string values. Key: the name of the property;
      * value: the string value of the property.
      */
-    private final Map<String, String> _strProps;
+    private final Map<String, String> stringProperties;
     private final Map<String, String> _customProps;
     /**
      * Map of properties with a list of string values. Key: the name of the
@@ -104,7 +104,7 @@ public class Scenario implements Comparable<Scenario> {
 
     {// initilization block shared by all constructors
         _customProps = new HashMap<>(10, 0.25f);
-        _strProps = new HashMap<>(35, 0.25f);
+        stringProperties = new HashMap<>(35, 0.25f);
         _strListProps = new HashMap<>(35, 0.25f);
         _intProps = new HashMap<>(50, 0.25f);
         _intListProps = new HashMap<>(5, 0.25f);
@@ -170,7 +170,7 @@ public class Scenario implements Comparable<Scenario> {
             }
         });
 
-        this._strProps.putAll(original._strProps);
+        this.stringProperties.putAll(original.stringProperties);
         this._customProps.putAll(original._customProps);
         this._strListProps.putAll(original._strListProps);
 
@@ -215,7 +215,7 @@ public class Scenario implements Comparable<Scenario> {
      */
     public int setupSignatureHash() {
         int hash = 5;
-        hash = 7 * hash + this._strProps.hashCode();
+        hash = 7 * hash + this.stringProperties.hashCode();
         hash = 17 * hash + this._customProps.hashCode();
         hash = 21 * hash + this._strListProps.hashCode();
 
@@ -242,7 +242,7 @@ public class Scenario implements Comparable<Scenario> {
     @Override
     public int hashCode() {
         int hash = 5;
-        hash = 7 * hash + this._strProps.hashCode();
+        hash = 7 * hash + this.stringProperties.hashCode();
         hash = 17 * hash + this._customProps.hashCode();
         hash = 21 * hash + this._strListProps.hashCode();
         hash = 23 * hash + this._intProps.hashCode();
@@ -269,7 +269,7 @@ public class Scenario implements Comparable<Scenario> {
             return false;
         }
         final Scenario otherScenario = (Scenario) other;
-        if (!Objects.equals(this._strProps, otherScenario._strProps)) {
+        if (!Objects.equals(this.stringProperties, otherScenario.stringProperties)) {
             return false;
         }
         if (!Objects.equals(this._customProps, otherScenario._customProps)) {
@@ -347,7 +347,7 @@ public class Scenario implements Comparable<Scenario> {
 
         //<editor-fold defaultstate="collapsed" desc="String - String list">
         _toString.append("\n#String properties:\n");
-        for (Map.Entry<String, String> entry : this._strProps.entrySet()) {
+        for (Map.Entry<String, String> entry : this.stringProperties.entrySet()) {
             String propName = entry.getKey();
             String propValue = entry.getValue();
             _toString.append("\t").append(propName).append("=").append(propValue).append("\n");
@@ -438,7 +438,7 @@ public class Scenario implements Comparable<Scenario> {
                 _doubleListProps.put(propName, dbllist);
 
             } else if (type.equals(Registry.Type.STRING.toString())) {
-                _strProps.put(propName, relativePathCheck(val));
+                stringProperties.put(propName, relativePathCheck(val));
 
             } else if (type.equals(Registry.Type.CUSTOM.toString())) {
                 _customProps.put(propName, relativePathCheck(val));
@@ -538,7 +538,7 @@ public String stringProperty(IProperty prop) {
        return stringProperty(prop, false);
     }
     public String stringProperty(String propertyName, boolean isPath) {
-        String toreturn = _strProps.get(propertyName);
+        String toreturn = stringProperties.get(propertyName);
 //        if (toreturn == null) {
 //            throw onPropertyFail(propertyName, Registry.Type.STRING.toString());
 //        }

@@ -51,7 +51,7 @@ public class MobileUser extends CachingUser {
     protected ConnectionStatusUpdate _mostRecentConnStatusUpdate;
     private int _minResidencePeriodInSCExpiration;
     private int _minHandoffPeriodInSCExpiration;
-    private final double _velocity;
+    private final double speed;
 
     /**
      * Number of performed handoffs before beeing reset;
@@ -59,12 +59,12 @@ public class MobileUser extends CachingUser {
     private int _handoffsPerformed;
     private Point _startCoordinates;
 
-    private Point _currentCoordinates;
+    private Point coordinatesNow;
 
     private Point _previousCoordinates;
     private int _penultimateTimeMoved;
     private int _lastTimeMoved;
-    protected final Area _area;
+    protected final Area theArea;
     /**
      * The small cell that this user was initially connected at startup (when it
      * was introduced to the simulation), or null if it was unconnected at
@@ -151,7 +151,7 @@ public class MobileUser extends CachingUser {
 
         this._lastTimeReqsUpdt = -1;
 
-        this._velocity = builder.__group.gaussianVelocity();
+        this.speed = builder.__group.gaussianVelocity();
         this._startRoamingTime = builder.__group.startRoamingTime(this._id); // based on id, i.e. getSim() entrance ranking
         setUserGroup(builder.__group);
         getUserGroup().add(this);
@@ -170,13 +170,14 @@ public class MobileUser extends CachingUser {
             throw new CriticalFailureException(ex);
         }
 
-        this._area = builder.__area;
+        this.theArea = builder.__area;
 
         //<editor-fold defaultstate="collapsed" desc="arrange start and current points">
         this._startCoordinates = builder.__startCoordinates;
 
         this._startCoordinates.addUser(this);
-        this._currentCoordinates = _startCoordinates;
+        this.coordinatesNow = _startCoordinates;
+
         this._penultimateTimeMoved = simTime();// use sim time. See why needed in code for consuming data 
         this._mostRecentConnStatusUpdate = null;
         this._lastTimeMoved = simTime();
@@ -227,9 +228,9 @@ public class MobileUser extends CachingUser {
      */
     private MobileUser(String dummyID) {
         super(dummyID, null, null);
-        _velocity = -1;
+        speed = -1;
 
-        _area = null;
+        theArea = null;
 
         setUserGroup(null);
 
@@ -280,7 +281,7 @@ public class MobileUser extends CachingUser {
 
     }
 
-    protected void updtResidenceTime(SmallCell comingFrom, SmallCell residentIn, boolean isLooped) {
+    protected void updtSojournTime(SmallCell comingFrom, SmallCell residentIn, boolean isLooped) {
 
         if (residentIn == null) {
             throw new InconsistencyException();
@@ -300,11 +301,11 @@ public class MobileUser extends CachingUser {
         int residentInID = residentIn.getID();
         Integer connTime = _lastKnownGotConnected.get(residentInID);
         Integer disconnTime = _lastKnownGotdisconnected.get(residentInID);
-        setLastResidenceDuration(disconnTime - connTime);
+        setLastSojournTime(disconnTime - connTime);
 
         getSimulation().getCellRegistry().updtResidenceTime(
                 this.getUserGroup(), comingFrom, residentIn,
-                (int) getLastResidenceDuration()
+                (int) getLastSojournTime()
         );
     }
 
@@ -319,7 +320,7 @@ public class MobileUser extends CachingUser {
         /* take cache descisions for every caching candidate cell*/
         for (SmallCell targetSC : hostingSC.neighbors()) {
 
-            double handoverProb = simCellRegistry().handoverProbability(this.getUserGroup(), hostingSC, targetSC);
+            double handoverProb = simCellRegistry().handoverProbability(this, hostingSC, targetSC);
 
 //            DebugTool.appendln("handoverProb=" + handoverProb + " for "
 //                    + hostingSC.toSynopsisString()
@@ -437,14 +438,14 @@ public class MobileUser extends CachingUser {
      */
     @Override
     public Point getCoordinates() {
-        return _currentCoordinates;
+        return coordinatesNow;
     }
 
     /**
-     * @return the _velocity
+     * @return the speed
      */
-    public double getVelocity() {
-        return _velocity;
+    public double getSpeed() {
+        return speed;
     }
 
     /**
@@ -507,7 +508,7 @@ public class MobileUser extends CachingUser {
         _lastTimeMoved = simTime();//keep the time of reset to compute duration of moveRelatively for consuming data
         _lastHandoffTime = -1;
         _lastHandoverDuration = -1;
-        setLastResidenceDuration(-1);
+        setLastSojournTime(-1);
         //</editor-fold>
 
         //CAUTION Must reset caching decisions before resetting connectivity. 
@@ -520,7 +521,7 @@ public class MobileUser extends CachingUser {
             disconnectFromSC();
         }
 
-        _currentCoordinates = pointAfterReseting();
+        coordinatesNow = pointAfterReseting();
 
         getCoordinates().addUser(this);
 
@@ -551,21 +552,21 @@ public class MobileUser extends CachingUser {
                 newPoint = _startCoordinates;
                 break;
             case Values.RANDOM:
-                int randX = getSimulation().getRandomGenerator().randIntInRange(0, _area.getLengthX() - 1);
-                int randY = getSimulation().getRandomGenerator().randIntInRange(0, _area.getLengthY() - 1);
-                _startCoordinates = newPoint = _area.getPointAt(randX, randY);
+                int randX = getSimulation().getRandomGenerator().randIntInRange(0, theArea.getLengthX() - 1);
+                int randY = getSimulation().getRandomGenerator().randIntInRange(0, theArea.getLengthY() - 1);
+                _startCoordinates = newPoint = theArea.getPointAt(randX, randY);
                 break;
             case Values.RANDOM_X:
-                randX = getSimulation().getRandomGenerator().randIntInRange(0, _area.getLengthX() - 1);
-                _startCoordinates = newPoint = _area.getPointAt(randX, _startCoordinates.getY());
+                randX = getSimulation().getRandomGenerator().randIntInRange(0, theArea.getLengthX() - 1);
+                _startCoordinates = newPoint = theArea.getPointAt(randX, _startCoordinates.getY());
                 break;
             case Values.RANDOM_Y:
-                randY = getSimulation().getRandomGenerator().randIntInRange(0, _area.getLengthY() - 1);
-                _startCoordinates = newPoint = _area.getPointAt(_startCoordinates.getX(), randY);
+                randY = getSimulation().getRandomGenerator().randIntInRange(0, theArea.getLengthY() - 1);
+                _startCoordinates = newPoint = theArea.getPointAt(_startCoordinates.getX(), randY);
                 break;
             default:
                 /*the only option left is [x|y]. Seee javadoc for #getPoint()*/
-                _startCoordinates = newPoint = _area.getPoint(howToResetPosition());
+                _startCoordinates = newPoint = theArea.getPoint(howToResetPosition());
                 break;
         }
         return newPoint;
@@ -601,59 +602,59 @@ public class MobileUser extends CachingUser {
 
     private Couple<Point, Boolean> selectNewCoordinate(int pos) {
 
-        double muVelocity = getVelocity();
+        double muVelocity = getSpeed();
         muVelocity = muVelocity > 0 ? muVelocity : -muVelocity;
         Couple<Point, Boolean> newPointisLoopedCoupled = null;
         boolean loop = howToResetPosition().equals(Values.LOOP_PLUS_NO_RESET);
 
         switch (pos) {
             case 0: // up left
-                newPointisLoopedCoupled = _area.northWest(loop, this.getCoordinates(), muVelocity);
+                newPointisLoopedCoupled = theArea.northWest(loop, this.getCoordinates(), muVelocity);
                 /*
-                 * use _velocity for distance because it refers to 1 simTime unit
+                 * use speed for distance because it refers to 1 simTime unit
                  */
 
                 break;
             case 1: // up
-                newPointisLoopedCoupled = _area.north(loop, this.getCoordinates(), muVelocity);/*
-                 * use _velocity for distance because it refers to 1 simTime unit
+                newPointisLoopedCoupled = theArea.north(loop, this.getCoordinates(), muVelocity);/*
+                 * use speed for distance because it refers to 1 simTime unit
                  */
 
                 break;
             case 2: // up right
-                newPointisLoopedCoupled = _area.northEast(loop, this.getCoordinates(), muVelocity);/*
-                 * use _velocity for distance because it refers to 1 simTime unit
+                newPointisLoopedCoupled = theArea.northEast(loop, this.getCoordinates(), muVelocity);/*
+                 * use speed for distance because it refers to 1 simTime unit
                  */
 
                 break;
             case 3: // left
-                newPointisLoopedCoupled = _area.west(loop, this.getCoordinates(), muVelocity);/*
-                 * use _velocity for distance because it refers to 1 simTime unit 
+                newPointisLoopedCoupled = theArea.west(loop, this.getCoordinates(), muVelocity);/*
+                 * use speed for distance because it refers to 1 simTime unit 
                  */
 
                 break;
             case 4: // does not moveRelatively
                 return new Couple<>(getCoordinates(), false); // no need to check for resetting
             case 5: // right
-                newPointisLoopedCoupled = _area.east(loop, this.getCoordinates(), muVelocity);/*
-                 * use _velocity for distance because it refers to 1 simTime unit
+                newPointisLoopedCoupled = theArea.east(loop, this.getCoordinates(), muVelocity);/*
+                 * use speed for distance because it refers to 1 simTime unit
                  */
                 break;
             case 6: // down left
-                newPointisLoopedCoupled = _area.southWest(loop, this.getCoordinates(), muVelocity);/*
-                 * use _velocity for distance because it refers to 1 simTime unit
+                newPointisLoopedCoupled = theArea.southWest(loop, this.getCoordinates(), muVelocity);/*
+                 * use speed for distance because it refers to 1 simTime unit
                  */
 
                 break;
             case 7: // down
-                newPointisLoopedCoupled = _area.south(loop, this.getCoordinates(), muVelocity);/*
-                 * use _velocity for distance because it refers to 1 simTime unit
+                newPointisLoopedCoupled = theArea.south(loop, this.getCoordinates(), muVelocity);/*
+                 * use speed for distance because it refers to 1 simTime unit
                  */
 
                 break;
             case 8: // down right
-                newPointisLoopedCoupled = _area.southEast(loop, this.getCoordinates(), muVelocity);/*
-                 * use _velocity for distance because it refers to 1 simTime unit
+                newPointisLoopedCoupled = theArea.southEast(loop, this.getCoordinates(), muVelocity);/*
+                 * use speed for distance because it refers to 1 simTime unit
                  */
 
                 break;
@@ -692,7 +693,7 @@ public class MobileUser extends CachingUser {
                 disconnectFromSC();
 
                 if (originatingFromSC != null && residentInSC != null) {
-                    updtResidenceTime(originatingFromSC, residentInSC, false /*always false as newPointLoopedCouple==null in this case*/);
+                    updtSojournTime(originatingFromSC, residentInSC, false /*always false as newPointLoopedCouple==null in this case*/);
                 }
             }
             return resetStatus();
@@ -919,7 +920,7 @@ public class MobileUser extends CachingUser {
                 connectToSC(sc);
 
                 if (originatingFromSC != null) {// to avoid the case it was for first time connected
-                    updtResidenceTime(originatingFromSC, residentInSC, isLooped); // call it here. 
+                    updtSojournTime(originatingFromSC, residentInSC, isLooped); // call it here. 
                     // Must call after disconnection of residentInSC
                     // so to use correct times for disconnection
                 }
@@ -948,7 +949,7 @@ public class MobileUser extends CachingUser {
 
                 if (originatingFromSC != null) {
                     // do it here to avoid case of reconnection to the same cell 
-                    updtResidenceTime(originatingFromSC, residentInSC, isLooped);
+                    updtSojournTime(originatingFromSC, residentInSC, isLooped);
                 }
 
                 getSimulation().addHaveExitedPrevCell(this);
@@ -984,7 +985,7 @@ public class MobileUser extends CachingUser {
 
         getCoordinates().removeUser(this);
 
-        _currentCoordinates = newPoint;
+        coordinatesNow = newPoint;
         newPoint.addUser(this);
 
 //        DebugTool.appendln(getID() + " moved from:to "
@@ -1000,7 +1001,7 @@ public class MobileUser extends CachingUser {
         if (_mostRecentConnStatusUpdate.isHandedOver()) {
 //////////// centrify if needed            
             if (getMuTransitionDecisions().equals(Values.PER_MU__PLUS__CENTRIFY)) {
-                _currentCoordinates = _currentlyConnectedSC.getCenter();
+                coordinatesNow = _currentlyConnectedSC.getCenter();
                 _currentlyConnectedSC.getCenter().addUser(this);
             }
 
@@ -1177,7 +1178,6 @@ public class MobileUser extends CachingUser {
                 predictedChunksNaive.addAll(nxtReq.referredContentDocument().getChunksInSequence().values());
             }
 
-
             for (AbstractCachingModel model : getCachingPolicies()) {
 
                 if (model instanceof MaxPop
@@ -1236,7 +1236,6 @@ public class MobileUser extends CachingUser {
                                     bhRateSliceBytes,
                                     scRateSliceBytes)
                     );
-
 
                     for (Chunk nxtChunk : predictedChunks) {
                         targetSC.getDmdPC(model).registerUpdtInfoPC(nxtChunk, this, handoverProb);

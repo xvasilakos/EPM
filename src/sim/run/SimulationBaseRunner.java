@@ -139,7 +139,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      */
     protected String _itemPopCmptType;
     protected final String _overideItemSize;
-    protected final int _loggingSimTimePeriod;
+    protected final int loggingPeriod;
     protected final List<MobileUser> _haveExitedPrevCell = new ArrayList();
     protected final List<MobileUser> _haveHandedOver = new ArrayList();
     protected String theNeighborhoodType;
@@ -310,34 +310,29 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
      *
      * @param s
      */
-    abstract protected void constructorInit(Scenario s);
+    abstract protected void init(Scenario s);
 
     /**
      * Private constructor. Inheriting classes must define whatever needed by
-     * overriding method #SimulationBaseRunner.constructorInit()
+ overriding method #SimulationBaseRunner.init()
      *
      * @param s
      * @throws CriticalFailureException
      */
     protected SimulationBaseRunner(Scenario s) throws CriticalFailureException {
         scenarioSetup = s;
-        constructorInit(s);
+        
+        //  initilize the clock.. //
+        clock = s.initClock(this);
+        int maxTime = scenarioSetup.intProperty(app.properties.Simulation.Clock.MAX_TIME);
+        int tmp = (int) (scenarioSetup.doubleProperty(app.properties.Simulation.PROGRESS_UPDATE) * maxTime);
+        loggingPeriod = tmp == 0 ? 10 : tmp;
+        
+        init(s);
 
         try {
             //<editor-fold defaultstate="collapsed" desc="init various final scenario setup parameters">
 
-            //  initilize the clock.. //
-            clock = s.initClock(this);
-            int maxTime = getScenario().intProperty(app.properties.Simulation.Clock.MAX_TIME);
-            int tmp = (int) (getScenario().doubleProperty(app.properties.Simulation.PROGRESS_UPDATE) * maxTime);
-            _loggingSimTimePeriod = tmp == 0 ? 10 : tmp;
-
-            // global variables for data rates
-            // 125000 bytes <=> 1Mbps
-//            _chunkSizeInBytes = Math.round(125000 * getSimulation().getScenario().doubleProperty(Networking.Rates.CHUNK_SIZE));
-//            _rateMCWlessInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.MC_WIRELESS));
-//            _rateSCWlessInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.SC_WIRELESS));
-//            _rateBHInBytes = (long) (125000 * scenarioSetup.doubleProperty(Networking.Rates.SC_BACKHAUL));
             _chunkSizeInBytes = utils.CommonFunctions.parseSizeToBytes(
                     getSimulation().getScenario().stringProperty(
                             Networking.Rates.CHUNK_SIZE
@@ -348,12 +343,12 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                             Networking.Rates.MC_WIRELESS
                     )
             );
-            _rateSCWlessInBytes =  utils.CommonFunctions.parseSizeToBytes(
+            _rateSCWlessInBytes = utils.CommonFunctions.parseSizeToBytes(
                     getSimulation().getScenario().stringProperty(
                             Networking.Rates.SC_WIRELESS
                     )
             );
-            _rateBHInBytes =  utils.CommonFunctions.parseSizeToBytes(
+            _rateBHInBytes = utils.CommonFunctions.parseSizeToBytes(
                     getSimulation().getScenario().stringProperty(
                             Networking.Rates.SC_BACKHAUL
                     )
@@ -684,7 +679,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     }
 
     public final int loggingSimTimePeriod() {
-        return _loggingSimTimePeriod;
+        return loggingPeriod;
     }
 
     public void addHaveExitedPrevCell(MobileUser mu) {

@@ -50,7 +50,7 @@ public final class EMPC_R_Tunned_c1 extends AbstractEMPC_R_Tunned {
             if (nxtUser instanceof StationaryUser) {
                  velocity = 0;
             } else if (nxtUser instanceof MobileUser) {
-                velocity = ((MobileUser)nxtUser).getVelocity();
+                velocity = ((MobileUser)nxtUser).getSpeed();
             } else {
                 throw new UnsupportedOperationException();
             }

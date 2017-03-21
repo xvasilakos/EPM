@@ -36,7 +36,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
     }
 
     @Override
-    protected void constructorInit(Scenario setup) {
+    protected void init(Scenario setup) {
         // nothing special to do here that is not done by the super constructor
     }
 

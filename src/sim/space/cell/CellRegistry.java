@@ -7,6 +7,7 @@ import caching.base.AbstractCachingModel;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
 import exceptions.InvalidOrUnsupportedException;
+import exceptions.WrongOrImproperArgumentException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -344,6 +345,9 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      * handoff destination SCs.
      *
      * mu src dest
+     * @param mu
+     * @param src
+     * @param dest
      */
     public void updtHandoffProbs(MobileUser mu, SmallCell src, SmallCell dest) {
 
@@ -548,29 +552,50 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
     /**
      * Returns probability based on srcCell destCell and -if using a mobile
-     * transitions history- the grp parameter.
+     * transitions history- the mobile user's group.
      *
      * Tries to use a probability matrix, which indicates the use of a trace for
      * cells. If there is no known probability matrix, then probabilities are
      * computed on the fly based on a history of mobile transitions between the
-     * cells. Note, that in the latter case, the history ustilises also the grp
+     * cells. Note, that in the latter case, the history utilises also the grp
      * parameter.
      *
-     * @param grp
-     * @param srcCell
-     * @param destCell
-     * @return the mobile transition probability
+     * @param mu the mobile user
+     * @param srcCell the source cell
+     * @param destCell the possible destination cell
+     * @return the expected mobile transition probability between the source and
+     * the destination cells
      *
      */
-    public double handoverProbability(MobileGroup grp, SmallCell srcCell, SmallCell destCell) {
+    public double handoverProbability(MobileUser mu, SmallCell srcCell, SmallCell destCell) {
 
-        if (probMatrix() != null) {
-            return probMatrix().get(traceCellsLoader.hashKey(srcCell, destCell));
+        String key = traceCellsLoader.hashKey(srcCell, destCell);
+
+        double probMarkov = traceCellsLoader.probMatrixGeneral.get(key);
+
+        double lastSojournTime = mu.getLastSojournTime();
+
+        if (true) {//xxx remove that testing if(true); uncomment the next if
+//        if (probMatrix() != null) {
+
+            if (50 < lastSojournTime && lastSojournTime < 100) {
+                return probMarkov * traceCellsLoader.probMatrix_rt50to100.get(key);
+            } else if (100 < lastSojournTime && lastSojournTime < 200) {
+                return probMarkov * traceCellsLoader.probMatrix_rt100to200.get(key);
+            } else if (200 < lastSojournTime && lastSojournTime < 300) {
+                return probMarkov * traceCellsLoader.probMatrix_rt200to300.get(key);
+            } else if (300 < lastSojournTime) {
+                return probMarkov * traceCellsLoader.probMatrix_rtover300.get(key);
+            } else {
+                return probMarkov * traceCellsLoader.probMatrix_rtunder50.get(key);
+            }
+
         }
 
-        if (destCell.equals(srcCell)) {
-            return 0;
-        }
+//        if (destCell.equals(srcCell)) {
+//            return 0;
+//        }
+        MobileGroup grp = mu.getUserGroup();
 
         double handoffsBetweenCells = getHandoffsBetweenCells(grp, srcCell, destCell);
         double outgoingHandoffs = getHandoffsOutgoing(grp, srcCell);
@@ -849,20 +874,33 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             LOG.log(Level.INFO, "Created cells cover {0}% of the area.", percentage);
 
             return theSCs;
-        } catch (UnsupportedOperationException ex) {
+        } catch (UnsupportedOperationException | InconsistencyException | IOException | WrongOrImproperArgumentException ex) {
             throw new CriticalFailureException(ex);
         }
     }
 
-    private Map<String, Double> probMatrix() {
-        return traceCellsLoader.probMatrix;
-    }
-
     public class TraceCellsLoader {
 
-        private Map<String, Double> probMatrix = null;
+        /**
+         * " Probability Matrix.csv" " rt50to100.csv" " rt100to200.csv" "
+         * rt200to300.csv" " rtover300" " rtunder50"
+         */
+        List<String> suffixes;
+        Map<String, Double> probMatrixGeneral = new HashMap<>();
+        Map<String, Double> probMatrix_rt50to100 = new HashMap<>();
+        Map<String, Double> probMatrix_rt100to200 = new HashMap<>();
+        Map<String, Double> probMatrix_rt200to300 = new HashMap<>();
+        Map<String, Double> probMatrix_rtover300 = new HashMap<>();
+        Map<String, Double> probMatrix_rtunder50 = new HashMap<>();
 
         private TraceCellsLoader() {
+            this.suffixes = new ArrayList();
+            suffixes.add(" Probability Matrix.csv");
+            suffixes.add(" rt50to100.csv");
+            suffixes.add(" rt100to200.csv");
+            suffixes.add(" rt200to300.csv");
+            suffixes.add(" rtover300.csv");
+            suffixes.add(" rtunder50.csv");
 
         }
 
@@ -882,7 +920,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
          */
         private List<SmallCell> initSCsTrace(Scenario s,
                 Area area, Collection<AbstractCachingModel> cacheMdls
-        ) throws CriticalFailureException {
+        ) throws CriticalFailureException, InconsistencyException, IOException, FileNotFoundException, WrongOrImproperArgumentException {
 
             Area.RealArea theRealDimensions = area.getREAL_AREA();
             int minX = theRealDimensions.minX,
@@ -890,7 +928,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                     maxX = theRealDimensions.maxX,
                     maxY = theRealDimensions.maxY;
 
-//        String metadataPath = s.stringProperty(Space.SC__TRACE_METADATA_PATH, true);
+//        String metadataPath = s.stringProperty(Space.SC__TRACE_METADATA, true);
 //        File metaF = (new File(metadataPath)).getAbsoluteFile();
 //        Couple<Point, Point> areaDimensions = Cells.extractAreaFromMetadata(metaF, minX, minY, maxX, maxY);
 //        
@@ -901,8 +939,8 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             String nxtLn = "";
 
 //            = CellRegistry.this.getSimulation().getScenario();
-            String tracePath = s.stringProperty(Space.SC__TRACE_PATH, true);
-            String probsPath = s.stringProperty(Space.SC__TRACE_PATH__PROB_MATRIX, true);
+            String tracePath = s.stringProperty(Space.SC__TRACE_BASE, true)
+                    + "/" + s.stringProperty(Space.SC__TRACE, true);
 
             double meanR = s.doubleProperty(Space.SC__RADIUS__MEAN);
             double stdevR = s.doubleProperty(Space.SC__RADIUS__STDEV);
@@ -916,38 +954,15 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                     }
             );
 
-            File cellsTraceF = null;
-            File probsMatrixF = null;
-            long byteConsumed = 0;
-            long sz = 0;
-            try {
-                cellsTraceF = (new File(tracePath)).getCanonicalFile();
-                probsMatrixF = (new File(probsPath)).getCanonicalFile();
-                sz = cellsTraceF.length();
+            List<SmallCell> initialisedFromTrc = null;
 
-                if (!cellsTraceF.exists()) {
-                    throw new FileNotFoundException("Path to file for initializing small "
-                            + "cells not exist: "
-                            + "\""
-                            + cellsTraceF.getCanonicalPath()
-                            + "\"");
-                }
+            initialisedFromTrc = new ArrayList<>();
+            parseTraceFile(tracePath, nxtLn, maxX, minX, maxY, minY, meanR, stdevR, s, area, cacheMdls, initialisedFromTrc);
 
-                if (!probsMatrixF.exists()) {
-                    throw new FileNotFoundException("Path to probability cells' matrix file for initializing small "
-                            + "cells not exist: "
-                            + "\""
-                            + probsMatrixF.getCanonicalPath()
-                            + "\"");
-                }
-
-            } catch (IOException iOException) {
-                throw new CriticalFailureException(iOException);
+            for (String suffix : suffixes) {
+                String probsPath = s.stringProperty(Space.SC__TRACE_BASE, true) + "/" + s.stringProperty(Space.SC__TRACE__PROB_MATRIX, true) + suffix;
+                parseProbsMatrix(suffix, probsPath, initialisedFromTrc);
             }
-
-            List<SmallCell> initialisedFromTrc = new ArrayList<>();
-            parseTraceFile(cellsTraceF, nxtLn, maxX, minX, maxY, minY, meanR, stdevR, s, area, cacheMdls, initialisedFromTrc, byteConsumed, sz);
-            parseProbsMatrix(probsMatrixF, initialisedFromTrc);
 
             return initialisedFromTrc;
 
@@ -975,15 +990,30 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
          * @throws InconsistencyException
          */
         private List<SmallCell> parseTraceFile(
-                File traceF, String nxtLn,
+                String tracePath, String nxtLn,
                 int maxX, int minX, int maxY, int minY,
                 double meanR, double stdevR, Scenario s,
                 Area area, Collection<AbstractCachingModel> cacheMdls,
-                List<SmallCell> cellsParsed,
-                long byteConsumed, long sz) throws CriticalFailureException, InconsistencyException {
+                List<SmallCell> cellsParsed) throws CriticalFailureException, InconsistencyException, FileNotFoundException, IOException {
+
+            File cellsTraceF = null;
+            long byteConsumed = 0;
+            long sz = 0;
+            cellsTraceF = (new File(tracePath)).getCanonicalFile();
+
+            sz = cellsTraceF.length();
+
+            if (!cellsTraceF.exists()) {
+                throw new FileNotFoundException("Path to file for initializing small "
+                        + "cells not exist: "
+                        + "\""
+                        + cellsTraceF.getCanonicalPath()
+                        + "\"");
+            }
+
             int countLines = 0;
             try (
-                    BufferedReader rdr = new BufferedReader(new FileReader(traceF))) {
+                    BufferedReader rdr = new BufferedReader(new FileReader(tracePath))) {
                 while (null != (nxtLn = rdr.readLine())) {
                     countLines++;
 
@@ -1067,16 +1097,52 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             }
         }
 
-        private List<SmallCell> parseProbsMatrix(
-                File probsMatrixF, List<SmallCell> cellsParsed)
-                throws CriticalFailureException, InconsistencyException {
+        private List<SmallCell> parseProbsMatrix(String suffix,
+                String probsPath, List<SmallCell> cellsParsed)
+                throws CriticalFailureException, InconsistencyException, FileNotFoundException, IOException, WrongOrImproperArgumentException {
 
-            initProbMatrix(cellsParsed);
+            File probsMatrixF = (new File(probsPath)).getCanonicalFile();
+            if (!probsMatrixF.exists()) {
+                throw new FileNotFoundException("Path to probability cells' matrix file for initializing small "
+                        + "cells does not exist: "
+                        + "\""
+                        + probsMatrixF.getCanonicalPath()
+                        + "\"");
+            }
+
+            Map<String, Double> probMatrix;
+
+            switch (suffix) {
+                case " Probability Matrix.csv":
+                    probMatrix = this.probMatrixGeneral;
+                    break;
+                case " rt50to100.csv":
+                    probMatrix = this.probMatrix_rt50to100;
+                    break;
+                case " rt100to200.csv":
+                    probMatrix = this.probMatrix_rt100to200;
+                    break;
+                case " rt200to300.csv":
+                    probMatrix = this.probMatrix_rt200to300;
+                    break;
+                case " rtover300.csv":
+                    probMatrix = this.probMatrix_rtover300;
+                    break;
+                case " rtunder50.csv":
+                    probMatrix = this.probMatrix_rtunder50;
+                    break;
+                default:
+                    throw new exceptions.WrongOrImproperArgumentException("Unknown type of file: \"" + suffix+"\"");
+            }
+
+            initProbMatrix(cellsParsed, probMatrix);
+
             int countLines = 0;
             String nxtLn = null;
 
-            try (
-                    BufferedReader reader = new BufferedReader(new FileReader(probsMatrixF))) {
+            try (BufferedReader reader = new BufferedReader(
+                    new FileReader(probsMatrixF)
+            )) {
 
                 // ignore first line
                 if (null == (nxtLn = reader.readLine())) {
@@ -1113,8 +1179,6 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                         new Object[]{CommonFunctions.toString(probMatrix)}
                 );
 
-               
-
                 return cellsParsed;
             } catch (IOException | NumberFormatException | NoSuchElementException ex) {
                 String msg = "";
@@ -1129,7 +1193,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             }
         }
 
-        private void initProbMatrix(List<SmallCell> cellsParsed) {
+        private void initProbMatrix(List<SmallCell> cellsParsed, Map<String, Double> probMatrix) {
             probMatrix = new HashMap<>();
             for (SmallCell nxtCl : cellsParsed) {
                 for (SmallCell nxtNghb : cellsParsed) {

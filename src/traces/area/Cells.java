@@ -17,8 +17,13 @@ import utilities.Couple;
 public class Cells {
 
     public static Couple<Point, Point> extractAreaFromMetadata(
-            File metaF, int minX, int minY, int maxX, int maxY)
+            File metaF)
             throws CriticalFailureException, NumberFormatException {
+
+        int minX = Integer.MAX_VALUE;
+        int minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE;
+        int maxY = Integer.MIN_VALUE;
 
         try {
 
@@ -61,8 +66,8 @@ public class Cells {
         }
 
         Couple<Point, Point> fromTo = new Couple<>(
-                new Point(minX-1, minY-1),
-                new Point(maxX+1, maxY+1)
+                new Point(minX - 1, minY - 1),
+                new Point(maxX + 1, maxY + 1)
         );
 
         LOG.log(Level.INFO, "Loaded dimensions of are from metadata file: "

@@ -177,7 +177,7 @@ public abstract class Utils {
         } else {
 
             if (cu instanceof MobileUser) {
-                q = sc.simCellRegistry().handoverProbability(((MobileUser) cu).getUserGroup(), cu.getCurrentlyConnectedSC(), sc);
+                q = sc.simCellRegistry().handoverProbability(((MobileUser) cu), cu.getCurrentlyConnectedSC(), sc);
             }
             if (cu instanceof StationaryUser) {
                 q = 1.0;
@@ -203,7 +203,7 @@ public abstract class Utils {
         double prob = 1.0;
 
         if (cu instanceof MobileUser) {
-            prob = sc.simCellRegistry().handoverProbability(((MobileUser) cu).getUserGroup(), cu.getCurrentlyConnectedSC(), sc);
+            prob = sc.simCellRegistry().handoverProbability(((MobileUser) cu), cu.getCurrentlyConnectedSC(), sc);
             return prob * item.gainOfTransferSCCacheHit();
         }
         if (cu instanceof StationaryUser) {

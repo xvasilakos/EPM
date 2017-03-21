@@ -45,7 +45,7 @@ public final class EMC_inversivelyHandoverTime extends caching.incremental.EMC {
         double distance = DistanceComparator.euclidianDistance(cu, targetSC) - targetSC.getRadius();
         double velocity = -1;
         if (cu instanceof MobileUser) {
-            velocity = ((MobileUser) cu).getVelocity();
+            velocity = ((MobileUser) cu).getSpeed();
         } else if (cu instanceof StationaryUser) {
             velocity = 0;
         } else {

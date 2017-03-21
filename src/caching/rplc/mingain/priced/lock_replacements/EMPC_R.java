@@ -87,7 +87,7 @@ public final class EMPC_R extends caching.rplc.mingain.priced.EMPC_R {
                     nxtCU, sc) - sc.getRadius();
             double velocity = -1;
             if (nxtCU instanceof MobileUser) {
-                velocity = ((MobileUser) nxtCU).getVelocity();
+                velocity = ((MobileUser) nxtCU).getSpeed();
             } else if (nxtCU instanceof StationaryUser) {
                 velocity = 0;
             } else {

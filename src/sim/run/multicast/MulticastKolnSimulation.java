@@ -12,6 +12,7 @@ import exceptions.InconsistencyException;
 import exceptions.InvalidOrUnsupportedException;
 import exceptions.TraceEndedException;
 import exceptions.WrongOrImproperArgumentException;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -51,7 +52,7 @@ import utilities.Couple;
 public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
     private String muTracePath;
-    private Scanner muTraceScan;
+    private BufferedReader muTraceBf;
     private String mobTrcLine;
     private String mobTrcCSVSep = " ";// default set to " "
 
@@ -87,13 +88,12 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     }
 
     @Override
-    protected void constructorInit(Scenario scenario) {
+    protected void init(Scenario scenario) {
         muTracePath = scenario.stringProperty(Space.MU__TRACE, true);
         try {
-            muTraceScan = new Scanner(new FileReader(muTracePath));
+            muTraceBf = new BufferedReader(new FileReader(muTracePath));
 
-            while (muTraceScan.hasNextLine()) {
-                mobTrcLine = muTraceScan.nextLine();
+            while (null != (mobTrcLine = muTraceBf.readLine())) {
                 linesReadFromMob++;
 
                 if (mobTrcLine.startsWith("#")) {
@@ -101,12 +101,56 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                         mobTrcCSVSep = mobTrcLine.substring(5);
                         LOG.log(Level.INFO, "Mobility trace uses separator=\"{0}\"", mobTrcCSVSep);
                     }
-
-                    mobTraceEarlyEndingCheck();
                 } else {
                     break;
                 }
             }
+
+            if (mobTrcCSVSep == null) {
+                mobTrcCSVSep = " ";
+            }
+
+            if (mobTrcLine == null) {
+                muTraceBf.close();
+                String trcEndStr = "The mobility trace has ended too early"
+                        + "(after initilisation):"
+                        + "\n\t- path:"
+                        + "\""
+                        + muTracePath
+                        + "\""
+                        + "\n\t- trace line read:"
+                        + "\""
+                        + mobTrcCSVSep
+                        + "\"";
+                throw new TraceEndedException(trcEndStr);
+            }
+
+            try {/*
+             * To be called to read first line of data from the trace in order to
+             * initilize the simulation clock time.
+                 */
+
+                String[] csv = mobTrcLine.split(mobTrcCSVSep);
+
+                clock.tick(Integer.parseInt(csv[0]));//[0]: time
+
+                timeForNextBatch = simTime() + roundDuration;
+                simRound = 0; // used for logging. See also var roundDuration.
+                linesReadFromMob = 0;
+
+            } catch (NormalSimulationEndException ex) {
+                muTraceBf.close();
+                String trcEndStr = "Clock time ended too early: " + simTimeStr()
+                        + " while initialising from mobility trace \""
+                        + muTracePath
+                        + "\""
+                        + "\n\t- trace line read:"
+                        + "\""
+                        + mobTrcCSVSep
+                        + "\"";
+                throw new TraceEndedException(trcEndStr);
+            }
+
         } catch (IOException | TraceEndedException | NoSuchElementException e) {
             throw new CriticalFailureException("On attempt to load from file: "
                     + "\""
@@ -128,10 +172,12 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     @Override
     public Area initArea() throws CriticalFailureException {
 
-        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_METADATA_PATH, true);
+        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE, true)
+                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA, true);
+
         File metaF = (new File(metadataPath)).getAbsoluteFile();
         Couple<Point, Point> areaDimensions
-                = Cells.extractAreaFromMetadata(metaF, minX, minY, maxX, maxY);
+                = Cells.extractAreaFromMetadata(metaF);
         minX = areaDimensions.getFirst().getX();
         minY = areaDimensions.getFirst().getY();
         maxX = areaDimensions.getSecond().getX();
@@ -173,8 +219,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
         batchOfMUsOfCurrRound = new ArrayList<>();
 
         //System.err.println("** last read: " + mobTrcLine);
-        while (muTraceScan.hasNextLine()) {
-            mobTrcLine = muTraceScan.nextLine();
+        do {
             linesReadFromMob++;
 
             String[] csv = mobTrcLine.split(mobTrcCSVSep);
@@ -185,6 +230,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
             if (time > this.timeForNextBatch) {
                 this.timeForNextBatch = time + roundDuration;
                 clock.tick(time);
+//                muTraceScan
                 return false; // in this case let it be read in the next round's batch of trace lines
             }
             //else...
@@ -192,11 +238,22 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
             //[1] mu id
             String parsedID = csv[1];
 
+//            //[2] x
+//            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
+//
+//            //[3] y
+//            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
+
+
+//TODO
+//BUGFIX
+//hack using max for out of area coordinates. 
+// somehow the trace of mobiliy has out of bounds moves:
             //[2] x
-            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
+            int x = (int) Math.max(0, Double.parseDouble(csv[2]) - minX); // -minX so as to be relative to area dimensions
 
             //[3] y
-            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
+            int y = (int) Math.max(0, Double.parseDouble(csv[3]) - minY); // -minY so as to be relative to area dimensions
 
             //[4] speed
             double speed = Math.ceil(Double.parseDouble(csv[4]));
@@ -234,7 +291,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
             batchOfMUsOfCurrRound.add(newMU);
 
-        }
+        } while (null != (mobTrcLine = muTraceBf.readLine()));
 
         return true; // if reached here, then the mobility trace is over
 
@@ -316,56 +373,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
         try {
 
-            //<editor-fold defaultstate="collapsed" desc="init simulation clock time">
-
-            /*
-             * To be called to read first line of data from the trace in order to
-             * initilize the simulation clock time.
-             */
-            String[] csv = mobTrcLine.split(mobTrcCSVSep);
-
-//[0]: time
-            int time = Integer.parseInt(csv[0]);
-            clock.tick(time);
-
-//[1] mu id
-            String parsedID = csv[1];
-
-//[2] x
-            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
-
-//[3] y
-            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
-
-//[4] speed
-            double speed = Math.ceil(Double.parseDouble(csv[4]));
-
-            TraceMU newMU = createMU(parsedID, x, y, speed, time);
-
-            if (usesTraceOfRequests()) {
-                int newAddedReqs = updtLoadWorkloadRequests(newMU, _dmdTrcReqsLoadedPerUser);
-
-                getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
-                );
-            }
-//</editor-fold>
-
-            if (!muTraceScan.hasNextLine()) {
-                muTraceScan.close();
-                String trcEndStr = "The mobility trace has ended too early"
-                        + "(after initilisation):"
-                        + "\n\t- path:"
-                        + "\""
-                        + muTracePath
-                        + "\""
-                        + "\n\t- trace line read:"
-                        + "\""
-                        + mobTrcCSVSep
-                        + "\"";
-                throw new TraceEndedException(trcEndStr);
-            }
+            boolean mobTraceFinished = false;
 
             //<editor-fold defaultstate="collapsed" desc="init stationaries' demand">
             try {
@@ -381,23 +389,8 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
             }
 //</editor-fold>
 
-            // usefull for stationary ammount of data concumption 
-            int trackClockTime = simTime();
-
-            /* 
-             * Load next line and extract the simulation time, 
-             * which will be used as a threshold for loading the next batch 
-             * of trace lines.
-             */
-            mobTrcLine = muTraceScan.nextLine();
-            csv = mobTrcLine.split(mobTrcCSVSep);
-            timeForNextBatch = Integer.parseInt(csv[0]) + roundDuration;
-
-            simRound = 0; // used for logging. See also var roundDuration.
-            linesReadFromMob = 0;
-
-            boolean mobTraceFinished = false;
-
+//            // usefull for stationary ammount of data concumption 
+//TODO            int trackClockTime = simTime();
             WHILE_THREAD_NOT_INTERUPTED:
             while (!Thread.currentThread().isInterrupted()) {
 
@@ -408,9 +401,9 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                 logSimulationRound();
 
                 mobTraceFinished = readFromMobilityTrace();
-                trackClockTime = simTime();
 
 //TODO commented to lighten the sim..
+//                trackClockTime = simTime();
 //                if (stationaryRequestsUsed()) {
 //                int roundTimeSpan = simTime() - trackClockTime; // in time units specified by the trace
 //                    /*
@@ -432,13 +425,13 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                 for (TraceMU nxtMU : batchOfMUsOfCurrRound) {
                     if (nxtMU.getSpeed() > 0.0) {
                         ConnectionStatusUpdate updtSCConnChange = nxtMU.moveRelatively();
-                    
+
                         //TODO reconsider this... added only to run example codes
                         if (theNeighborhoodType.equalsIgnoreCase(DISCOVER)
                                 && updtSCConnChange.isHandedOver()) {
                             nxtMU.getPreviouslyConnectedSC().addNeighbor(nxtMU.getCurrentlyConnectedSC());
                         }
-                    
+
                     }
                     if (nxtMU.isSoftUser()) {
                         nxtMU.consumeSftUsr();//TODO
@@ -479,7 +472,6 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                 int clearedReqs = 0;
                 int newAddedReqs = 0;
 
-                
                 for (MobileUser nxtMU : _haveExitedPrevCell) {
 
                     SmallCell lastSCForCacheDecisions = nxtMU.getLastSCForCacheDecisions();//TODO
@@ -493,7 +485,6 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                         clearedReqs += nxtMU.clearCompletedRequests();
                         newAddedReqs += updtLoadWorkloadRequests(nxtMU, _dmdTrcReqsLoadedPerUser);
                     }
-
 
                     // finaly take caching decisions
                     nxtMU.cacheDescisionsPerformRegisterPC(nxtMU.getLastKnownConnectedSC());//TODO
@@ -566,18 +557,15 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
     }
 
-    private void mobTraceEarlyEndingCheck() throws TraceEndedException {
-        if (!muTraceScan.hasNextLine()) {
-            muTraceScan.close();
-            throw new TraceEndedException("The mobility trace has ended too early.");
-        }
-    }
-
     @Override
     public void runFinish() {
         super.runFinish();
         _trcLoader.close();
-        muTraceScan.close();
+        try {
+            muTraceBf.close();
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
     }
 
 }

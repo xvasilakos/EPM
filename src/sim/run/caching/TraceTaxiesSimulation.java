@@ -63,7 +63,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
     }
 
     @Override
-    protected void constructorInit(Scenario scenario) {
+    protected void init(Scenario scenario) {
         String mutracePath = scenario.stringProperty(Space.MU__TRACE, true);
         try {
             muTraceIn = new Scanner(new FileReader(mutracePath));

@@ -58,7 +58,7 @@ public class TraceMU extends MobileUser {
     }
 
     @Override
-    protected void updtResidenceTime(SmallCell comingFrom, SmallCell residentIn, boolean isLooped) {
+    protected void updtSojournTime(SmallCell comingFrom, SmallCell residentIn, boolean isLooped) {
 
         if (residentIn.equals(comingFrom)) {
             String mthd = new Object() {
@@ -67,7 +67,7 @@ public class TraceMU extends MobileUser {
             return;
         }
 
-        super.updtResidenceTime(comingFrom, residentIn, isLooped);
+        super.updtSojournTime(comingFrom, residentIn, isLooped);
     }
 
     /**
@@ -106,25 +106,25 @@ public class TraceMU extends MobileUser {
         Point coordinates = this.getCoordinates();
         if (dx < 0) {
             // up
-            newPointisLoopedCoupled = _area.west(loop, coordinates, Math.abs(dx));/*
+            newPointisLoopedCoupled = theArea.west(loop, coordinates, Math.abs(dx));/*
                  * use _velocity for distance because it refers to 1 simTime unit
              */
         } else {
             // up
-            newPointisLoopedCoupled = _area.east(loop, coordinates, Math.abs(dx));
+            newPointisLoopedCoupled = theArea.east(loop, coordinates, Math.abs(dx));
         }
         boolean isLoopedX = newPointisLoopedCoupled.getSecond();
 
         coordinates = newPointisLoopedCoupled.getFirst();
         if (dy < 0) {
             // up
-            newPointisLoopedCoupled = _area.north(loop, coordinates, Math.abs(dy));/*
+            newPointisLoopedCoupled = theArea.north(loop, coordinates, Math.abs(dy));/*
                  * use _velocity for distance because it refers to 1 simTime unit
              */
         } else {
             // up
             double diff = Math.abs(dy) % _areaMaxY; // due to trace, dx or dy can exceed area limits 2,3,..n times which will cause out of bounds exceptions
-            newPointisLoopedCoupled = _area.south(loop, coordinates, diff);
+            newPointisLoopedCoupled = theArea.south(loop, coordinates, diff);
         }
         boolean isLoopedY = newPointisLoopedCoupled.getSecond();
 
