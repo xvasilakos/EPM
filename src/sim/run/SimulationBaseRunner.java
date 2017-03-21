@@ -314,20 +314,20 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     /**
      * Private constructor. Inheriting classes must define whatever needed by
- overriding method #SimulationBaseRunner.init()
+     * overriding method #SimulationBaseRunner.init()
      *
      * @param s
      * @throws CriticalFailureException
      */
     protected SimulationBaseRunner(Scenario s) throws CriticalFailureException {
         scenarioSetup = s;
-        
+
         //  initilize the clock.. //
         clock = s.initClock(this);
         int maxTime = scenarioSetup.intProperty(app.properties.Simulation.Clock.MAX_TIME);
         int tmp = (int) (scenarioSetup.doubleProperty(app.properties.Simulation.PROGRESS_UPDATE) * maxTime);
         loggingPeriod = tmp == 0 ? 10 : tmp;
-        
+
         init(s);
 
         try {
@@ -841,10 +841,6 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                 }
             }
 
-            getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
-                    new UnonymousCompute6(
-                            new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
-            );
             return true;
         } else {
             return false;

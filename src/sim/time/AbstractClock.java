@@ -73,9 +73,11 @@ public abstract class AbstractClock implements ISimulationMember, Comparable<Abs
      * @param t
      * @return
      * @throws NormalSimulationEndException
+     * @throws InconsistencyException In case there is an effort to set the time
+     * to a value lower than the current clock's time.
      */
-    public int tick(int t) throws NormalSimulationEndException {
-        if (t <= simTime) {
+    public int tick(int t) throws NormalSimulationEndException, InconsistencyException {
+        if (t < simTime) {
             throw new InconsistencyException(
                     "Effort to set simulation time to value "
                     + "\""
@@ -87,6 +89,20 @@ public abstract class AbstractClock implements ISimulationMember, Comparable<Abs
                     + "\""
             );
         }
+        checkSimEnded();
+        return simTime = t;
+    }
+
+    /**
+     * Proceeds the time to a given time value. This is a useful option for some
+     * mobility traces. Allows to set time to a value lower than the current clock's
+     * time.
+     *
+     * @param t
+     * @return
+     * @throws NormalSimulationEndException
+     */
+    public int tickAllowBackwardsTime(int t) throws NormalSimulationEndException {
         checkSimEnded();
         return simTime = t;
     }

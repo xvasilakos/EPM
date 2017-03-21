@@ -1,5 +1,6 @@
 package sim.run.multicast;
 
+import app.properties.Simulation;
 import sim.run.SimulationBaseRunner;
 import sim.Scenario;
 import app.properties.Space;
@@ -22,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Scanner;
 import java.util.SortedMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,7 +69,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     private int timeForNextBatch;
     private Collection<TraceMU> batchOfMUsOfCurrRound;
 
-    private final int roundDuration;
+    private int roundDuration;
 
     /**
      * To be defined by parsed metadata for cells' trace.
@@ -84,14 +84,15 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
     public MulticastKolnSimulation(Scenario s) {
         super(s);
-        this.roundDuration = getScenario().intProperty(StatsProperty.STATS__AGGREGATES__RECORDING_PERIOD);
     }
 
     @Override
     protected void init(Scenario scenario) {
         muTracePath = scenario.stringProperty(Space.MU__TRACE, true);
+        roundDuration = getScenario().intProperty(StatsProperty.STATS__AGGREGATES__RECORDING_PERIOD);
+
         try {
-            muTraceBf = new BufferedReader(new FileReader(muTracePath));
+            this.muTraceBf = new BufferedReader(new FileReader(muTracePath));
 
             while (null != (mobTrcLine = muTraceBf.readLine())) {
                 linesReadFromMob++;
@@ -125,23 +126,28 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                 throw new TraceEndedException(trcEndStr);
             }
 
-            try {/*
+            /*
              * To be called to read first line of data from the trace in order to
              * initilize the simulation clock time.
-                 */
+             */
+            int initTime = scenario.intProperty(Simulation.Clock.INIT_TIME);
+            String[] csv = mobTrcLine.split(mobTrcCSVSep);
+            int time = Integer.parseInt(csv[0]);
 
-                String[] csv = mobTrcLine.split(mobTrcCSVSep);
+            if (time < initTime) {// do not start unless a minimum time has been reached.
+                while (null != (mobTrcLine = muTraceBf.readLine()) && time < initTime) {
+                    csv = mobTrcLine.split(mobTrcCSVSep);
+                    time = Integer.parseInt(csv[0]);
+                    linesReadFromMob++;
+                }
+            }
 
-                clock.tick(Integer.parseInt(csv[0]));//[0]: time
-
-                timeForNextBatch = simTime() + roundDuration;
-                simRound = 0; // used for logging. See also var roundDuration.
-                linesReadFromMob = 0;
-
-            } catch (NormalSimulationEndException ex) {
+            if (mobTrcLine == null) {
                 muTraceBf.close();
-                String trcEndStr = "Clock time ended too early: " + simTimeStr()
-                        + " while initialising from mobility trace \""
+                String trcEndStr = "The mobility trace has ended too early"
+                        + "(after initilisation):"
+                        + "\n\t- path:"
+                        + "\""
                         + muTracePath
                         + "\""
                         + "\n\t- trace line read:"
@@ -151,12 +157,28 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                 throw new TraceEndedException(trcEndStr);
             }
 
+            updtClockAndBatchTimes(time);
+
+            simRound = 0; // used for logging. See also var roundDuration.
+            linesReadFromMob = 0;
+
         } catch (IOException | TraceEndedException | NoSuchElementException e) {
             throw new CriticalFailureException("On attempt to load from file: "
                     + "\""
                     + muTracePath
                     + "\"", e);
+        } catch (NormalSimulationEndException ex) {
+            String trcEndStr = "Clock time ended too early: " + simTimeStr()
+                    + " while initialising from mobility trace \""
+                    + muTracePath
+                    + "\""
+                    + "\n\t- trace line read:"
+                    + "\""
+                    + mobTrcCSVSep
+                    + "\"";
+            throw new CriticalFailureException(trcEndStr);
         }
+
     }
 
     /**
@@ -220,17 +242,14 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
         //System.err.println("** last read: " + mobTrcLine);
         do {
-            linesReadFromMob++;
 
             String[] csv = mobTrcLine.split(mobTrcCSVSep);
 
             //[0]: time
             int time = Integer.parseInt(csv[0]);
 
-            if (time > this.timeForNextBatch) {
-                this.timeForNextBatch = time + roundDuration;
-                clock.tick(time);
-//                muTraceScan
+            if (time >= this.timeForNextBatch) {
+                updtClockAndBatchTimes(time);
                 return false; // in this case let it be read in the next round's batch of trace lines
             }
             //else...
@@ -243,8 +262,6 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 //
 //            //[3] y
 //            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
-
-
 //TODO
 //BUGFIX
 //hack using max for out of area coordinates. 
@@ -269,7 +286,11 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
                     getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
                             new UnonymousCompute6(
-                                    new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
+                                    new UnonymousCompute6.WellKnownTitle("NewDemand"))
+                    );
+                    getSimulation().getStatsHandle().updtSCCmpt6(newMU.getRequests().size(),
+                            new UnonymousCompute6(
+                                    new UnonymousCompute6.WellKnownTitle("TotalDemand"))
                     );
                 }
             } else {
@@ -291,10 +312,27 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
             batchOfMUsOfCurrRound.add(newMU);
 
+            linesReadFromMob++;
         } while (null != (mobTrcLine = muTraceBf.readLine()));
 
         return true; // if reached here, then the mobility trace is over
 
+    }
+
+    /**
+     * Sets the time of next batch of mobile user moves and 
+     * the clock time to an Integer multiple of #roundDuration.
+     *
+     * @param time the last time parsed from mobility trace
+     * @throws sim.time.NormalSimulationEndException
+     */
+    protected void updtClockAndBatchTimes(int time) throws NormalSimulationEndException {
+        int tmp = (time + roundDuration);
+        int ypoloipo = tmp % roundDuration;
+        timeForNextBatch = tmp - ypoloipo;
+        int currBatchVBegin = timeForNextBatch - roundDuration;
+
+        clock.tickAllowBackwardsTime(currBatchVBegin);
     }
 
     /**
@@ -376,19 +414,18 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
             boolean mobTraceFinished = false;
 
             //<editor-fold defaultstate="collapsed" desc="init stationaries' demand">
-            try {
-                if (stationaryRequestsUsed()) {
-                    for (SmallCell nxtSC : getCellRegistry().getSmallCells()) {
-                        nxtSC.initLclDmdStationary();
-                        nxtSC.updtLclDmdByStationary(true);
-                    }
-                }
-            } catch (InvalidOrUnsupportedException |
-                    InconsistencyException ex) {
-                throw new CriticalFailureException(ex);
-            }
-//</editor-fold>
-
+//todo TMPORARILY NO STATIONARIES            try {
+//                if (stationaryRequestsUsed()) {
+//                    for (SmallCell nxtSC : getCellRegistry().getSmallCells()) {
+//                        nxtSC.initLclDmdStationary();
+//                        nxtSC.updtLclDmdByStationary(true);
+//                    }
+//                }
+//            } catch (InvalidOrUnsupportedException |
+//                    InconsistencyException ex) {
+//                throw new CriticalFailureException(ex);
+//            }
+            //</editor-fold>
 //            // usefull for stationary ammount of data concumption 
 //TODO            int trackClockTime = simTime();
             WHILE_THREAD_NOT_INTERUPTED:

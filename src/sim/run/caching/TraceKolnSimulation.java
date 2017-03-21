@@ -129,9 +129,9 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     @Override
     public Area initArea() throws CriticalFailureException {
 
-        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE, true) 
+        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE, true)
                 + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA, true);
-        
+
         File metaF = (new File(metadataPath)).getAbsoluteFile();
         Couple<Point, Point> areaDimensions = Cells.extractAreaFromMetadata(metaF);
         minX = areaDimensions.getFirst().getX();
@@ -212,10 +212,14 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                 if (usesTraceOfRequests()) {
                     int newAddedReqs = updtLoadWorkloadRequests(newMU, _dmdTrcReqsLoadedPerUser);
 
-                    getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
-                            new UnonymousCompute6(
-                                    new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
-                    );
+//                    getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
+//                            new UnonymousCompute6(
+//                                    new UnonymousCompute6.WellKnownTitle("NewDemand"))
+//                    );
+//                    getSimulation().getStatsHandle().updtSCCmpt6(newMU.getRequests().size(),
+//                            new UnonymousCompute6(
+//                                    new UnonymousCompute6.WellKnownTitle("TotalDemand"))
+//                    );
                 }
             } else {
                 //if a known mobile ID, state its dx, dy so as to move the mobile user
@@ -344,14 +348,18 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
             TraceMU newMU = createMU(parsedID, x, y, speed, time);
 
-            if (usesTraceOfRequests()) {
-                int newAddedReqs = updtLoadWorkloadRequests(newMU, _dmdTrcReqsLoadedPerUser);
-
-                getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("newAddedReqs[firstTime]"))
-                );
-            }
+//            if (usesTraceOfRequests()) {
+//                int newAddedReqs = updtLoadWorkloadRequests(newMU, _dmdTrcReqsLoadedPerUser);
+//
+//                getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("NewDemand"))
+//                );
+//                getSimulation().getStatsHandle().updtSCCmpt6(newMU.getRequests().size(),
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("TotalDemand"))
+//                );
+//            }
 //</editor-fold>
 
             if (!muTraceScan.hasNextLine()) {
