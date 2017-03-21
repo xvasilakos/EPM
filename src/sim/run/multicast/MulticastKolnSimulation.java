@@ -62,6 +62,8 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     private List<String> conn2SCPolicy;
     private String mobTransDecisions;
 
+    private int currBatchVBegin;
+
     /**
      * The simulation time which will be used as a threshold for loading the
      * next batch of trace lines
@@ -320,8 +322,8 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     }
 
     /**
-     * Sets the time of next batch of mobile user moves and 
-     * the clock time to an Integer multiple of #roundDuration.
+     * Sets the time of next batch of mobile user moves and the clock time to an
+     * Integer multiple of #roundDuration.
      *
      * @param time the last time parsed from mobility trace
      * @throws sim.time.NormalSimulationEndException
@@ -330,7 +332,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
         int tmp = (time + roundDuration);
         int ypoloipo = tmp % roundDuration;
         timeForNextBatch = tmp - ypoloipo;
-        int currBatchVBegin = timeForNextBatch - roundDuration;
+        currBatchVBegin = timeForNextBatch - roundDuration;
 
         clock.tickAllowBackwardsTime(currBatchVBegin);
     }

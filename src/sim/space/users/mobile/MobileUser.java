@@ -384,6 +384,7 @@ public class MobileUser extends CachingUser {
                         cachingMdl,
                         sc, nxtRequest
                 );
+                
                 sc.getDmdPC(cachingMdl).deregisterUpdtInfoPC(this, nxtRequest);
             }
         }
@@ -1169,6 +1170,10 @@ public class MobileUser extends CachingUser {
 
 ///////////////////////select chunks and 
 ///////////////////////update popularity info for requests
+        //////////////////////////////////////////////
+        ////////////////  SOFT USERS  ////////////////
+        //////////////////////////////////////////////
+        //<editor-fold defaultstate="collapsed" desc="case of "SOFT USERS"">
         if (isSoftUser()) {
             List<Chunk> predictedChunks = new ArrayList();
             List<Chunk> predictedChunksNaive = new ArrayList();
@@ -1190,16 +1195,23 @@ public class MobileUser extends CachingUser {
                     targetSC.getDmdPC(model).registerUpdtInfoPC(nxtChunk, this, handoverProb);
                 }
 
-///////////////////////take cache decisions    
+//take cache decisions
                 targetSC.cacheDecisions(model, this, targetSC,
                         predictedChunks, predictedChunks);
 
             }// FOR EVERY MODEL
 
-        }// if soft user
+        }// if SOFT USERS
+        //</editor-fold>
+        //        
+        //        
+        //        
+        //        
+        //        
         //////////////////////////////////////////////
         ////////////////  HARD USERS  ////////////////
         //////////////////////////////////////////////
+        //<editor-fold defaultstate="collapsed" desc="case of "HARD USERS"">
         else { // if hard user
             for (AbstractCachingModel model : getCachingPolicies()) {
                 if (model instanceof MaxPop
@@ -1212,7 +1224,7 @@ public class MobileUser extends CachingUser {
                 List<Chunk> predictedChunksNaive = new ArrayList();
                 for (DocumentRequest nxtReq : getRequests()) {
 // update popularity info for requests
-                    //targetSC.getPopInfo().registerPopInfo(nxtReq);
+//targetSC.getPopInfo().registerPopInfo(nxtReq);
 // select chunks
                     predictedChunks.addAll(
                             nxtReq.predictChunks2Request(
@@ -1241,12 +1253,18 @@ public class MobileUser extends CachingUser {
                         targetSC.getDmdPC(model).registerUpdtInfoPC(nxtChunk, this, handoverProb);
                     }
 
-///////////////////////take cache decisions    
-                    targetSC.cacheDecisions(model, this, targetSC,
-                            predictedChunks, predictedChunks);
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////// Take Cache Decisions
+                    targetSC.cacheDecisions(
+                            model, this, targetSC, predictedChunks,
+                            predictedChunks
+                    );
                 }// FOR EVERY REQUEST
             }// FOR EVERY MODEL
-        }
+        }//else HARD USERS
+//</editor-fold>
     }
 
     public int getLastHandoffTime() {

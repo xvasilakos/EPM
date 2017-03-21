@@ -2,6 +2,7 @@ package caching.incremental;
 
 import caching.Utils;
 import caching.base.AbstractCachingModel;
+import caching.base.AbstractEPC;
 import caching.base.IEMC;
 import exceptions.CriticalFailureException;
 import java.util.Collection;
@@ -23,7 +24,7 @@ import utils.DebugTool;
  *
  * @author xvas
  */
-public class EMC extends caching.incremental.EPC implements IEMC {
+public class EMC extends AbstractEPC implements IEMC {
 
     private static EMC singleton = new EMC();
 
@@ -43,39 +44,42 @@ public class EMC extends caching.incremental.EPC implements IEMC {
         return "EMC";
     }
 
-//    @Override
-//    public int cacheDecision(SimulationBaseRunner sim, CachingUser cu,
-//            Collection<Chunk> requestChunks, SmallCell hostSC,
-//            SmallCell targetSC) throws Throwable {
-//
-//        int totalSizeCached = 0;
-//        for (Chunk nxtChunk : requestChunks) {
-//
-////never do that: No need to, it is done by methods called by cacheItemAttempt
-////            if (targetSC.isCached(this, nxtChunk)) {
-////                targetSC.addCacher(cu, this, nxtChunk);
-////                continue;
-////            }
-//            double cachePrice = targetSC.cachePrice(this);
-//            double assessment = assess(cu, nxtChunk, hostSC);
-//
-//            if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
-////                DebugTool.appendln(
-////                        "cache positive" + cachePrice + "\n\t"
-////                        + "pre-getUsed()=" + targetSC.getBuffer(singleton).getUsed()
-////                        + "\n\t"
-////                        + "pre-getPrice()=" + targetSC.getBuffer(singleton).getPrice()
-////                );
-//
-////                targetSC.cacheItem(cu, model, nxtChunk);
-//                if (targetSC.cacheItemAttemptPriceUpdate(cu, this, nxtChunk) == Success) {
-//                    totalSizeCached += nxtChunk.sizeInBytes();
-//                }
-//            } 
-//
-//        }
-//        return totalSizeCached;
-//    }
+    public int cacheDecision(SimulationBaseRunner sim, CachingUser cu,
+            Collection<Chunk> requestChunks, SmallCell hostSC,
+            SmallCell targetSC) throws Throwable {
+
+        // clear based on TTL first..
+        targetSC.checkEMCTTL4Cached(sim.simTime(), this);
+
+        int totalSizeCached = 0;
+        for (Chunk nxtChunk : requestChunks) {
+
+//never do that: No need to, it is done by methods called by cacheItemAttempt
+//            if (targetSC.isCached(this, nxtChunk)) {
+//                targetSC.addCacher(cu, this, nxtChunk);
+//                continue;
+//            }
+            double cachePrice = targetSC.cachePrice(this);
+            double assessment = assess(cu, nxtChunk, hostSC);
+
+            if (assessment / nxtChunk.sizeInMBs() >= cachePrice) {
+//                DebugTool.appendln(
+//                        "cache positive" + cachePrice + "\n\t"
+//                        + "pre-getUsed()=" + targetSC.getBuffer(singleton).getUsed()
+//                        + "\n\t"
+//                        + "pre-getPrice()=" + targetSC.getBuffer(singleton).getPrice()
+//                );
+
+//                targetSC.cacheItem(cu, model, nxtChunk);
+                if (targetSC.cacheItemAttemptPriceUpdate(cu, this, nxtChunk) == Success) {
+                    totalSizeCached += nxtChunk.sizeInBytes();
+                    targetSC.updtEMCTTL4Cached(nxtChunk, sim.simTime());
+                }
+            }
+
+        }
+        return totalSizeCached;
+    }
 
     @Override
     public double assess(CachingUser mu, Chunk chunk, SmallCell sc) throws CriticalFailureException {

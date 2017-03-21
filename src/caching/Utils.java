@@ -58,7 +58,6 @@ public abstract class Utils {
                      */
                     itemsTotallyRmvd.add(nxtReqChunk);
                 }
-
             }
         }
         return itemsTotallyRmvd;

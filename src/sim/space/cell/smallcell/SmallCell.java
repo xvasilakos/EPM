@@ -9,7 +9,6 @@ import caching.base.AbstractCachingModel;
 import caching.base.AbstractOracle;
 import caching.base.AbstractPricing;
 import caching.base.IPop;
-import caching.interfaces.rplc.IGainNoRplc;
 import caching.interfaces.rplc.IGainRplc;
 import caching.rplc.mingain.priced.tuned_timened.EMPC_R_Tunned_a;
 import caching.rplc.mingain.priced.tuned_timened.EMPC_R_Tunned_b;
@@ -46,7 +45,6 @@ import statistics.StatisticException;
 import statistics.handlers.iterative.sc.cmpt5.UnonymousCompute5;
 import traces.dmdtrace.TraceWorkloadRecord;
 import static utils.CommonFunctions.PHI;
-import utils.DebugTool;
 
 /**
  *
@@ -400,7 +398,8 @@ public class SmallCell extends AbstractCell {
     public void cacheDecisions(
             AbstractCachingModel model, CachingUser cacheRequestor, // MobileUser cacheRequestor,
             SmallCell targetSC, Collection<Chunk> predictedChunks,
-            Collection<Chunk> predictedChunksNaive) throws Throwable {
+            Collection<Chunk> predictedChunksNaive
+    ) throws Throwable {
 
         if (!cacheRequestor.isAllowedToCache()) {
             return;
@@ -578,7 +577,6 @@ public class SmallCell extends AbstractCell {
         }
         neighbors.add(sc);
     }
-   
 
     /**
      * @param cachingMdl the caching policy
@@ -962,6 +960,46 @@ public class SmallCell extends AbstractCell {
     private double _smoothedResidenceDuration;
     private double _smoothedHandoverDuration;
     private int _smoothedHandoversCount;
+
+    private final Map<Chunk, Integer> eMCTTL4Cached = new HashMap();//TODO ... More efficient implementation ->  change to a priority queue based on time inserted. 
+    /**
+     * Time to live threshold for EMC cached chunks
+     */
+    public static final int TTL = 120;
+
+    public void updtEMCTTL4Cached(Chunk ch, int tm) {
+        eMCTTL4Cached.put(ch, tm);
+    }
+
+    public int checkEMCTTL4Cached(int tm, AbstractCachingModel model) {
+        int sum = 0;
+        Object[] chunks =  eMCTTL4Cached.keySet().toArray();
+//        for (Chunk ch : eMCTTL4Cached.keySet()) {
+        for (Object ob : chunks) {
+            Chunk ch = (Chunk) ob;
+            Integer whenLogged = eMCTTL4Cached.get(ch);
+            if (whenLogged + tm > TTL) {
+                eMCTTL4Cached.remove(ch);
+
+                sum++;
+                if (bufferContains(model, null, ch)) {
+                    getBuffer(model).deallocateForce(ch);
+                    //getDmdPC(model).deregisterUpdtInfoPC(this, ch);
+                }
+            }
+
+        }
+        return sum;
+    }
+
+//    private boolean checkEMCTTL4Cached(Chunk ch, int tm) {
+//        Integer whenLogged = eMCTTL4Cached.get(ch);
+//        if (whenLogged + tm > TTL) {
+//            eMCTTL4Cached.remove(ch);
+//            return true;
+//        }
+//        return false;
+//    }
 
     /**
      * Useful state for a dynamic interval where no replacements take place

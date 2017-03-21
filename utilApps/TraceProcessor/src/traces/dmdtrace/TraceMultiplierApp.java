@@ -31,7 +31,7 @@ public class TraceMultiplierApp {
      * different desired file sizes, e.g. 240, one trick is to use
      * desiredFileSize / 30.0 * thirtyMBMultiplier
      */
-    public static final int DESIRED_FILE_SIZE = 500;
+    public static final int DESIRED_FILE_SIZE = 100;
 
     /**
      * Based on the original trace, multiplying the _size of each file by x 2.96
@@ -61,7 +61,7 @@ public class TraceMultiplierApp {
     private static long idGen = INITIAL_ID_GENERATOR;
 //    private static final  String VIDEO_TRACE_BASE_PATH = "C:/Users/xvas/Dropbox/2014-2015-EPC+POP/trunk/files/dmdtrace/video";
     private static final String ROOT = System.getProperty("os.name").equalsIgnoreCase("LINUX") ? "/home" : "C:/Users";
-    private static final String VIDEO_TRACE_BASE_PATH = ROOT + "/xvas/Dropbox/2014-2015-EPC+POP/trunk/files/dmdtrace/video";
+    private static final String VIDEO_TRACE_BASE_PATH = ROOT + "/xvas/Dropbox/EPC/git/EPM/files/unsync/dmdtrace/video";
     private static long _lastLogged = 0;
 
     public static void main(String[] args) {
@@ -72,8 +72,8 @@ public class TraceMultiplierApp {
 
 //        int start = 111;//111 gives x112=> x5 #videos in VC x24
 //        for (int timesI = start; timesI > 110; timesI-=10) {
-        int start = 23;//23->24
-        for (int timesI = start; timesI > 22; timesI-=10) {
+        int start = 5;//23->24
+        for (int timesI = start; timesI > 1; timesI-=1) {
             for (int traceNameJ = 0; traceNameJ < 5; traceNameJ++) {
                 traceFileName = String.valueOf(traceNameJ);
                 run(timesI, traceFileName, VIDEO_FILE_SIZE_MULTIPLIER);
