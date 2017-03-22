@@ -89,8 +89,11 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     }
 
     @Override
-    protected void init(Scenario scenario) {
-        muTracePath = scenario.stringProperty(Space.MU__TRACE, true);
+    protected void init(Scenario scn) {
+        muTracePath = scn.stringProperty(Space.MU__TRACE_BASE)
+                + "/"
+                + scn.stringProperty(Space.MU__TRACE) + ".tr";
+
         roundDuration = getScenario().intProperty(StatsProperty.STATS__AGGREGATES__RECORDING_PERIOD);
 
         try {
@@ -132,7 +135,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
              * To be called to read first line of data from the trace in order to
              * initilize the simulation clock time.
              */
-            int initTime = scenario.intProperty(Simulation.Clock.INIT_TIME);
+            int initTime = scn.intProperty(Simulation.Clock.INIT_TIME);
             String[] csv = mobTrcLine.split(mobTrcCSVSep);
             int time = Integer.parseInt(csv[0]);
 
@@ -196,8 +199,8 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     @Override
     public Area initArea() throws CriticalFailureException {
 
-        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE, true)
-                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA, true);
+        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE)
+                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA) + ".meta";
 
         File metaF = (new File(metadataPath)).getAbsoluteFile();
         Couple<Point, Point> areaDimensions
@@ -259,20 +262,21 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
             //[1] mu id
             String parsedID = csv[1];
 
-//            //[2] x
-//            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
-//
-//            //[3] y
-//            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
+            //[2] x
+            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
+
+            //[3] y
+            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
+
 //TODO
 //BUGFIX
 //hack using max for out of area coordinates. 
 // somehow the trace of mobiliy has out of bounds moves:
-            //[2] x
-            int x = (int) Math.max(0, Double.parseDouble(csv[2]) - minX); // -minX so as to be relative to area dimensions
-
-            //[3] y
-            int y = (int) Math.max(0, Double.parseDouble(csv[3]) - minY); // -minY so as to be relative to area dimensions
+//            //[2] x
+//            int x = (int) Math.max(0, Double.parseDouble(csv[2]) - minX); // -minX so as to be relative to area dimensions
+//
+//            //[3] y
+//            int y = (int) Math.max(0, Double.parseDouble(csv[3]) - minY); // -minY so as to be relative to area dimensions
 
             //[4] speed
             double speed = Math.ceil(Double.parseDouble(csv[4]));
@@ -370,7 +374,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
 
         conn2SCPolicy = scenario.parseConnPolicySC();
 
-        mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS, false);
+        mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS);
 
         musByID = new HashMap();
 

@@ -63,10 +63,13 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
     }
 
     @Override
-    protected void init(Scenario scenario) {
-        String mutracePath = scenario.stringProperty(Space.MU__TRACE, true);
+    protected void init(Scenario scn) {
+        String muTracePath = scn.stringProperty(Space.MU__TRACE_BASE)
+                + "/"
+                + scn.stringProperty(Space.MU__TRACE) + ".tr";
+
         try {
-            muTraceIn = new Scanner(new FileReader(mutracePath));
+            muTraceIn = new Scanner(new FileReader(muTracePath));
             mobTrcLine = muTraceIn.nextLine();// init line
             while (mobTrcLine.startsWith("#")) {
                 if (mobTrcLine.toUpperCase().startsWith("#SEP=")) {
@@ -189,7 +192,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
         List<String> conn2SCPolicy;
         conn2SCPolicy = scenario.parseConnPolicySC();
-        String mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS, false);
+        String mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS);
         double percentage = scenario.doubleProperty(app.properties.Simulation.PROGRESS_UPDATE);
 
         muByID = new HashMap();
@@ -198,7 +201,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
         Map<String, TraceMU> musByTheirID = new HashMap<>();
 
-        String metaPath = scenario.stringProperty(Space.MU__TRACE__META, true);
+        String metaPath = scenario.stringProperty(Space.MU__TRACE__META);
 
         if (!metaPath.equalsIgnoreCase(Values.NONE)) {
             initAndConnectMUs_1(metaPath, percentage, area, nxtGroup,
@@ -283,11 +286,11 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
             try {
                 cloneID = count * totalMUsNum + Integer.parseInt(originalID);
-                 cloneIDs.add(String.valueOf(cloneID));
+                cloneIDs.add(String.valueOf(cloneID));
             } catch (NumberFormatException e) {
                 cloneIDs.add(count * totalMUsNum + "_" + originalID.hashCode());
             }
-           
+
         }
 
         return cloneIDs;
@@ -385,23 +388,26 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
     private void initAndConnectMUs_2(
             double percentage, Area area, MobileGroup nxtGroup,
             List<String> conn2SCPolicy, Collection<AbstractCachingModel> cachingPolicies,
-            String mobTransDecisions, List<TraceMU> musLst, Scenario scenario)
+            String mobTransDecisions, List<TraceMU> musLst, Scenario scn)
             throws CriticalFailureException, InconsistencyException, NumberFormatException {
 
-        String mutracePath = scenario.stringProperty(Space.MU__TRACE, true);
+        String muTracePath = scn.stringProperty(Space.MU__TRACE_BASE)
+                + "/"
+                + scn.stringProperty(Space.MU__TRACE) + ".tr";
+
         String lineCSV;
         String sep = " ";
 
         int musNum = 0;
         SortedSet<String> ids = new TreeSet<>();
-        try (BufferedReader bin = new BufferedReader(new FileReader(mutracePath))) {
+        try (BufferedReader bin = new BufferedReader(new FileReader(muTracePath))) {
 
             while ((lineCSV = bin.readLine()) != null) {
 
                 if (lineCSV.toUpperCase().startsWith("#SEP=")) {
                     sep = mobTrcLine.substring(5);
                     LOG.log(Level.INFO, "Mobility trace \"{0}\" uses separator=\"{1}\"",
-                            new Object[]{mutracePath, mobTrcCSVSep});
+                            new Object[]{muTracePath, mobTrcCSVSep});
                 }
 
                 if (lineCSV.startsWith("#")) {

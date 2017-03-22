@@ -88,8 +88,11 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     }
 
     @Override
-    protected void init(Scenario scenario) {
-        muTracePath = scenario.stringProperty(Space.MU__TRACE, true);
+    protected void init(Scenario scn) {
+        muTracePath = scn.stringProperty(Space.MU__TRACE_BASE)
+                + "/"
+                + scn.stringProperty(Space.MU__TRACE) + ".tr";
+
         try {
             muTraceScan = new Scanner(new FileReader(muTracePath));
 
@@ -129,8 +132,8 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     @Override
     public Area initArea() throws CriticalFailureException {
 
-        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE, true)
-                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA, true);
+        String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE)
+                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA) + ".meta";
 
         File metaF = (new File(metadataPath)).getAbsoluteFile();
         Couple<Point, Point> areaDimensions = Cells.extractAreaFromMetadata(metaF);
@@ -279,7 +282,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 
         conn2SCPolicy = scenario.parseConnPolicySC();
 
-        mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS, false);
+        mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS);
 
         musByID = new HashMap();
 
@@ -361,7 +364,6 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
 //                );
 //            }
 //</editor-fold>
-
             if (!muTraceScan.hasNextLine()) {
                 muTraceScan.close();
                 String trcEndStr = "The mobility trace has ended too early:"

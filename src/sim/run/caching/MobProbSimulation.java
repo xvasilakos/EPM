@@ -61,7 +61,7 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
         List<String> conn2SCPolicy;
 
         conn2SCPolicy = scenario.parseConnPolicySC();
-        String mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS, false);
+        String mobTransDecisions = scenario.stringProperty(Space.MU__TRANSITION_DECISIONS);
         int itemRndIDRange = scenario.intProperty(Space.ITEM__RND_ID_RANGE);
         double percentage = scenario.doubleProperty(app.properties.Simulation.PROGRESS_UPDATE);
 

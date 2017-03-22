@@ -52,7 +52,7 @@ public class PricedBuffer extends BufferBase {
 
         Scenario setup = _simulation.getScenario();
 
-        _pricingScheme = setup.stringProperty(Cost.Cache.PRICING_SCHEME, false);
+        _pricingScheme = setup.stringProperty(Cost.Cache.PRICING_SCHEME);
         _gamma = setup.doubleProperty(Cost.EPC.GAMMA);
 
         _costTrgtUtilization = setup.doubleProperty(Cost.EPC.TARGET_UTILIZATION);

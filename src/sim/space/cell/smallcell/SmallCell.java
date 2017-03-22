@@ -73,7 +73,7 @@ public class SmallCell extends AbstractCell {
         _smoothedHandoverDuration = sim.getScenario().doubleProperty(Space.SC__INIT_DURATION__HANDOVER);
         _smoothedResidenceDuration = sim.getScenario().doubleProperty(Space.SC__INIT_DURATION__RESIDENCE);
 
-        String neighborhoodType = sim.getScenario().stringProperty(app.properties.Space.SC__NEIGHBORHOOD, false);
+        String neighborhoodType = sim.getScenario().stringProperty(app.properties.Space.SC__NEIGHBORHOOD);
         _selfNeighborsAllowed
                 = sim.getScenario().isTrue(Space.SC__NEIGHBORHOOD__ALLOW_SELF)
                 || neighborhoodType.equalsIgnoreCase(Values.ALL_PLUS_SELF)
@@ -112,7 +112,7 @@ public class SmallCell extends AbstractCell {
                 ),
                 area,
                 cachingMdls, utils.CommonFunctions.parseSizeToBytes(sim.getScenario()
-                        .stringProperty(Space.SC__BUFFER__SIZE, false)
+                        .stringProperty(Space.SC__BUFFER__SIZE)
                 ));
     }
 
@@ -160,7 +160,7 @@ public class SmallCell extends AbstractCell {
         _smoothedHandoverDuration = sim.getScenario().doubleProperty(Space.SC__INIT_DURATION__HANDOVER);
         _smoothedResidenceDuration = sim.getScenario().doubleProperty(Space.SC__INIT_DURATION__RESIDENCE);
 
-        String neighborhoodType = sim.getScenario().stringProperty(app.properties.Space.SC__NEIGHBORHOOD, false);
+        String neighborhoodType = sim.getScenario().stringProperty(app.properties.Space.SC__NEIGHBORHOOD);
         _selfNeighborsAllowed
                 = sim.getScenario().isTrue(Space.SC__NEIGHBORHOOD__ALLOW_SELF)
                 || neighborhoodType.equalsIgnoreCase(Values.ALL_PLUS_SELF)
@@ -962,10 +962,11 @@ public class SmallCell extends AbstractCell {
     private int _smoothedHandoversCount;
 
     private final Map<Chunk, Integer> eMCTTL4Cached = new HashMap();//TODO ... More efficient implementation ->  change to a priority queue based on time inserted. 
+    private final Map<Chunk, Integer> naiveTTL4Cached = new HashMap();//TODO ... More efficient implementation ->  change to a priority queue based on time inserted. 
     /**
      * Time to live threshold for EMC cached chunks
      */
-    public static final int TTL = 120;
+    public static final int TTL = 1800;
 
     public void updtEMCTTL4Cached(Chunk ch, int tm) {
         eMCTTL4Cached.put(ch, tm);
@@ -980,6 +981,30 @@ public class SmallCell extends AbstractCell {
             Integer whenLogged = eMCTTL4Cached.get(ch);
             if (whenLogged + tm > TTL) {
                 eMCTTL4Cached.remove(ch);
+
+                sum++;
+                if (bufferContains(model, null, ch)) {
+                    getBuffer(model).deallocateForce(ch);
+                    //getDmdPC(model).deregisterUpdtInfoPC(this, ch);
+                }
+            }
+
+        }
+        return sum;
+    }
+    public void updtNAIVETTL4Cached(Chunk ch, int tm) {
+        naiveTTL4Cached.put(ch, tm);
+    }
+
+    public int checkNAIVETTL4Cached(int tm, AbstractCachingModel model) {
+        int sum = 0;
+        Object[] chunks =  naiveTTL4Cached.keySet().toArray();
+//        for (Chunk ch : eMCTTL4Cached.keySet()) {
+        for (Object ob : chunks) {
+            Chunk ch = (Chunk) ob;
+            Integer whenLogged = naiveTTL4Cached.get(ch);
+            if (whenLogged + tm > TTL) {
+                naiveTTL4Cached.remove(ch);
 
                 sum++;
                 if (bufferContains(model, null, ch)) {

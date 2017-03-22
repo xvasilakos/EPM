@@ -147,7 +147,7 @@ public class MobileUser extends CachingUser {
                 builder.__simulation,
                 builder._cachingPolicies
         );
-        this.sftUsr = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT, false));
+        this.sftUsr = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT));
 
         this._lastTimeReqsUpdt = -1;
 

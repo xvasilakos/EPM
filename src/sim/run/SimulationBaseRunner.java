@@ -162,7 +162,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
     public List<M> shuffledMUs() {
         ArrayList shuffled = new ArrayList(musByID.values());
 
-        switch (getScenario().stringProperty(Space.MU__SHUFFLE, false)) {
+        switch (getScenario().stringProperty(Space.MU__SHUFFLE)) {
             //<editor-fold defaultstate="collapsed" desc="shuffle iff property imposed">
             case Values.NEVER:
             case Values.UPON_CREATION:
@@ -172,7 +172,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
                 break;
             default:
                 throw new UnsupportedOperationException(
-                        getScenario().stringProperty(Space.MU__SHUFFLE, false) + " not supported for " + " property " + Space.MU__SHUFFLE
+                        getScenario().stringProperty(Space.MU__SHUFFLE) + " not supported for " + " property " + Space.MU__SHUFFLE
                 );
         }
         //</editor-fold>
@@ -355,12 +355,12 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             );
 
             warmupPeriod = getScenario().intProperty(Space.SC__WARMUP_PERIOD);
-            _itemPopCmptType = scenarioSetup.stringProperty(Space.ITEM__POP_CMPT, false);
-            _decimalFormat = s.stringProperty(app.properties.Simulation.DecimalFormat, false);
+            _itemPopCmptType = scenarioSetup.stringProperty(Space.ITEM__POP_CMPT);
+            _decimalFormat = s.stringProperty(app.properties.Simulation.DecimalFormat);
 
             loadDmdTraceDocs(s);
 
-            _overideItemSize = s.stringProperty(Space.MU__DMD__TRACE__OVERRIDE_SIZE, false);
+            _overideItemSize = s.stringProperty(Space.MU__DMD__TRACE__OVERRIDE_SIZE);
             _dmdTraceLimit = s.intProperty(Space.MU__DMD__TRACE__LIMIT);
             _shuffleWorkloadTimes = s.isTrue(Space.MU__DMD__TRACE__SHUFFLE_WORKLOAD_TIMES);
             _randInitInTrace = s.isTrue(Space.MU__DMD__TRACE__RAND_INIT);
@@ -481,17 +481,17 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
     protected void loadDmdTraceDocs(Scenario scenarioSetup) {
 
-        List<String> tmp = scenarioSetup.listOfStringsProperty(Space.MU__DMD__TRACE__FILES, false);
+        List<String> tmp = scenarioSetup.listOfStringsProperty(Space.MU__DMD__TRACE__FILES);
 
         _dmdTraceDocs = new ArrayList();
-        String pathPrefix = scenarioSetup.stringProperty(Space.MU__DMD__TRACE__DOCS_PATH, true);
+        String pathPrefix = scenarioSetup.stringProperty(Space.MU__DMD__TRACE__DOCS_PATH);
 
         for (String nxt : tmp) {
             _dmdTraceDocs.add(pathPrefix + "/" + nxt);
         }
 
         _dmdTraceWkrlds = new ArrayList();
-        pathPrefix = scenarioSetup.stringProperty(Space.MU__DMD__TRACE__WORKLOAD_PATH, true);
+        pathPrefix = scenarioSetup.stringProperty(Space.MU__DMD__TRACE__WORKLOAD_PATH);
         for (String nxt : tmp) {
             _dmdTraceWkrlds.add(pathPrefix + "/" + nxt);
         }
@@ -562,7 +562,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
 
         waitMaxThreadsThreshold();
 
-        String classSimName = setup.stringProperty(Simulation.RUN__CLASS, false);
+        String classSimName = setup.stringProperty(Simulation.RUN__CLASS);
 
         Class simClass;
         try {
@@ -718,7 +718,7 @@ public abstract class SimulationBaseRunner<M extends MobileUser> implements Runn
             Collection<AbstractCachingModel> cachingPolicies);
 
     protected void initCellNeighborhood(CellRegistry reg, Scenario setup) {
-        theNeighborhoodType = setup.stringProperty(app.properties.Space.SC__NEIGHBORHOOD, false);
+        theNeighborhoodType = setup.stringProperty(app.properties.Space.SC__NEIGHBORHOOD);
         switch (theNeighborhoodType) {
             case Values.ALL:
 

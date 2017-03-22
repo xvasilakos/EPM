@@ -72,8 +72,8 @@ public class TraceMultiplierApp {
 
 //        int start = 111;//111 gives x112=> x5 #videos in VC x24
 //        for (int timesI = start; timesI > 110; timesI-=10) {
-        int start = 5;//23->24
-        for (int timesI = start; timesI > 1; timesI-=1) {
+        int start = 23;//23->24
+        for (int timesI = start; timesI > 0; timesI-=1) {
             for (int traceNameJ = 0; traceNameJ < 5; traceNameJ++) {
                 traceFileName = String.valueOf(traceNameJ);
                 run(timesI, traceFileName, VIDEO_FILE_SIZE_MULTIPLIER);

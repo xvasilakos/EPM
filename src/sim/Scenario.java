@@ -3,7 +3,6 @@ package sim;
 import app.SimulatorApp;
 import app.arguments.MainArguments;
 import app.properties.IProperty;
-import app.properties.Networking;
 import app.properties.Preprocessor;
 import app.properties.Registry;
 import app.properties.Simulation;
@@ -53,6 +52,8 @@ public class Scenario implements Comparable<Scenario> {
 
     public static final Object NONE = new Object();
 
+    private final Map<String, Object> allPrps;//TODO currently has only string properties
+
     /*
     * The following maps contain the name of property as a key and its value.
     * There can be different types of values, therefore there is on map for each 
@@ -62,33 +63,33 @@ public class Scenario implements Comparable<Scenario> {
      * Map of properties with string values. Key: the name of the property;
      * value: the string value of the property.
      */
-    private final Map<String, String> stringProperties;
-    private final Map<String, String> _customProps;
+    private final Map<String, String> strPrps;
+    private final Map<String, String> customPrps;
     /**
      * Map of properties with a list of string values. Key: the name of the
      * property; value: the list of string values of the property.
      */
-    private final Map<String, List< String>> _strListProps;
+    private final Map<String, List< String>> strListPrs;
     /**
      * Map of properties with integer values. Key: the name of the property;
      * value: the integer value of the property.
      */
-    private final Map<String, Integer> _intProps;
+    private final Map<String, Integer> intPrps;
     /**
      * Map of properties with a list of integer values. Key: the name of the
      * property; value: the list of integer values of the property.
      */
-    private final Map<String, List< Integer>> _intListProps;
+    private final Map<String, List< Integer>> intListPrps;
     /**
      * Map of properties with double values. Key: the name of the property;
      * value: the double value of the property.
      */
-    private final Map<String, Double> _doubleProps;
+    private final Map<String, Double> doublePrps;
     /**
      * Map of properties with a list of double values. Key: the name of the
      * property; value: the list of double values of the property.
      */
-    private final Map<String, List<Double>> _doubleListProps;
+    private final Map<String, List<Double>> doubleListPrps;
     private final int _level;
     /**
      * transition probabilities as defined for the current scenario
@@ -96,34 +97,35 @@ public class Scenario implements Comparable<Scenario> {
     private List<double[][]> transProbabilities;
     /**
      * A list of property name and value couples that keeps track of all the
- different property values in a single setup used to create different
- scenarios running in parallel.
+     * different property values in a single setup used to create different
+     * scenarios running in parallel.
      */
     private final SortedSet<Couple<String, String>> _replicationProperties;
     private final Logger LOG;
 
     {// initilization block shared by all constructors
-        _customProps = new HashMap<>(10, 0.25f);
-        stringProperties = new HashMap<>(35, 0.25f);
-        _strListProps = new HashMap<>(35, 0.25f);
-        _intProps = new HashMap<>(50, 0.25f);
-        _intListProps = new HashMap<>(5, 0.25f);
-        _doubleProps = new HashMap<>(25, 0.25f);
-        _doubleListProps = new HashMap<>(25, 0.25f);
-        _replicationCount = 0;
+        allPrps = new HashMap<>(10, 0.25f);
+        customPrps = new HashMap<>(10, 0.25f);
+        strPrps = new HashMap<>(35, 0.25f);
+        strListPrs = new HashMap<>(35, 0.25f);
+        intPrps = new HashMap<>(50, 0.25f);
+        intListPrps = new HashMap<>(5, 0.25f);
+        doublePrps = new HashMap<>(25, 0.25f);
+        doubleListPrps = new HashMap<>(25, 0.25f);
+        replCount = 0;
     }
     /**
      * Number of known replicate of this scenario. Each simTime a replicate of
      * this scenario is created, this counter is incremented.
      */
-    private int _replicationCount;
+    private int replCount;
     private final int _id;
     private final String _idStr;
     private static int idGen = 0;
     private RandomGeneratorWrapper randGen;
 
     public static final Scenario replicate(Scenario original) throws ScenarioSetupException {
-        ++original._replicationCount;
+        ++original.replCount;
         return new Scenario(original);
     }
 
@@ -154,7 +156,7 @@ public class Scenario implements Comparable<Scenario> {
                 return t1.compareToFirst(t2);
             }
         });
-        _replicationCount = 0;
+        replCount = 0;
         _level = 0;
 
         _id = ++idGen;
@@ -170,19 +172,20 @@ public class Scenario implements Comparable<Scenario> {
             }
         });
 
-        this.stringProperties.putAll(original.stringProperties);
-        this._customProps.putAll(original._customProps);
-        this._strListProps.putAll(original._strListProps);
+        this.allPrps.putAll(original.allPrps);
+        this.strPrps.putAll(original.strPrps);
+        this.customPrps.putAll(original.customPrps);
+        this.strListPrs.putAll(original.strListPrs);
 
-        this._doubleProps.putAll(original._doubleProps);
-        this._doubleListProps.putAll(original._doubleListProps);
+        this.doublePrps.putAll(original.doublePrps);
+        this.doubleListPrps.putAll(original.doubleListPrps);
 
-        this._intProps.putAll(original._intProps);
-        this._intListProps.putAll(original._intListProps);
+        this.intPrps.putAll(original.intPrps);
+        this.intListPrps.putAll(original.intListPrps);
 
         this._replicationProperties.addAll(original._replicationProperties);
 
-        _replicationCount = 0;
+        replCount = 0;
         _level = original._level + 1;
 
         _id = ++idGen;
@@ -215,22 +218,23 @@ public class Scenario implements Comparable<Scenario> {
      */
     public int setupSignatureHash() {
         int hash = 5;
-        hash = 7 * hash + this.stringProperties.hashCode();
-        hash = 17 * hash + this._customProps.hashCode();
-        hash = 21 * hash + this._strListProps.hashCode();
+        hash = 3 * hash + this.allPrps.hashCode();
+        hash = 7 * hash + this.strPrps.hashCode();
+        hash = 17 * hash + this.customPrps.hashCode();
+        hash = 21 * hash + this.strListPrs.hashCode();
 
         //<editor-fold defaultstate="collapsed" desc="exclude repeat number (i.e. the seed) from hash computation">
-        Iterator<Map.Entry<String, Integer>> iterator = this._intProps.entrySet().iterator();
+        Iterator<Map.Entry<String, Integer>> iterator = this.intPrps.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Integer> next = iterator.next();
             hash = 23 * hash + next.getValue().hashCode();
         }
         //</editor-fold>
 
-        hash = 3 * hash + this._intListProps.hashCode();
+        hash = 3 * hash + this.intListPrps.hashCode();
 
-        hash = 17 * hash + this._doubleProps.hashCode();
-        hash = 25 * hash + this._doubleListProps.hashCode();
+        hash = 17 * hash + this.doublePrps.hashCode();
+        hash = 25 * hash + this.doubleListPrps.hashCode();
         return hash;
     }
 
@@ -242,13 +246,14 @@ public class Scenario implements Comparable<Scenario> {
     @Override
     public int hashCode() {
         int hash = 5;
-        hash = 7 * hash + this.stringProperties.hashCode();
-        hash = 17 * hash + this._customProps.hashCode();
-        hash = 21 * hash + this._strListProps.hashCode();
-        hash = 23 * hash + this._intProps.hashCode();
-        hash = 3 * hash + this._intListProps.hashCode();
-        hash = 17 * hash + this._doubleProps.hashCode();
-        hash = 25 * hash + this._doubleListProps.hashCode();
+        hash = 3 * hash + this.allPrps.hashCode();
+        hash = 7 * hash + this.strPrps.hashCode();
+        hash = 17 * hash + this.customPrps.hashCode();
+        hash = 21 * hash + this.strListPrs.hashCode();
+        hash = 23 * hash + this.intPrps.hashCode();
+        hash = 3 * hash + this.intListPrps.hashCode();
+        hash = 17 * hash + this.doublePrps.hashCode();
+        hash = 25 * hash + this.doubleListPrps.hashCode();
         return hash;
     }
 
@@ -258,6 +263,7 @@ public class Scenario implements Comparable<Scenario> {
      *
      * other
      *
+     * @param other the other object to test for equality
      * @return
      */
     @Override
@@ -269,25 +275,28 @@ public class Scenario implements Comparable<Scenario> {
             return false;
         }
         final Scenario otherScenario = (Scenario) other;
-        if (!Objects.equals(this.stringProperties, otherScenario.stringProperties)) {
+        if (!Objects.equals(this.allPrps, otherScenario.allPrps)) {
             return false;
         }
-        if (!Objects.equals(this._customProps, otherScenario._customProps)) {
+        if (!Objects.equals(this.strPrps, otherScenario.strPrps)) {
             return false;
         }
-        if (!Objects.equals(this._strListProps, otherScenario._strListProps)) {
+        if (!Objects.equals(this.customPrps, otherScenario.customPrps)) {
             return false;
         }
-        if (!Objects.equals(this._intProps, otherScenario._intProps)) {
+        if (!Objects.equals(this.strListPrs, otherScenario.strListPrs)) {
             return false;
         }
-        if (!Objects.equals(this._intListProps, otherScenario._intListProps)) {
+        if (!Objects.equals(this.intPrps, otherScenario.intPrps)) {
             return false;
         }
-        if (!Objects.equals(this._doubleProps, otherScenario._doubleProps)) {
+        if (!Objects.equals(this.intListPrps, otherScenario.intListPrps)) {
             return false;
         }
-        if (!Objects.equals(this._doubleListProps, otherScenario._doubleListProps)) {
+        if (!Objects.equals(this.doublePrps, otherScenario.doublePrps)) {
+            return false;
+        }
+        if (!Objects.equals(this.doubleListPrps, otherScenario.doubleListPrps)) {
             return false;
         }
         return true;
@@ -302,14 +311,14 @@ public class Scenario implements Comparable<Scenario> {
 
         //<editor-fold defaultstate="collapsed" desc="int - int list">
         _toString.append("\n#int properties:\n");
-        for (Map.Entry<String, Integer> entry : this._intProps.entrySet()) {
+        for (Map.Entry<String, Integer> entry : this.intPrps.entrySet()) {
             String propName = entry.getKey();
             Integer propValue = entry.getValue();
             _toString.append("\t").append(propName).append("=").append(propValue).append("\n");
         }
 
         _toString.append("\n#int list properties:\n");
-        for (Map.Entry<String, List<Integer>> entry : this._intListProps.entrySet()) {
+        for (Map.Entry<String, List<Integer>> entry : this.intListPrps.entrySet()) {
             String propName = entry.getKey();
             List<Integer> propValue = entry.getValue();
             _toString.append("\t");
@@ -325,14 +334,14 @@ public class Scenario implements Comparable<Scenario> {
 
         //<editor-fold defaultstate="collapsed" desc="double - double list">
         _toString.append("\n#double properties:\n");
-        for (Map.Entry<String, Double> entry : this._doubleProps.entrySet()) {
+        for (Map.Entry<String, Double> entry : this.doublePrps.entrySet()) {
             String propName = entry.getKey();
             Double propValue = entry.getValue();
             _toString.append("\t").append(propName).append("=").append(propValue).append("\n");
         }
 
         _toString.append("\n#double list properties:\n");
-        for (Map.Entry<String, List<Double>> entry : this._doubleListProps.entrySet()) {
+        for (Map.Entry<String, List<Double>> entry : this.doubleListPrps.entrySet()) {
             String propName = entry.getKey();
             List<Double> propValue = entry.getValue();
             _toString.append("\t");
@@ -347,21 +356,21 @@ public class Scenario implements Comparable<Scenario> {
 
         //<editor-fold defaultstate="collapsed" desc="String - String list">
         _toString.append("\n#String properties:\n");
-        for (Map.Entry<String, String> entry : this.stringProperties.entrySet()) {
+        for (Map.Entry<String, String> entry : this.strPrps.entrySet()) {
             String propName = entry.getKey();
             String propValue = entry.getValue();
             _toString.append("\t").append(propName).append("=").append(propValue).append("\n");
         }
 
         _toString.append("\n#Custom properties:\n");
-        for (Map.Entry<String, String> entry : this._customProps.entrySet()) {
+        for (Map.Entry<String, String> entry : this.customPrps.entrySet()) {
             String propName = entry.getKey();
             String propValue = entry.getValue();
             _toString.append("\t").append(propName).append("=").append(propValue).append("\n");
         }
 
         _toString.append("\n#String list properties:\n");
-        for (Map.Entry<String, List<String>> entry : this._strListProps.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : this.strListPrs.entrySet()) {
             String propName = entry.getKey();
             List<String> propValue = entry.getValue();
             _toString.append("\t");
@@ -389,8 +398,8 @@ public class Scenario implements Comparable<Scenario> {
 
     /**
      * @return the properties that yield multiple scenarios due to having
- multiple values in the same properties setup file, coupled by their
- values in the current scenario.
+     * multiple values in the same properties setup file, coupled by their
+     * values in the current scenario.
      */
     public SortedSet<Couple<String, String>> getReplicationProperties() {
         return Collections.unmodifiableSortedSet(_replicationProperties);
@@ -409,11 +418,16 @@ public class Scenario implements Comparable<Scenario> {
             StringTokenizer toks;
 
             if (type.equals(Registry.Type.CUSTOM.toString())) {
-                _customProps.put(propName, val);
-            } else if (type.equals(Registry.Type.INT.toString())) {
-                _intProps.put(propName, (int) Double.parseDouble(val));
+                allPrps.put(propName, val);
 
+                customPrps.put(propName, val);
+            } else if (type.equals(Registry.Type.INT.toString())) {
+                allPrps.put(propName, val);
+
+                intPrps.put(propName, (int) Double.parseDouble(val));
             } else if (type.equals(Registry.Type.LIST_INT.toString())) {
+                allPrps.put(propName, val);
+
                 toks = new StringTokenizer(val, Values.LIST_SEPARATOR);
                 List<Integer> intlist = new ArrayList<>();
                 while (toks.hasMoreElements()) {
@@ -424,39 +438,48 @@ public class Scenario implements Comparable<Scenario> {
                     }
                     intlist.add((int) Double.parseDouble(tokTrimed));
                 }
-                _intListProps.put(propName, intlist);
+                intListPrps.put(propName, intlist);
 
             } else if (type.equals(Registry.Type.DOUBLE.toString())) {
-                _doubleProps.put(propName, Double.valueOf(val));
+                allPrps.put(propName, val);
+
+                doublePrps.put(propName, Double.valueOf(val));
 
             } else if (type.equals(Registry.Type.LIST_DOUBLE.toString())) {
+                allPrps.put(propName, val);
+
                 toks = new StringTokenizer(val, Values.LIST_SEPARATOR);
                 List<Double> dbllist = new ArrayList<>();
                 while (toks.hasMoreElements()) {
                     dbllist.add(Double.parseDouble(toks.nextToken().trim()));
                 }
-                _doubleListProps.put(propName, dbllist);
+                doubleListPrps.put(propName, dbllist);
 
             } else if (type.equals(Registry.Type.STRING.toString())) {
-                stringProperties.put(propName, relativePathCheck(val));
-
+                String pathCheck = pathCheck(val);
+                strPrps.put(propName, pathCheck);
+                allPrps.put(propName, pathCheck);
             } else if (type.equals(Registry.Type.CUSTOM.toString())) {
-                _customProps.put(propName, relativePathCheck(val));
-
+                String pathCheck = pathCheck(val);
+                customPrps.put(propName, pathCheck);
+                allPrps.put(propName, pathCheck);
             } else if (type.equals(Registry.Type.LIST_STRING.toString())) {
+                allPrps.put(propName, val);
+
                 toks = new StringTokenizer(val, Values.LIST_SEPARATOR);
+
                 List strlist = new ArrayList<>();
                 while (toks.hasMoreElements()) {
-                    String value = toks.nextToken().trim();
-                    strlist.add(relativePathCheck(value));
+                    String nxtVal = toks.nextToken().trim();
+                    strlist.add(pathCheck(nxtVal));
                 }
-                _strListProps.put(propName, strlist);
-
+                strListPrs.put(propName, strlist);
             }
         } catch (IOException ex) {
             throw new InvalidOrUnsupportedException(ex);
         } catch (java.lang.NumberFormatException nf) {
-            throw new exceptions.ScenarioSetupException("For property: \"" + propName + "\" with value \"" + val + "\"", nf);
+            throw new exceptions.ScenarioSetupException(
+                    "For property: \"" + propName + "\" with value \"" + val + "\"", nf);
         }
     }
 
@@ -465,22 +488,34 @@ public class Scenario implements Comparable<Scenario> {
      * replaced by the parent directly path of the properties file as the latter
      * is defined in the main method's arguments in class SimulatorApp.
      *
-     * str
      *
+     * @param str the string value
      * @return
      * @throws java.io.IOException if the path does not exist or any other IO
      * problem happens.
      */
-    public String relativePathCheck(String str) throws IOException {
-        String relativeChecked = str;
-        if (relativeChecked.startsWith("./")
-                || relativeChecked.startsWith(".\\")) {
-            relativeChecked = (new File(SimulatorApp.getMainArgs().getPropertiesParent() + "/" + relativeChecked)).getCanonicalPath();
-        } else if (relativeChecked.startsWith("./")
-                || relativeChecked.startsWith(".\\")) {
-            relativeChecked = (new File(SimulatorApp.getMainArgs().getPropertiesParent() + "/" + relativeChecked.substring(1))).getCanonicalPath();
+    public String pathCheck(String str) throws IOException {
+        String toreturn = str;
+
+        //1) raplace relative path references.
+        if (toreturn.startsWith("./")
+                || toreturn.startsWith(".\\")) {
+            toreturn = (new File(SimulatorApp.getMainArgs().getPropertiesParent() + "/" + toreturn)).getCanonicalPath();
+        } else if (toreturn.startsWith("./")
+                || toreturn.startsWith(".\\")) {
+            toreturn = (new File(SimulatorApp.getMainArgs().getPropertiesParent() + "/" + toreturn.substring(1))).getCanonicalPath();
         }
-        return relativeChecked;
+
+        //2) raplace tagged path references.
+        if (toreturn.startsWith(MainArguments.Defaults.PROPS_PATH_TAG)) {
+            toreturn = toreturn.replace(MainArguments.Defaults.PROPS_PATH_TAG, MainArguments.Defaults.DEFAULT_PROPS_MASTER__INI_PATH);
+        } else if (toreturn.startsWith(MainArguments.Defaults.FILES_TAG)) {
+            toreturn = toreturn.replace(MainArguments.Defaults.FILES_TAG, MainArguments.Defaults.FILES_PATH);
+        } else if (toreturn.startsWith(MainArguments.Defaults.INSTALLATION_PATH_TAG)) {
+            toreturn = toreturn.replace(MainArguments.Defaults.INSTALLATION_PATH_TAG, MainArguments.Defaults.INSTALLATION_PATH);
+        }
+
+        return toreturn;
     }
 
     public int intProperty(IProperty property) {
@@ -488,7 +523,7 @@ public class Scenario implements Comparable<Scenario> {
     }
 
     public int intProperty(String propertyName) {
-        Integer toreturn = _intProps.get(propertyName);
+        Integer toreturn = intPrps.get(propertyName);
 //        if (toreturn == null) {
 //            throw onPropertyFail(propertyName, Registry.Type.INT.toString());
 //        }
@@ -500,7 +535,7 @@ public class Scenario implements Comparable<Scenario> {
     }
 
     public List<Integer> listOfIntProperty(String propertyName) {
-        List<Integer> toreturn = _intListProps.get(propertyName);
+        List<Integer> toreturn = intListPrps.get(propertyName);
 //        if (toreturn == null) {
 //            throw onPropertyFail(propertyName, Registry.Type.LIST_INT.toString());
 //        }
@@ -512,7 +547,7 @@ public class Scenario implements Comparable<Scenario> {
     }
 
     public double doubleProperty(String propertyName) {
-        Double toreturn = _doubleProps.get(propertyName);
+        Double toreturn = doublePrps.get(propertyName);
 //        if (toreturn == null) {
 //            throw onPropertyFail(propertyName, Registry.Type.DOUBLE.toString());
 //        }
@@ -524,61 +559,42 @@ public class Scenario implements Comparable<Scenario> {
     }
 
     public List<Double> listOfDoublesProperty(String propertyName) {
-        List<Double> toreturn = _doubleListProps.get(propertyName);
+        List<Double> toreturn = doubleListPrps.get(propertyName);
 //        if (toreturn == null) {
 //            throw onPropertyFail(propertyName, Registry.Type.LIST_DOUBLE.toString());
 //        }
         return toreturn;
     }
 
-    public String stringProperty(IProperty property, boolean isPath) {
-        return stringProperty(property.propertyName(), isPath);
+    public String stringProperty(IProperty property) {
+        return stringProperty(property.propertyName());
     }
-public String stringProperty(IProperty prop) {
-       return stringProperty(prop, false);
-    }
-    public String stringProperty(String propertyName, boolean isPath) {
-        String toreturn = stringProperties.get(propertyName);
+
+    public String stringProperty(String propertyName) {
+        String val = strPrps.get(propertyName);
+
+//        // whatever between two consequtive "%", try to see if it refers to another property value
+//        Pattern p = Pattern.compile("%([^%]*)%");
+//        Matcher m = p.matcher(val);
+//        while (m.find()) {
+//            String tmp = "%" + m.group(1) + "%";
+//            val = val.replace(tmp, allPrps.get(m.group(1)).toString());
+//        }
 //        if (toreturn == null) {
 //            throw onPropertyFail(propertyName, Registry.Type.STRING.toString());
 //        }
-        toreturn = removePathTags(isPath, toreturn);
-
-        return toreturn;
+        return val;
     }
 
-    private String removePathTags(boolean isPath, String toreturn) {
-        if (isPath) {
-            if (toreturn.startsWith(MainArguments.Defaults.PROPS_PATH_TAG)) {
-                toreturn = toreturn.replace(MainArguments.Defaults.PROPS_PATH_TAG, MainArguments.Defaults.DEFAULT_PROPS_MASTER__INI_PATH);
-            } else if (toreturn.startsWith(MainArguments.Defaults.FILES_TAG)) {
-                toreturn = toreturn.replace(MainArguments.Defaults.FILES_TAG, MainArguments.Defaults.FILES_PATH);
-            } else if (toreturn.startsWith(MainArguments.Defaults.INSTALLATION_PATH_TAG)) {
-                toreturn = toreturn.replace(MainArguments.Defaults.INSTALLATION_PATH_TAG, MainArguments.Defaults.INSTALLATION_PATH);
-            }
-        } 
-        return toreturn;
+    public List<String> listOfStringsProperty(IProperty property) {
+        return listOfStringsProperty(property.propertyName());
     }
 
-    public List<String> listOfStringsProperty(IProperty property, boolean containsPaths) {
-        return listOfStringsProperty(property.propertyName(), containsPaths);
-    }
-
-    public List<String> listOfStringsProperty(String propertyName, boolean constainsPaths) {
-        List<String> toreturn = _strListProps.get(propertyName);
+    public List<String> listOfStringsProperty(String propertyName) {
+        List<String> toreturn = strListPrs.get(propertyName);
 //        if (toreturn == null) {
 //            throw onPropertyFail(propertyName, Registry.Type.LIST_STRING.toString());
 //        }
-
-        if (constainsPaths) {
-            List<String> tmp = new ArrayList<>();
-            for (int i = 0; i < toreturn.size(); i++) {
-                String nxt = toreturn.get(i);
-                nxt = removePathTags(true, nxt);
-                tmp.add(nxt);
-            }
-            toreturn = tmp;
-        }
 
         return toreturn;
     }
@@ -587,7 +603,7 @@ public String stringProperty(IProperty prop) {
      * property must have string type.
      *
      * @return
-     * 
+     *
      */
     public boolean isFalse(String property) throws InvalidOrUnsupportedException {
         return !isTrue(property);
@@ -601,10 +617,10 @@ public String stringProperty(IProperty prop) {
      * property must have string type.
      *
      * @return
-     * 
+     *
      */
     public boolean isTrue(String property) throws InvalidOrUnsupportedException {
-        String value = stringProperty(property, false);
+        String value = stringProperty(property);
         if (value.equalsIgnoreCase(Values.TRUE)) {
             return true;
         } else if (value.equalsIgnoreCase(Values.FALSE)) {
@@ -623,7 +639,7 @@ public String stringProperty(IProperty prop) {
     ////// custom properties /////
     public int seed() {
         String propertyName = Simulation.SEED.propertyName();
-        String str = _customProps.get(propertyName);
+        String str = customPrps.get(propertyName);
 
         if (str == null || str.equalsIgnoreCase("TIME")) {
             return (int) (Math.random() * System.currentTimeMillis() / 1000000);
@@ -672,8 +688,8 @@ public String stringProperty(IProperty prop) {
      *
      * @return a list of mobile transition probabilities per group of mobiles.
      *
-     *  In case there is something wrong
-     * with the parsed percentages of probabilities
+     * In case there is something wrong with the parsed percentages of
+     * probabilities
      */
     public List<double[][]> parseMobileTransProbs() throws InvalidOrUnsupportedException {
         if (transProbabilities != null) { // in this case it is already loaded; just return it
@@ -682,7 +698,7 @@ public String stringProperty(IProperty prop) {
 
         transProbabilities = new ArrayList<>();
         String propertyName = Space.MU__TRANSITION_PROBABILITIES__MATRIX.propertyName();
-        String probsStr = _customProps.get(propertyName).trim();
+        String probsStr = customPrps.get(propertyName).trim();
 
         // find the probs sets for each group of mobiles
         StringTokenizer tok = new StringTokenizer(probsStr, "|");
@@ -765,8 +781,12 @@ public String stringProperty(IProperty prop) {
             transProbabilities.add(subsetProbs);
         }
 
-        String muTrace = stringProperty(Space.MU__TRACE, true);
-        if (muTrace.equalsIgnoreCase(Values.NONE)) {
+        String muTrace
+                = stringProperty(Space.MU__TRACE_BASE)
+                + "/"
+                + stringProperty(Space.MU__TRACE) + ".tr";
+
+        if (muTrace.toUpperCase().endsWith(Values.NONE)) {
             StringBuilder sb = new StringBuilder();
             sb.append("\n**********");
             sb.append("\nTrasition probability matrix");
@@ -810,12 +830,10 @@ public String stringProperty(IProperty prop) {
         return randGen;
     }
 
-   
-
     public AbstractClock initClock(sim.run.SimulationBaseRunner sim) throws CriticalFailureException {
         AbstractClock clock = null;
         try {
-            String clockClasspath = stringProperty(Simulation.Clock.TYPE, true);
+            String clockClasspath = stringProperty(Simulation.Clock.TYPE);
 
             Constructor constructor = Class.forName(clockClasspath).getConstructor(new Class[]{sim.run.SimulationBaseRunner.class});
             Object clockInstance = constructor.newInstance(sim);
@@ -840,11 +858,11 @@ public String stringProperty(IProperty prop) {
      * simply returned for consequent calls to this method.
      *
      * @return the list of connection policy rules
-     * 
+     *
      */
     public List<String> parseConnPolicySC() {
 
-        List<String> conn2SCPolicy = listOfStringsProperty(Space.SC__CONNECTION_POLICY, false);
+        List<String> conn2SCPolicy = listOfStringsProperty(Space.SC__CONNECTION_POLICY);
 
         if (conn2SCPolicy.size() == 1) {
             if (conn2SCPolicy.get(0).equals(app.properties.valid.Values.CC)
@@ -870,8 +888,7 @@ public String stringProperty(IProperty prop) {
     public List<AbstractCachingModel> loadCachingPolicies() throws CriticalFailureException {
         List<AbstractCachingModel> loaded = new ArrayList();
 
-        Collection<String> cachingPolicies = listOfStringsProperty(app.properties.Caching.CACHING__MODELS, false
-        );
+        Collection<String> cachingPolicies = listOfStringsProperty(app.properties.Caching.CACHING__MODELS);
 
         for (String nxtMthd : cachingPolicies) {
             try {
@@ -901,7 +918,5 @@ public String stringProperty(IProperty prop) {
     public String getIDStr() {
         return String.valueOf(_id);
     }
-
-  
 
 }// inner class Scenario

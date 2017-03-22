@@ -5,6 +5,7 @@ import app.properties.valid.Values;
 import exceptions.CriticalFailureException;
 import exceptions.InconsistencyException;
 import exceptions.InvalidOrUnsupportedException;
+import exceptions.WrongOrImproperArgumentException;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -23,6 +24,8 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import utilities.Couple;
 
 /**
@@ -53,7 +56,7 @@ public final class Preprocessor {
      * key=value from properties file after discarding all comments (both after
      * values and stand-alone comments in
      */
-    private final SortedMap<String, String> _rawProps = new TreeMap<>();
+    private final SortedMap<String, String> rawPrps = new TreeMap<>();
 
     private Preprocessor() {
         _includedFiles = new HashSet<File>();
@@ -67,7 +70,8 @@ public final class Preprocessor {
      * Performs the initial processing of a properties file. Calling this method
      * discards the result of a previous invocation.
      *
-     * thePath the path to the properties file
+     * @param thePath the path to the properties file
+     *
      *
      * @return the default Preprocessor instance after performing the processing
      * of the properties file.
@@ -78,11 +82,11 @@ public final class Preprocessor {
         boolean customPathUsed = true;
         try {
             thePath = MainArguments.replaceAllTags(thePath);
-            
+
             _singleton.loadNameValuesPairs(thePath);
-        } catch (IOException ioex) {
-            LOG.log(Level.SEVERE, "\n", ioex);
-            throw new CriticalFailureException(ioex);
+        } catch (IOException | WrongOrImproperArgumentException e) {
+            LOG.log(Level.SEVERE, "\n", e);
+            throw new CriticalFailureException(e);
         }
 
         //<editor-fold defaultstate="collapsed" desc="logging">
@@ -118,7 +122,7 @@ public final class Preprocessor {
      *
      * IOException
      */
-    private void loadNameValuesPairs(String pth) throws IOException {
+    private void loadNameValuesPairs(String pth) throws IOException, WrongOrImproperArgumentException {
 
         //@todo ocnsider if these lines not need (..?)
 //        int sep = pth.lastIndexOf("/");
@@ -146,8 +150,6 @@ public final class Preprocessor {
 //
 //            }
 //        }
-
-
         File pFile = new File(pth);
 
         FileInputStream inStream = new FileInputStream(pth);
@@ -173,7 +175,7 @@ public final class Preprocessor {
                     String nxtPth = tok.nextToken().trim();
 
                     nxtPth = MainArguments.replaceAllTags(nxtPth);
-                    
+
                     if (nxtPth.startsWith("./")) {
 
                         File pfileParent = pFile.getParentFile();
@@ -205,17 +207,17 @@ public final class Preprocessor {
             if (commTok.hasMoreTokens()) {
                 line = commTok.nextToken(); // use the part before comments
             }
-            
+
             int eqIdx = line.indexOf("=");
-            
+
             if (eqIdx == -1) {
                 throw new InconsistencyException("Non valid entry: " + line
                         + " found on line #" + lineCounter
                         + "\n at path: " + pth);
             }
             String key = line.substring(0, eqIdx).trim();
-            String val = line.substring(eqIdx+1).trim();
-            String prvIgnored = _rawProps.put(key, val);
+            String val = line.substring(eqIdx + 1).trim();
+            String prvIgnored = rawPrps.put(key, val);
 
             if (prvIgnored != null) {
                 LOG.log(Level.WARNING, "Property {0} in file \"{3}\" overriden: "
@@ -223,11 +225,51 @@ public final class Preprocessor {
                         new Object[]{key, prvIgnored, val, pth});
             }
         }//while
+        replaceRefsToOtherProps();
 
+    }
+
+    private void replaceRefsToOtherProps() throws WrongOrImproperArgumentException, IOException {
+        for (Map.Entry<String, String> entry : rawPrps.entrySet()) {
+            String key = entry.getKey();
+            String original = entry.getValue();
+            String val = entry.getValue();
+
+            // whatever between two consequtive "%", try to see if it refers to another property value
+            Pattern p = Pattern.compile("%([^%]*)%");
+            Matcher m = p.matcher(val);
+
+            int countLim = 100;
+            while (m.find() && countLim-- > 0) {
+//                System.err.println("press enter");
+//                System.in.read();
+
+                String tmp = "%" + m.group(1) + "%";
+
+                val = val.replace(tmp, rawPrps.get(m.group(1)));
+//                System.err.print("replacing \"");
+//                System.err.print(tmp);
+//                System.err.print("\" in " + key + "->" + rawPrps.get(key));
+//                System.err.println(" with \"");
+//                System.err.print(rawPrps.get(m.group(1)));
+//                System.err.println("\"");
+                rawPrps.put(key, val);
+            }
+            if (countLim == 0) {
+                throw new exceptions.WrongOrImproperArgumentException(
+                        "Parameter "
+                        + "\""
+                        + original
+                        + "\""
+                        + " suspected to cause cyclic references between property values."
+                );
+            }
+
+        }
     }
     private static final Logger LOG = Logger.getLogger(Preprocessor.class.getName());
 
-    private void loadFromIncludedFile(File includedFile) throws IOException {
+    private void loadFromIncludedFile(File includedFile) throws IOException, WrongOrImproperArgumentException {
         if (!_includedFiles.contains(includedFile)) {
             _includedFiles.add(includedFile);
         } else {
@@ -246,11 +288,11 @@ public final class Preprocessor {
     }
 
     public Set<String> getPropertyNames() {
-        return _rawProps.keySet();
+        return rawPrps.keySet();
     }
 
     public Set<Map.Entry<String, String>> getEntries() {
-        return _rawProps.entrySet();
+        return rawPrps.entrySet();
     }
 
     public void print(PrintStream printStream) {
@@ -263,7 +305,7 @@ public final class Preprocessor {
         _toString.append(Preprocessor.class.getSimpleName()).append(':');
         _toString.append("Listing raw \"type => property:=value\", including comments: ");
 
-        Iterator<Map.Entry<String, String>> iter_entries = _rawProps.entrySet().iterator();
+        Iterator<Map.Entry<String, String>> iter_entries = rawPrps.entrySet().iterator();
         while (iter_entries.hasNext()) {
             Map.Entry<String, String> entry = iter_entries.next();
 
@@ -304,7 +346,7 @@ public final class Preprocessor {
             throws InvalidOrUnsupportedException {
 
         ArrayList<String> _propertyValueList = new ArrayList<>();
-        String rawValues_comments = _rawProps.get(propName);
+        String rawValues_comments = rawPrps.get(propName);
         if (rawValues_comments == null) {
             throw new InvalidOrUnsupportedException("No such key loaded: " + propName);
         }

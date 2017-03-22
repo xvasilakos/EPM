@@ -89,7 +89,7 @@ public final class SimulatorApp {
             exitByFail("Failed to load arguments propertly..\n", ex, -10);
         }
 
-        //<editor-fold defaultstate="collapsed" desc="defaultPreprocessor properties">
+ 
         try {
             String path = _mainArgs.getPropertiesPath();
 
@@ -99,9 +99,8 @@ public final class SimulatorApp {
         } catch (CriticalFailureException ex) {
             exitByFail("Loading properties failed: " + ex.getMessage(), ex, -20);
         }
-        //</editor-fold>
+       
 
-        //<editor-fold defaultstate="collapsed" desc="init ScenariosFactory">
         try {
             ScenariosFactory.init(_preprocessedProps, _mainArgs);
             int num = ScenariosFactory.unconsumedScenariosNum();
@@ -111,11 +110,10 @@ public final class SimulatorApp {
             );
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ScenariosFactory.printScenarios(new PrintStream(baos));
-            LOG.log(Level.CONFIG, "{0}\n", baos.toString());
+            LOG.log(Level.INFO, "{0}\n", baos.toString());
         } catch (CriticalFailureException | NotIntiliazedException ex) {
             exitByFail("\"ScenariosFactory FAILED!", ex, -30);
         }
-        //</editor-fold>
 
         initStatsDir();
         DebugTool.init();

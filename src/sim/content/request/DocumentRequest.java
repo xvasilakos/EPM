@@ -487,7 +487,7 @@ public class DocumentRequest extends TraceWorkloadRecord implements ISynopsisStr
             double minSCorBHRateSlice, Map<AbstractCachingModel, List<Chunk>> fillInWithDownloadedFromBH,
             Map<AbstractCachingModel, List<Chunk>> fillInWithMissedPerPolicy) {
 
-        Boolean isSoft = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT, false));
+        Boolean isSoft = Boolean.parseBoolean(getSimulation().getScenario().stringProperty(Space.MU__ISSOFT));
         // if soft, then the macro IS never used
 
         if (!_consumeReady) {

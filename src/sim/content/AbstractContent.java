@@ -36,7 +36,7 @@ public abstract class AbstractContent implements IContent, ISimulationMember {
         _id = id;
         _sim = sim;
 
-        _remoteCostType = getSimulation().getScenario().stringProperty(Cost.Transfer.TRANSFER_COST_ON_MISS__TYPE, false);
+        _remoteCostType = getSimulation().getScenario().stringProperty(Cost.Transfer.TRANSFER_COST_ON_MISS__TYPE);
 
         double hopMean = getSimulation().getScenario().doubleProperty(Cost.Transfer.TRANSFER__PROPAGATION__HOP_COUNT__MEAN);
         double hopStdev = getSimulation().getScenario().doubleProperty(Cost.Transfer.TRANSFER__PROPAGATION__HOP_COUNT__STD);

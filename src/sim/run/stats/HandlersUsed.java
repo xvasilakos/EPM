@@ -99,7 +99,7 @@ final class HandlersUsed {
      */
     private Set<IComputePercent> initCmpt1(StatsProperty statsProp) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException {
         Set<IComputePercent> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerName : handleNames) {
             switch (nxtHandlerName) {
                 case Values.UNDEFINED:
@@ -126,7 +126,7 @@ final class HandlersUsed {
      */
     private Set<AbstractPerformanceStat> initPerformanceStats(StatsProperty statsProp) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, StatisticException {
         Set<AbstractPerformanceStat> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerName : handleNames) {
             switch (nxtHandlerName) {
                 case Values.UNDEFINED:
@@ -160,7 +160,7 @@ final class HandlersUsed {
      */
     private Set<ICompute3> initCmpt3(StatsProperty statsProp) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException, NoSuchMethodException, StatisticException, IllegalArgumentException, InvocationTargetException {
         Set<ICompute3> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerArgs : handleNames) {
             switch (nxtHandlerArgs) {
                 case Values.UNDEFINED:
@@ -198,7 +198,7 @@ final class HandlersUsed {
 
     private Set<ICompute0> initFixedSCCmpt0(StatsProperty statsProp, Collection<SmallCell> monitorSCs) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, StatisticException {
         Set<ICompute0> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerName : handleNames) {
             switch (nxtHandlerName) {
                 case Values.UNDEFINED:
@@ -225,7 +225,7 @@ final class HandlersUsed {
 
     private Set<ICompute0> initFixedSCCmpt0NoPolicies(StatsProperty statsProp, Collection<SmallCell> monitorSCs) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, StatisticException {
         Set<ICompute0> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerName : handleNames) {
             switch (nxtHandlerName) {
                 case Values.UNDEFINED:
@@ -250,7 +250,7 @@ final class HandlersUsed {
 
     private Set<ICompute4> initCmpt4Nopolicies(StatsProperty statsProp) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, StatisticException {
         Set<ICompute4> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerName : handleNames) {
             switch (nxtHandlerName) {
                 case Values.UNDEFINED:
@@ -274,7 +274,7 @@ final class HandlersUsed {
 
     private Set<ComputeAllPoliciesImpl> initCmpt4(StatsProperty statsProp) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, StatisticException {
         Set<ComputeAllPoliciesImpl> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerName : handleNames) {
             switch (nxtHandlerName) {
                 case Values.UNDEFINED:
@@ -299,7 +299,7 @@ final class HandlersUsed {
 
     private Set<UnonymousCompute5> initCmpt5(StatsProperty statsProp) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, StatisticException {
         Set<UnonymousCompute5> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerTitl : handleNames) {
             switch (nxtHandlerTitl) {
                 case Values.UNDEFINED:
@@ -320,7 +320,7 @@ final class HandlersUsed {
 
     private Set<UnonymousCompute6> initCmpt6(StatsProperty statsProp) throws IllegalAccessException, ClassNotFoundException, RuntimeException, InstantiationException, InvalidOrUnsupportedException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException, StatisticException {
         Set<UnonymousCompute6> initHdlSet = new TreeSet<>();
-        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp, false);
+        List<String> handleNames = _statsHandlingOuter._scenarioSetup.listOfStringsProperty(statsProp);
         for (String nxtHandlerTitl : handleNames) {
             switch (nxtHandlerTitl) {
                 case Values.UNDEFINED:

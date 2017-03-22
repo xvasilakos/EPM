@@ -247,7 +247,7 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
     }
 
     private void initResetPosGrp(Scenario scenario) throws InvalidOrUnsupportedException {
-        _resetPosGrp = scenario.listOfStringsProperty(Space.MU__GROUP__RESET__POS, false);
+        _resetPosGrp = scenario.listOfStringsProperty(Space.MU__GROUP__RESET__POS);
         if (_resetPosGrp.size() != 1 && _resetPosGrp.size() != groupsNum) {
             throw new InvalidOrUnsupportedException(
                     "Property " + Space.MU__GROUP__RESET__POS
@@ -257,7 +257,7 @@ public class MobileGroupsRegistry implements ISimulationMember, ISynopsisString 
     }
 
     private void initInitPosGrp(Scenario scenario) throws InvalidOrUnsupportedException {
-        _initPosGrp = scenario.listOfStringsProperty(Space.MU__GROUP__INIT__POS, false);
+        _initPosGrp = scenario.listOfStringsProperty(Space.MU__GROUP__INIT__POS);
         if (_initPosGrp.size() != 1 && _initPosGrp.size() != groupsNum) {
             throw new InvalidOrUnsupportedException(
                     "Property " + Space.MU__GROUP__INIT__POS

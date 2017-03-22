@@ -100,7 +100,7 @@ public final class StatsHandling implements ISimulationMember {
                 throw new RuntimeException(StatsProperty.STATS__MIN_TIME.name() + " property = " + theMinTime + " can not be set to less than property " + app.properties.Simulation.Clock.MAX_TIME.name() + " = " + _clockMaxTime);
             }
 
-            String _confIntervalZ = _scenarioSetup.stringProperty(StatsProperty.STATS__CONF_INTERVAL_Z, false);
+            String _confIntervalZ = _scenarioSetup.stringProperty(StatsProperty.STATS__CONF_INTERVAL_Z);
             confInterval = Statistics.ConfidenceInterval.find(_confIntervalZ);
             String currSimStatsDirPath = SimulatorApp.getResultFilesPath();
             this._simStatististics = new Statistics(sim);

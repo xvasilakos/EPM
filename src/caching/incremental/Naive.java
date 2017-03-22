@@ -44,6 +44,7 @@ public class Naive extends AbstractNaive implements IGainNoRplc, IIncrementalBas
 //            }
             if (targetSC.cacheItemAttempt(cu, this, nxtChunk) == Success) {
                 totalSizeCached += nxtChunk.sizeInBytes();
+                targetSC.updtNAIVETTL4Cached(nxtChunk, sim.simTime());
             }
         }
         return totalSizeCached;

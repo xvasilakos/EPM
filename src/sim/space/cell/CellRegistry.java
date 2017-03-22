@@ -103,7 +103,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
         scenario = sim.getScenario();
         LOG = CommonFunctions.getLoggerFor(CellRegistry.class, "simID=" + getSimulation().getID());
 
-        mobModel = scenario.stringProperty(Space.MOBILITY_MODEL, false);
+        mobModel = scenario.stringProperty(Space.MOBILITY_MODEL);
         probJitter = scenario.doubleProperty(Space.SC__HANDOFF_PROBABILITY__STDEV);
 
         muGroupRegistry = groupRegistry;
@@ -345,6 +345,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
      * handoff destination SCs.
      *
      * mu src dest
+     *
      * @param mu
      * @param src
      * @param dest
@@ -822,7 +823,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
         List<SmallCell> theSCs = null;
         try {
-            List<String> scsInit = s.listOfStringsProperty(Space.SC__INIT, false);
+            List<String> scsInit = s.listOfStringsProperty(Space.SC__INIT);
             if (scsInit.isEmpty()) {
                 LOG.log(Level.WARNING,
                         "There are no small cells defined in property {0}",
@@ -939,8 +940,8 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             String nxtLn = "";
 
 //            = CellRegistry.this.getSimulation().getScenario();
-            String tracePath = s.stringProperty(Space.SC__TRACE_BASE, true)
-                    + "/" + s.stringProperty(Space.SC__TRACE, true);
+            String tracePath = s.stringProperty(Space.SC__TRACE_BASE)
+                    + "/" + s.stringProperty(Space.SC__TRACE) + ".log";
 
             double meanR = s.doubleProperty(Space.SC__RADIUS__MEAN);
             double stdevR = s.doubleProperty(Space.SC__RADIUS__STDEV);
@@ -960,7 +961,9 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
             parseTraceFile(tracePath, nxtLn, maxX, minX, maxY, minY, meanR, stdevR, s, area, cacheMdls, initialisedFromTrc);
 
             for (String suffix : suffixes) {
-                String probsPath = s.stringProperty(Space.SC__TRACE_BASE, true) + "/" + s.stringProperty(Space.SC__TRACE__PROB_MATRIX, true) + suffix;
+                String probsPath = s.stringProperty(Space.SC__TRACE_BASE)
+                        + "/" + s.stringProperty(Space.SC__TRACE__PROB_MATRIX)
+                        + suffix;
                 parseProbsMatrix(suffix, probsPath, initialisedFromTrc);
             }
 
@@ -1061,8 +1064,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                     int radius = (int) sim.getRandomGenerator().
                             getGaussian(meanR, stdevR);
 
-                    long capacity = utils.CommonFunctions.parseSizeToBytes(
-                            s.stringProperty(Space.SC__BUFFER__SIZE, false));
+                    long capacity = utils.CommonFunctions.parseSizeToBytes(s.stringProperty(Space.SC__BUFFER__SIZE));
 
                     SmallCell newSC = new SmallCell(
                             id, sim, center, radius,
@@ -1132,7 +1134,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                     probMatrix = this.probMatrix_rtunder50;
                     break;
                 default:
-                    throw new exceptions.WrongOrImproperArgumentException("Unknown type of file: \"" + suffix+"\"");
+                    throw new exceptions.WrongOrImproperArgumentException("Unknown type of file: \"" + suffix + "\"");
             }
 
             initProbMatrix(cellsParsed, probMatrix);
