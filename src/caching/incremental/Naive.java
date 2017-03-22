@@ -37,7 +37,7 @@ public class Naive extends AbstractNaive implements IGainNoRplc, IIncrementalBas
 
         int ttlEviction = 0;
         // clear based on TTL first..
-        ttlEviction = targetSC.checkEMCTTL4Cached(sim.simTime(), this);
+        ttlEviction = targetSC.checkNAIVETTL4Cached(sim.simTime(), this);
 
         int totalSizeCached = 0;
         for (Chunk nxtChunk : chunks) {

@@ -964,11 +964,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 String probsPath = s.stringProperty(Space.SC__TRACE_BASE)
                         + "/" + s.stringProperty(Space.SC__TRACE__PROB_MATRIX)
                         + suffix;
-                
-                System.out.println("probsPath="+probsPath);
-        System.out.println("SC__TRACE__PROB_MATRIX="+s.stringProperty(Space.SC__TRACE__PROB_MATRIX));
-        System.exit(-66);
-                
+
                 parseProbsMatrix(suffix, probsPath, initialisedFromTrc);
             }
 

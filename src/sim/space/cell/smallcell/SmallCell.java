@@ -966,7 +966,8 @@ public class SmallCell extends AbstractCell {
     /**
      * Time to live threshold for EMC cached chunks
      */
-    public static final int TTL = 1800;
+    public static final int TTL_EMC = 60;
+    public static final int TTL_NAIVE = 2 * TTL_EMC;
 
     public void updtEMCTTL4Cached(Chunk ch, int tm) {
         Integer prevTime = eMCTTL4Cached.get(ch);
@@ -982,10 +983,10 @@ public class SmallCell extends AbstractCell {
         for (Object ob : chunks) {
             Chunk ch = (Chunk) ob;
             Integer whenLogged = eMCTTL4Cached.get(ch);
-            if (whenLogged + tm > TTL) {
+            if (tm - whenLogged > TTL_EMC) {
                 eMCTTL4Cached.remove(ch);
 
-                sum+=ch.sizeInBytes();
+                sum += ch.sizeInBytes();
                 if (bufferContains(model, null, ch)) {
                     getBuffer(model).deallocateForce(ch);
                     //getDmdPC(model).deregisterUpdtInfoPC(this, ch);
@@ -997,7 +998,10 @@ public class SmallCell extends AbstractCell {
     }
 
     public void updtNAIVETTL4Cached(Chunk ch, int tm) {
-        naiveTTL4Cached.put(ch, tm);
+        Integer prevTime = naiveTTL4Cached.get(ch);
+        if (prevTime == null) {
+            naiveTTL4Cached.put(ch, tm);
+        }//otherwise leave it with the original time
     }
 
     public int checkNAIVETTL4Cached(int tm, AbstractCachingModel model) {
@@ -1007,7 +1011,7 @@ public class SmallCell extends AbstractCell {
         for (Object ob : chunks) {
             Chunk ch = (Chunk) ob;
             Integer whenLogged = naiveTTL4Cached.get(ch);
-            if (whenLogged + tm > TTL) {
+            if (tm - whenLogged > TTL_NAIVE) {
                 naiveTTL4Cached.remove(ch);
 
                 sum++;
@@ -1023,7 +1027,7 @@ public class SmallCell extends AbstractCell {
 
 //    private boolean checkEMCTTL4Cached(Chunk ch, int tm) {
 //        Integer whenLogged = eMCTTL4Cached.get(ch);
-//        if (whenLogged + tm > TTL) {
+//        if (whenLogged + tm > TTL_EMC) {
 //            eMCTTL4Cached.remove(ch);
 //            return true;
 //        }

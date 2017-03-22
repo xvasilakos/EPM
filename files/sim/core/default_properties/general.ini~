@@ -29,7 +29,7 @@ simulation.clock.init_time=4000
 #	Cautions: 
 # 		- consider along with stats.min_time parameter.
 # 		- consider along with space.sc.warmup_period parameter.
-simulation.clock.max_time=50000
+simulation.clock.max_time=55000
 
 simulation.clock.max_req_num=100000
 simulation.progress_update=0.005
