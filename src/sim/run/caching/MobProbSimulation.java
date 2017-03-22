@@ -208,14 +208,14 @@ public final class MobProbSimulation extends SimulationBaseRunner<MobileUser> {
                     nxtMU.cacheDescisionsPerformRegisterPC(nxtMU.getLastKnownConnectedSC());
                 }
 
-                getSimulation().getStatsHandle().updtSCCmpt6(clearedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("ClearedReqs"))
-                );
-                getSimulation().getStatsHandle().updtSCCmpt6(newAddedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("newAddedReqs"))
-                );
+//               getStatsHandle().updtSCCmpt6(clearedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("[ClearedReqs]"))
+//                );
+//                getStatsHandle().updtSCCmpt6(newAddedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("[NewReqs]"))
+//                );
 
 ////////////////////////////////////////////////////
                 boolean roundCommited = runUpdtStats4SimRound();

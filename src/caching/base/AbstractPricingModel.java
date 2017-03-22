@@ -7,7 +7,7 @@ import sim.space.cell.smallcell.PricedBuffer;
  *
  * @author Xenofon Vasilakos xvas@aueb.gr
  */
-public abstract class AbstractPricing extends AbstractCachingModel {
+public abstract class AbstractPricingModel extends AbstractCachingModel {
 
     public static Class bufferType() {
         return PricedBuffer.class;

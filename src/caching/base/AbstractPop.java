@@ -10,7 +10,7 @@ import sim.space.cell.smallcell.SmallCell;
  *
  * @author xvas
  */
-public abstract class AbstractPop extends AbstractPricing implements IPop {
+public abstract class AbstractPop extends AbstractPricingModel implements IPop {
 
     public AbstractPop() {
     }

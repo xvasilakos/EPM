@@ -4,7 +4,7 @@ import caching.base.AbstractEMPC;
 import caching.base.AbstractCachingModel;
 import caching.interfaces.incremental.IIncremental;
 import caching.Utils;
-import caching.base.AbstractPricing;
+import caching.base.AbstractPricingModel;
 import java.util.Collection;
 import sim.run.SimulationBaseRunner;
 import sim.content.Chunk;

@@ -9,6 +9,7 @@ import sim.content.Chunk;
 import static sim.space.cell.smallcell.BufferBase.BufferAllocationStatus.Success;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
+import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
 
 /**
  * @author xvas
@@ -34,6 +35,10 @@ public class Naive extends AbstractNaive implements IGainNoRplc, IIncrementalBas
             SimulationBaseRunner sim, CachingUser cu, Collection<Chunk> chunks,
             SmallCell hostSC, SmallCell targetSC) throws Throwable {
 
+        int ttlEviction = 0;
+        // clear based on TTL first..
+        ttlEviction = targetSC.checkEMCTTL4Cached(sim.simTime(), this);
+
         int totalSizeCached = 0;
         for (Chunk nxtChunk : chunks) {
 
@@ -47,6 +52,18 @@ public class Naive extends AbstractNaive implements IGainNoRplc, IIncrementalBas
                 targetSC.updtNAIVETTL4Cached(nxtChunk, sim.simTime());
             }
         }
+
+//        sim.getStatsHandle().updtSCCmpt6(chunks.size(),//totalSizeCached - ttlEviction,
+//                new UnonymousCompute6(
+//                        new UnonymousCompute6.WellKnownTitle("[DMD(Naive)]"))
+//        );
+//        
+//        //hack
+//        sim.getStatsHandle().updtSCCmpt6(chunks.size(),
+//                new UnonymousCompute6(
+//                        new UnonymousCompute6.WellKnownTitle("[DMD(MaxPop)]"))
+//        );
+
         return totalSizeCached;
     }
 

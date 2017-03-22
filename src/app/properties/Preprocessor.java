@@ -217,7 +217,7 @@ public final class Preprocessor {
             }
             String key = line.substring(0, eqIdx).trim();
             String val = line.substring(eqIdx + 1).trim();
-            String prvIgnored = rawPrps.put(key, val);
+            String prvIgnored = rawPrps.put(key, val.equals("\"\"") ? "" : val);
 
             if (prvIgnored != null) {
                 LOG.log(Level.WARNING, "Property {0} in file \"{3}\" overriden: "
@@ -229,7 +229,75 @@ public final class Preprocessor {
 
     }
 
+    /**
+     * Replaces references to other properties, marked within "%", e.g.
+     * %ref.to.other.prop%. The only references left intact, are the ones which
+     * include one or more colons ";", i.e. the ones that have multiple values,
+     * as that could cause inconsistencies. For instance: a=a1;a2;a3 yields
+     * three scenarios. If b=%a% gets replaced by a1;a2;a3, then that would
+     * result in 3 x 3 = 9 scenarios.
+     *
+     * {@literal @note} that #replaceForceRefsToOtherProps() allows such
+     * scenarios, only it is invoked when {@literal "<"  and ">" are used, e.g. "b=<a>"
+     * }
+     *
+     * @throws WrongOrImproperArgumentException
+     * @throws IOException
+     */
     private void replaceRefsToOtherProps() throws WrongOrImproperArgumentException, IOException {
+        for (Map.Entry<String, String> entry : rawPrps.entrySet()) {
+            String key = entry.getKey();
+            String original = entry.getValue();
+            String val = entry.getValue();
+
+            if (val.contains(";")) {
+                continue;
+            }
+
+            // whatever between two consequtive "%", try to see if it refers to another property value
+            Pattern p = Pattern.compile("%([^%]*)%");
+            Matcher m = p.matcher(val);
+
+            int countLim = 100;
+            while (m.find() && countLim-- > 0) {
+//                System.err.println("press enter");
+//                System.in.read();
+
+                String tmp = "%" + m.group(1) + "%";
+
+                val = val.replace(tmp, rawPrps.get(m.group(1)));
+//                System.err.print("replacing \"");
+//                System.err.print(tmp);
+//                System.err.print("\" in " + key + "->" + rawPrps.get(key));
+//                System.err.println(" with \"");
+//                System.err.print(rawPrps.get(m.group(1)));
+//                System.err.println("\"");
+                rawPrps.put(key, val);
+            }
+            if (countLim == 0) {
+                throw new exceptions.WrongOrImproperArgumentException(
+                        "Parameter "
+                        + "\""
+                        + original
+                        + "\""
+                        + " suspected to cause cyclic references between property values."
+                );
+            }
+
+        }
+    }
+
+    /**
+     * Replaces references to other properties, marked within
+     * {@literal "<" and ">".} Unlike #replaceRefsToOtherProps(), this method
+     * allows to replace with multiple values. For instance: a=a1;a2;a3 yields
+     * three scenarios. If b=%a% gets replaced by a1;a2;a3, it will result in 3
+     * x 3 = 9 scenarios.
+     *
+     * @throws WrongOrImproperArgumentException
+     * @throws IOException
+     */
+    private void replaceForceRefsToOtherProps() throws WrongOrImproperArgumentException, IOException {
         for (Map.Entry<String, String> entry : rawPrps.entrySet()) {
             String key = entry.getKey();
             String original = entry.getValue();
@@ -326,9 +394,11 @@ public final class Preprocessor {
     /**
      * property
      *
+     * @param property
      * @return the (possibly multiple) values for this property, coupled by
      * comments (optionally) following property values
      * InvalidOrUnsupportedException
+     * @throws exceptions.InvalidOrUnsupportedException
      */
     public Couple<List<String>, String> getValues(IProperty property)
             throws InvalidOrUnsupportedException, InconsistencyException {
@@ -338,9 +408,11 @@ public final class Preprocessor {
     /**
      * propName
      *
+     * @param propName
      * @return the (possibly multiple) values for this property name, coupled by
      * the optional comments following property values
      * InvalidOrUnsupportedException
+     * @throws exceptions.InvalidOrUnsupportedException
      */
     public Couple<List<String>, String> getValues(String propName)
             throws InvalidOrUnsupportedException {
@@ -371,10 +443,12 @@ public final class Preprocessor {
     /**
      * statsProperty
      *
+     * @param statsProperty
      * @return the first value if according to the current scenarios setups this
      * is a multiple values property, or if this is a list property. Note that
      * the value returned is in string format.
      * epc.femto.exceptions.InvalidOrUnsupportedException
+     * @throws exceptions.InvalidOrUnsupportedException
      */
     public String getFirstValue(StatsProperty statsProperty) throws InvalidOrUnsupportedException {
         return getValues(statsProperty).getFirst().get(0);
@@ -383,10 +457,12 @@ public final class Preprocessor {
     /**
      * statsProperty
      *
+     * @param statsProperty
      * @return the first value if according to the current scenarios setups this
      * is a multiple values property, or if this is a list property. Note that
      * the value returned is in string format.
      * epc.femto.exceptions.InvalidOrUnsupportedException
+     * @throws exceptions.InvalidOrUnsupportedException
      */
     public String getFirstValue(String statsProperty) throws InvalidOrUnsupportedException {
         return getValues(statsProperty).getFirst().get(0);

@@ -2,7 +2,7 @@ package caching.rplc.mingain.priced;
 
 import caching.Utils;
 import caching.base.AbstractCachingModel;
-import caching.base.AbstractPricing;
+import caching.base.AbstractPricingModel;
 import caching.base.IEMC;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.CriticalFailureException;
@@ -29,7 +29,7 @@ import sim.space.users.CachingUser;
  * Information {@literal Sciences & Technology}, Athens University of Economics and
  * Business, Greece
  */
-public class EMC_R extends AbstractPricing implements IGainRplc, IEMC {
+public class EMC_R extends AbstractPricingModel implements IGainRplc, IEMC {
 
     private static final AbstractCachingModel singelton = new EMC_R();
 

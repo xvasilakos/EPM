@@ -11,7 +11,7 @@ import sim.run.SimulationBaseRunner;
 import static sim.space.cell.smallcell.BufferBase.BufferAllocationStatus.Success;
 import sim.space.cell.smallcell.SmallCell;
 import sim.space.users.CachingUser;
-import utils.DebugTool;
+import statistics.handlers.iterative.sc.cmpt6.UnonymousCompute6;
 
 /**
  * Efficient Proactive Caching implementation with Cache decisions cancelation
@@ -45,14 +45,15 @@ public class EMC extends AbstractEPC implements IEMC {
     }
 
     public int cacheDecision(SimulationBaseRunner sim, CachingUser cu,
-            Collection<Chunk> requestChunks, SmallCell hostSC,
+            Collection<Chunk> chunks, SmallCell hostSC,
             SmallCell targetSC) throws Throwable {
 
+        int ttlEviction = 0;
         // clear based on TTL first..
-        targetSC.checkEMCTTL4Cached(sim.simTime(), this);
+        ttlEviction = targetSC.checkEMCTTL4Cached(sim.simTime(), this);
 
         int totalSizeCached = 0;
-        for (Chunk nxtChunk : requestChunks) {
+        for (Chunk nxtChunk : chunks) {
 
 //never do that: No need to, it is done by methods called by cacheItemAttempt
 //            if (targetSC.isCached(this, nxtChunk)) {
@@ -74,10 +75,18 @@ public class EMC extends AbstractEPC implements IEMC {
                 if (targetSC.cacheItemAttemptPriceUpdate(cu, this, nxtChunk) == Success) {
                     totalSizeCached += nxtChunk.sizeInBytes();
                     targetSC.updtEMCTTL4Cached(nxtChunk, sim.simTime());
+
                 }
             }
 
         }
+
+//        sim.getStatsHandle().updtSCCmpt6(
+//                chunks.size(),//totalSizeCached - ttlEviction,
+//                new UnonymousCompute6(
+//                        new UnonymousCompute6.WellKnownTitle("[DMD(EMC)]"))
+//        );
+
         return totalSizeCached;
     }
 

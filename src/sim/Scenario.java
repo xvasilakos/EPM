@@ -37,6 +37,8 @@ import java.util.StringTokenizer;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import sim.space.Area;
 import sim.space.cell.MacroCell;
 import sim.time.AbstractClock;
@@ -573,16 +575,25 @@ public class Scenario implements Comparable<Scenario> {
     public String stringProperty(String propertyName) {
         String val = strPrps.get(propertyName);
 
-//        // whatever between two consequtive "%", try to see if it refers to another property value
-//        Pattern p = Pattern.compile("%([^%]*)%");
-//        Matcher m = p.matcher(val);
-//        while (m.find()) {
-//            String tmp = "%" + m.group(1) + "%";
-//            val = val.replace(tmp, allPrps.get(m.group(1)).toString());
-//        }
-//        if (toreturn == null) {
-//            throw onPropertyFail(propertyName, Registry.Type.STRING.toString());
-//        }
+        if (val == null) {
+            throw onPropertyFail(propertyName, Registry.Type.STRING.toString());
+        }
+
+        int counter = 10;
+        while (val.contains("\"")) {// whatever between two consequtive dpuble quots, try to see if it refers to another property value
+            Pattern p = Pattern.compile("\"([^\"]*)\"");
+            Matcher m = p.matcher(val);
+            while (m.find()) {
+                String tmp = "\"" + m.group(1) + "\"";
+                val = val.replace(tmp, allPrps.get(m.group(1)).toString());
+            }
+            if (counter-- == 0) {
+                throw new RuntimeException("Property: "
+                        + "\"" + propertyName + "\""
+                        + " may be a cause of cyclic references between properties.");
+            }
+        }
+
         return val;
     }
 
@@ -784,7 +795,7 @@ public class Scenario implements Comparable<Scenario> {
         String muTrace
                 = stringProperty(Space.MU__TRACE_BASE)
                 + "/"
-                + stringProperty(Space.MU__TRACE) + ".tr";
+                + stringProperty(Space.MU__TRACE);
 
         if (muTrace.toUpperCase().endsWith(Values.NONE)) {
             StringBuilder sb = new StringBuilder();

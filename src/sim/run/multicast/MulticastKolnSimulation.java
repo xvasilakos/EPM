@@ -92,7 +92,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     protected void init(Scenario scn) {
         muTracePath = scn.stringProperty(Space.MU__TRACE_BASE)
                 + "/"
-                + scn.stringProperty(Space.MU__TRACE) + ".tr";
+                + scn.stringProperty(Space.MU__TRACE);
 
         roundDuration = getScenario().intProperty(StatsProperty.STATS__AGGREGATES__RECORDING_PERIOD);
 
@@ -200,7 +200,7 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
     public Area initArea() throws CriticalFailureException {
 
         String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE)
-                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA) + ".meta";
+                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA);
 
         File metaF = (new File(metadataPath)).getAbsoluteFile();
         Couple<Point, Point> areaDimensions
@@ -262,23 +262,21 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
             //[1] mu id
             String parsedID = csv[1];
 
-            //[2] x
-            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
-
-            //[3] y
-            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
-
+//            //[2] x
+//            int x = (int) Double.parseDouble(csv[2]) - minX; // -minX so as to be relative to area dimensions
+//
+//            //[3] y
+//            int y = (int) Double.parseDouble(csv[3]) - minY; // -minY so as to be relative to area dimensions
 //TODO
 //BUGFIX
 //hack using max for out of area coordinates. 
 // somehow the trace of mobiliy has out of bounds moves:
-//            //[2] x
-//            int x = (int) Math.max(0, Double.parseDouble(csv[2]) - minX); // -minX so as to be relative to area dimensions
-//
-//            //[3] y
-//            int y = (int) Math.max(0, Double.parseDouble(csv[3]) - minY); // -minY so as to be relative to area dimensions
+            //[2] x
+            int x = (int) Math.max(0, Double.parseDouble(csv[2]) - minX); // -minX so as to be relative to area dimensions
 
-            //[4] speed
+            //[3] y
+            int y = (int) Math.max(0, Double.parseDouble(csv[3]) - minY); // -minY so as to be relative to area dimensions
+//            [4] speed
             double speed = Math.ceil(Double.parseDouble(csv[4]));
 
             TraceMU newMU;
@@ -533,13 +531,18 @@ public final class MulticastKolnSimulation extends SimulationBaseRunner<TraceMU>
                     nxtMU.cacheDescisionsPerformRegisterPC(nxtMU.getLastKnownConnectedSC());//TODO
                 }
 
-                getStatsHandle().updtSCCmpt6(clearedReqs,
+//                getStatsHandle().updtSCCmpt6(clearedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("[ClearedReqs]"))
+//                );
+//                getStatsHandle().updtSCCmpt6(newAddedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("[NewReqs]"))
+//                );
+                getStatsHandle().updtSCCmpt6(
+                        newAddedReqs - clearedReqs,
                         new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("ClearedReqs"))
-                );
-                getStatsHandle().updtSCCmpt6(newAddedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("NewReqs"))
+                                new UnonymousCompute6.WellKnownTitle("[DMD]"))
                 );
 
                 ////////////////////////////////////////////////////

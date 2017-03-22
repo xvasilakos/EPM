@@ -66,7 +66,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
     protected void init(Scenario scn) {
         String muTracePath = scn.stringProperty(Space.MU__TRACE_BASE)
                 + "/"
-                + scn.stringProperty(Space.MU__TRACE) + ".tr";
+                + scn.stringProperty(Space.MU__TRACE);
 
         try {
             muTraceIn = new Scanner(new FileReader(muTracePath));
@@ -393,7 +393,7 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
 
         String muTracePath = scn.stringProperty(Space.MU__TRACE_BASE)
                 + "/"
-                + scn.stringProperty(Space.MU__TRACE) + ".tr";
+                + scn.stringProperty(Space.MU__TRACE);
 
         String lineCSV;
         String sep = " ";
@@ -598,14 +598,14 @@ public final class TraceTaxiesSimulation extends SimulationBaseRunner<TraceMU> {
                     // finaly take caching decisions
                     nxtMU.cacheDescisionsPerformRegisterPC(nxtMU.getLastKnownConnectedSC());
                 }
-                getStatsHandle().updtSCCmpt6(clearedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("ClearedReqs"))
-                );
-                getStatsHandle().updtSCCmpt6(newAddedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("NewReqs"))
-                );
+//                getStatsHandle().updtSCCmpt6(clearedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("[ClearedReqs]"))
+//                );
+//                getStatsHandle().updtSCCmpt6(newAddedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("[NewReqs]"))
+//                );
 
                 ////////////////////////////////////////////////////
                 boolean roundCommited = runUpdtStats4SimRound();

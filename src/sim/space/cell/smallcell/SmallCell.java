@@ -7,7 +7,7 @@ import caching.MaxPop;
 import caching.ModelsFactory;
 import caching.base.AbstractCachingModel;
 import caching.base.AbstractOracle;
-import caching.base.AbstractPricing;
+import caching.base.AbstractPricingModel;
 import caching.base.IPop;
 import caching.interfaces.rplc.IGainRplc;
 import caching.rplc.mingain.priced.tuned_timened.EMPC_R_Tunned_a;
@@ -249,11 +249,11 @@ public class SmallCell extends AbstractCell {
         return builder.toString();
     }
 
-    public double cachePrice(AbstractPricing cachingMdl) {
+    public double cachePrice(AbstractPricingModel cachingMdl) {
         return ((PricedBuffer) _buffersMap.get(cachingMdl)).getPrice();
     }
 
-    public void setCachePrice(AbstractPricing cachingMdl, double price) throws Throwable {
+    public void setCachePrice(AbstractPricingModel cachingMdl, double price) throws Throwable {
         ((PricedBuffer) _buffersMap.get(cachingMdl)).setPrice(price);
     }
 
@@ -321,7 +321,7 @@ public class SmallCell extends AbstractCell {
     }
 
     public BufferBase.BufferAllocationStatus cacheItemAttemptPriceUpdate(CachingUser cu,
-            AbstractPricing cachingMdl, Chunk chunk) {
+            AbstractPricingModel cachingMdl, Chunk chunk) {
 
         BufferBase.BufferAllocationStatus result
                 = _buffersMap.get(cachingMdl).allocateAttempt(cu, chunk, this);
@@ -755,7 +755,7 @@ public class SmallCell extends AbstractCell {
         _orderedCachedByGainMap.get(cachingMdl).clear();
     }
 
-    public PricedBuffer getBuffer(AbstractPricing cachingMdl) {
+    public PricedBuffer getBuffer(AbstractPricingModel cachingMdl) {
         return (PricedBuffer) _buffersMap.get(cachingMdl);
     }
 
@@ -969,12 +969,15 @@ public class SmallCell extends AbstractCell {
     public static final int TTL = 1800;
 
     public void updtEMCTTL4Cached(Chunk ch, int tm) {
-        eMCTTL4Cached.put(ch, tm);
+        Integer prevTime = eMCTTL4Cached.get(ch);
+        if (prevTime == null) {
+            eMCTTL4Cached.put(ch, tm);
+        }//otherwise leave it with the original time
     }
 
     public int checkEMCTTL4Cached(int tm, AbstractCachingModel model) {
         int sum = 0;
-        Object[] chunks =  eMCTTL4Cached.keySet().toArray();
+        Object[] chunks = eMCTTL4Cached.keySet().toArray();
 //        for (Chunk ch : eMCTTL4Cached.keySet()) {
         for (Object ob : chunks) {
             Chunk ch = (Chunk) ob;
@@ -982,7 +985,7 @@ public class SmallCell extends AbstractCell {
             if (whenLogged + tm > TTL) {
                 eMCTTL4Cached.remove(ch);
 
-                sum++;
+                sum+=ch.sizeInBytes();
                 if (bufferContains(model, null, ch)) {
                     getBuffer(model).deallocateForce(ch);
                     //getDmdPC(model).deregisterUpdtInfoPC(this, ch);
@@ -992,13 +995,14 @@ public class SmallCell extends AbstractCell {
         }
         return sum;
     }
+
     public void updtNAIVETTL4Cached(Chunk ch, int tm) {
         naiveTTL4Cached.put(ch, tm);
     }
 
     public int checkNAIVETTL4Cached(int tm, AbstractCachingModel model) {
         int sum = 0;
-        Object[] chunks =  naiveTTL4Cached.keySet().toArray();
+        Object[] chunks = naiveTTL4Cached.keySet().toArray();
 //        for (Chunk ch : eMCTTL4Cached.keySet()) {
         for (Object ob : chunks) {
             Chunk ch = (Chunk) ob;
@@ -1025,7 +1029,6 @@ public class SmallCell extends AbstractCell {
 //        }
 //        return false;
 //    }
-
     /**
      * Useful state for a dynamic interval where no replacements take place
      * during tryCacheRecentFromBH decisions with EPC-LC

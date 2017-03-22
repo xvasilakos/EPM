@@ -3,7 +3,7 @@ package caching.incremental;
 import caching.Utils;
 import caching.base.AbstractEPC;
 import caching.base.AbstractCachingModel;
-import caching.base.AbstractPricing;
+import caching.base.AbstractPricingModel;
 import caching.interfaces.incremental.IIncremental;
 import caching.interfaces.rplc.IGainNoRplc;
 import java.util.Collection;

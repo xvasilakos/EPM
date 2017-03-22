@@ -45,16 +45,18 @@ public abstract class AbstractGainRplc extends AbstractCachingModel implements I
 
     @Override
     public int cacheDecision(SimulationBaseRunner sim, CachingUser cu,
-            Collection<Chunk> requestChunks, SmallCell hostSC,
+            Collection<Chunk> chunks, SmallCell hostSC,
             SmallCell targetSC, Set<Chunk> chunksRplcd,
             PriorityQueue<Chunk> cachedOrderByGain) throws Throwable {
+
+        int evictSzInBytes = 0;
 
         // helps to skip some checking, e.g. for cosequent chunks of the same content with same assement. 
         // -10 means last one succeeded
         double lastFailedAssessment = -10;
 
         int totalSizeCached = 0;
-        for (Chunk nxtChunk : requestChunks) {
+        for (Chunk nxtChunk : chunks) {
             double assessment = assess(nxtChunk, targetSC) / nxtChunk.sizeInMBs();// note that assess to be defined in sub-classes
             if (assessment == 0
                     && !Utils.isSpaceAvail(this, targetSC, nxtChunk.sizeInBytes())) {
@@ -83,8 +85,9 @@ public abstract class AbstractGainRplc extends AbstractCachingModel implements I
                 }
                 lastFailedAssessment = -10;
 
-                for (Chunk items2evict : opt4Eviction) {
-                    targetSC.bufferForceEvict(this, items2evict);
+                for (Chunk ecictCh : opt4Eviction) {
+                    targetSC.bufferForceEvict(this, ecictCh);
+                    evictSzInBytes += ecictCh.sizeInBytes();
                 }
                 chunksRplcd.addAll(opt4Eviction);
                 cachedOrderByGain.removeAll(opt4Eviction);
@@ -97,6 +100,13 @@ public abstract class AbstractGainRplc extends AbstractCachingModel implements I
             totalSizeCached += nxtChunk.sizeInBytes();
 
         }
+
+//        sim.getStatsHandle().updtSCCmpt6(
+//                chunks.size(),//totalSizeCached - evictSzInBytes,
+//                new UnonymousCompute6(
+//                        new UnonymousCompute6.WellKnownTitle("[DMD(" + getClass().getName() + ")]"))
+//        );
+
         return totalSizeCached;
     }
 

@@ -5,6 +5,7 @@ import app.properties.valid.Values;
 import caching.base.AbstractCachingModel;
 import caching.interfaces.rplc.IGainRplc;
 import exceptions.InconsistencyException;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import sim.Scenario;
@@ -79,8 +80,7 @@ public class PricedBuffer extends BufferBase {
 
         BufferAllocationStatus result = super.allocateAttempt(cu, chunk, sc);
 
-        if (result == BufferAllocationStatus.Success 
-                ) {
+        if (result == BufferAllocationStatus.Success) {
             double pricePoll = priceΑllocatePoll(chunk);
             setPrice(pricePoll);
         }
@@ -111,6 +111,28 @@ public class PricedBuffer extends BufferBase {
         }
 
         return mobsStillRequesting;
+    }
+
+    @Override
+    protected void deallocateForce(Chunk ch) {
+        // mobs stays removed
+        Set<CachingUser> cachingUsers = new HashSet(_chunksPerCachingUser.keySet());
+        for (CachingUser nxtCU : cachingUsers) {
+            Set<Chunk> chunksOfNxtCU = null;
+            if ((chunksOfNxtCU = _chunksPerCachingUser.get(nxtCU)) == null) {
+                continue;
+            }
+
+            chunksOfNxtCU.remove(ch); // try to remove the item
+            if (chunksOfNxtCU.isEmpty()) {
+                _chunksPerCachingUser.remove(nxtCU);
+            }
+        }
+
+        double pricePolled = PricedBuffer.this.priceDeallocatePoll(ch);
+        _price = pricePolled;
+        _used -= ch.sizeInBytes();
+        _cachingUsersPerChunk.remove(ch);
     }
 
     /**
@@ -257,7 +279,6 @@ public class PricedBuffer extends BufferBase {
 //                + polledUtil + "-" + getTrgtUtililzation()
 //                + ")"
 //        );
-
         return pricePolled;
     }
 
@@ -326,7 +347,6 @@ public class PricedBuffer extends BufferBase {
 //                + "\n\t"
 //                + "post-getPrice()=" + getPrice()
 //        );
-
         if (polledUtil > getTrgtUtililzation()) {
             pricePolled = getPrice() + getGamma() * (polledUtil - getTrgtUtililzation());
         } else {

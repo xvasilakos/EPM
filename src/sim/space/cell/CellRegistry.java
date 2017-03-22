@@ -941,7 +941,7 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
 
 //            = CellRegistry.this.getSimulation().getScenario();
             String tracePath = s.stringProperty(Space.SC__TRACE_BASE)
-                    + "/" + s.stringProperty(Space.SC__TRACE) + ".log";
+                    + "/" + s.stringProperty(Space.SC__TRACE);
 
             double meanR = s.doubleProperty(Space.SC__RADIUS__MEAN);
             double stdevR = s.doubleProperty(Space.SC__RADIUS__STDEV);
@@ -964,6 +964,11 @@ public final class CellRegistry implements ISimulationMember, ISynopsisString {
                 String probsPath = s.stringProperty(Space.SC__TRACE_BASE)
                         + "/" + s.stringProperty(Space.SC__TRACE__PROB_MATRIX)
                         + suffix;
+                
+                System.out.println("probsPath="+probsPath);
+        System.out.println("SC__TRACE__PROB_MATRIX="+s.stringProperty(Space.SC__TRACE__PROB_MATRIX));
+        System.exit(-66);
+                
                 parseProbsMatrix(suffix, probsPath, initialisedFromTrc);
             }
 

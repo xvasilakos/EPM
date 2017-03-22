@@ -91,7 +91,7 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     protected void init(Scenario scn) {
         muTracePath = scn.stringProperty(Space.MU__TRACE_BASE)
                 + "/"
-                + scn.stringProperty(Space.MU__TRACE) + ".tr";
+                + scn.stringProperty(Space.MU__TRACE);
 
         try {
             muTraceScan = new Scanner(new FileReader(muTracePath));
@@ -133,8 +133,11 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
     public Area initArea() throws CriticalFailureException {
 
         String metadataPath = scenarioSetup.stringProperty(Space.SC__TRACE_BASE)
-                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA) + ".meta";
+                + "/" + scenarioSetup.stringProperty(Space.SC__TRACE_METADATA);
 
+        
+       
+        
         File metaF = (new File(metadataPath)).getAbsoluteFile();
         Couple<Point, Point> areaDimensions = Cells.extractAreaFromMetadata(metaF);
         minX = areaDimensions.getFirst().getX();
@@ -502,14 +505,14 @@ public final class TraceKolnSimulation extends SimulationBaseRunner<TraceMU> {
                     nxtMU.cacheDescisionsPerformRegisterPC(nxtMU.getLastKnownConnectedSC());
                 }
 
-                getStatsHandle().updtSCCmpt6(clearedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("ClearedReqs"))
-                );
-                getStatsHandle().updtSCCmpt6(newAddedReqs,
-                        new UnonymousCompute6(
-                                new UnonymousCompute6.WellKnownTitle("NewReqs"))
-                );
+//                getStatsHandle().updtSCCmpt6(clearedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("[ClearedReqs]"))
+//                );
+//                getStatsHandle().updtSCCmpt6(newAddedReqs,
+//                        new UnonymousCompute6(
+//                                new UnonymousCompute6.WellKnownTitle("[NewReqs]"))
+//                );
 
                 ////////////////////////////////////////////////////
                 /*

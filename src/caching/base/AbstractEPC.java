@@ -12,7 +12,7 @@ import sim.space.users.CachingUser;
  *
  * @author xvas
  */
-public abstract class AbstractEPC extends AbstractPricing {
+public abstract class AbstractEPC extends AbstractPricingModel {
 
     /**
      * @param chnk the chunk to be assessed

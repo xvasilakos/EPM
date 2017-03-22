@@ -1,7 +1,7 @@
 package statistics.handlers.iterative.sc.cmpt4;
 
 import caching.base.AbstractCachingModel;
-import caching.base.AbstractPricing;
+import caching.base.AbstractPricingModel;
 import caching.interfaces.rplc.IGainRplc;
 import sim.space.cell.smallcell.PricedBuffer;
 import sim.space.cell.smallcell.SmallCell;
@@ -23,8 +23,8 @@ public class BuffUtil extends ComputeAllPoliciesImpl {
         AbstractCachingModel cachingPolicy = getCachingMethod();
 
         if (cachingPolicy instanceof IGainRplc) {
-            if (cachingPolicy instanceof AbstractPricing) {
-                AbstractPricing pricePolicy = (AbstractPricing) cachingPolicy;
+            if (cachingPolicy instanceof AbstractPricingModel) {
+                AbstractPricingModel pricePolicy = (AbstractPricingModel) cachingPolicy;
                 PricedBuffer buffer = cell.getBuffer(pricePolicy);
                 try {
                     return buffer.utilization4Rplc((IGainRplc) cachingPolicy);
